@@ -1043,15 +1043,10 @@ function renderResult(j) {
   // 精简提示词
   document.getElementById('short-prompt').textContent = j.short_prompt || '';
 
-  // 即梦设置
-  const s = j.settings || {};
-  document.getElementById('settings-tags').innerHTML =
-    ['模型：' + (s.model || '图片5.0 Lite'), '尺寸：' + (s.size || d.size || '9:16'), '强度：' + (s.strength || '0'), s.note || '']
-    .map(t => `<span class="stag">${t}</span>`).join('');
-
-  // 话题标签
+  // 话题标签（安全写入）
   const tags = j.hashtags || [];
-  document.getElementById('tags-body').innerHTML = tags.map(t => `<span class="hashtag">${t}</span>`).join('');
+  const tagsEl = document.getElementById('tags-body');
+  if (tagsEl) tagsEl.innerHTML = tags.map(t => `<span class="hashtag">${t}</span>`).join('');
 
   document.getElementById('block-copywrite').style.display = 'none';
   document.getElementById('outSection').style.display = 'block';
