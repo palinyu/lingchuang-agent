@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/lingchuang_agent_final.html" }
+  ]
+}
