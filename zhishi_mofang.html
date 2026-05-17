@@ -105,6 +105,16 @@ textarea{resize:vertical;min-height:110px;line-height:1.7;}
 .hashtag{padding:4px 10px;background:rgba(245,196,74,0.06);border:1px solid rgba(245,196,74,0.15);border-radius:20px;font-size:12px;color:var(--tx2);}
 
 /* 悬浮卡片 */
+.platform-btn{background:rgba(20,20,20,0.6);border:1px solid var(--bd);border-radius:12px;padding:14px 12px;text-align:center;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:6px;}
+.platform-btn:hover{border-color:rgba(245,196,74,0.4);background:var(--gold-l);transform:translateY(-2px);}
+.featured-platform{border-color:rgba(245,196,74,0.5)!important;background:linear-gradient(135deg,rgba(245,196,74,0.1),rgba(212,175,55,0.05))!important;box-shadow:0 0 16px rgba(245,196,74,0.1);}
+.platform-icon{font-size:24px;}
+.platform-name{font-size:13px;font-weight:700;color:var(--tx);}
+.platform-tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
+.free-tag{background:rgba(52,199,89,0.1);color:#34c759;border:1px solid rgba(52,199,89,0.2);}
+.paid-tag{background:rgba(255,159,10,0.1);color:#ff9f0a;border:1px solid rgba(255,159,10,0.2);}
+.featured-platform .platform-name{color:var(--gold);}
+.featured-platform .platform-tag{background:var(--gold-l);color:var(--gold);border:1px solid rgba(245,196,74,0.3);}
 #float-card-desktop{display:block;}
 #float-card-mobile{display:none;}
 @media(max-width:1200px){
@@ -138,6 +148,15 @@ textarea{resize:vertical;min-height:110px;line-height:1.7;}
 
   <div class="card">
     <div class="card-title"><span></span>输入你的知识主题</div>
+    <!-- 爆款选题库 -->
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <label>🔥 爆款选题库（点击直接使用）</label>
+        <button onclick="switchTopicCat(this)" data-cat="0" style="font-size:11px;color:var(--gold);background:none;border:none;cursor:pointer;padding:0;">换一批 →</button>
+      </div>
+      <div id="hot-topics" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+    </div>
+
     <div style="margin-bottom:14px;">
       <label>主题内容（直接输入，或描述你想做什么图）</label>
       <textarea id="topic-input" placeholder="例如：光合作用 / 石斛麦冬瘦肉汤 / 摩羯座性格分析 / 减脂训练动作 / 北京Citywalk路线…&#10;&#10;也可以粘贴一段文字内容，AI自动提取核心知识点"></textarea>
@@ -168,10 +187,18 @@ textarea{resize:vertical;min-height:110px;line-height:1.7;}
         <label>图片尺寸偏好</label>
         <select id="size-pref">
           <option value="AI自动推荐">🤖 AI自动推荐（默认）</option>
+          <optgroup label="📱 竖版">
           <option value="9:16竖版">9:16 竖版（刷屏传播首选）</option>
-          <option value="1:1方版">1:1 方版（朋友圈/社交）</option>
-          <option value="3:4竖版">3:4 竖版（小红书封面）</option>
+          <option value="3:4竖版">3:4 竖版（小红书封面首选）</option>
+          <option value="2:3竖版">2:3 竖版（小红书多图/手机截图）</option>
+          </optgroup>
+          <optgroup label="⬛ 方版">
+          <option value="1:1方版">1:1 方版（朋友圈/社交首选）</option>
+          </optgroup>
+          <optgroup label="🖥️ 横版">
           <option value="16:9横版">16:9 横版（PPT/场景叙事）</option>
+          <option value="4:3横版">4:3 横版（公众号头图/banner）</option>
+          </optgroup>
         </select>
       </div>
       <div>
@@ -257,6 +284,78 @@ textarea{resize:vertical;min-height:110px;line-height:1.7;}
       </div>
     </div>
 
+    <!-- 生图平台跳转 -->
+    <div class="out-block" id="block-platforms">
+      <div class="out-head">
+        <div class="out-head-left">
+          <div class="out-icon">🚀</div>
+          <div><div class="out-title">选择生图平台</div><div class="out-sub">复制提示词后，点击跳转对应平台粘贴生图</div></div>
+        </div>
+        <button class="copy-btn" onclick="copyAndGo()">一键复制提示词</button>
+      </div>
+      <div class="out-body" style="padding:16px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;">
+          <!-- 灵创星球 首选 -->
+          <a href="https://lc.wazgz.com/" target="_blank" style="text-decoration:none;">
+            <div class="platform-btn featured-platform">
+              <div class="platform-icon">🌐</div>
+              <div class="platform-name">灵创星球</div>
+              <div class="platform-tag">推荐·全模型</div>
+            </div>
+          </a>
+          <!-- 即梦 免费 -->
+          <a href="https://jimeng.jianying.com/" target="_blank" style="text-decoration:none;">
+            <div class="platform-btn">
+              <div class="platform-icon">✨</div>
+              <div class="platform-name">即梦 AI</div>
+              <div class="platform-tag free-tag">免费可用</div>
+            </div>
+          </a>
+          <!-- 豆包 免费 -->
+          <a href="https://www.doubao.com/" target="_blank" style="text-decoration:none;">
+            <div class="platform-btn">
+              <div class="platform-icon">🤖</div>
+              <div class="platform-name">豆包</div>
+              <div class="platform-tag free-tag">免费可用</div>
+            </div>
+          </a>
+          <!-- 通义万相 -->
+          <a href="https://tongyi.aliyun.com/wanxiang" target="_blank" style="text-decoration:none;">
+            <div class="platform-btn">
+              <div class="platform-icon">🍊</div>
+              <div class="platform-name">通义万相</div>
+              <div class="platform-tag free-tag">免费可用</div>
+            </div>
+          </a>
+          <!-- Midjourney -->
+          <a href="https://www.midjourney.com/" target="_blank" style="text-decoration:none;">
+            <div class="platform-btn">
+              <div class="platform-icon">🎨</div>
+              <div class="platform-name">Midjourney</div>
+              <div class="platform-tag paid-tag">付费·顶级质量</div>
+            </div>
+          </a>
+          <!-- 可灵 -->
+          <a href="https://klingai.com/" target="_blank" style="text-decoration:none;">
+            <div class="platform-btn">
+              <div class="platform-icon">⚡</div>
+              <div class="platform-name">可灵 AI</div>
+              <div class="platform-tag paid-tag">付费·国产顶级</div>
+            </div>
+          </a>
+          <!-- Stable Diffusion -->
+          <a href="https://stability.ai/" target="_blank" style="text-decoration:none;">
+            <div class="platform-btn">
+              <div class="platform-icon">🔮</div>
+              <div class="platform-name">Stable Diffusion</div>
+              <div class="platform-tag paid-tag">付费·专业级</div>
+            </div>
+          </a>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:var(--tx3);text-align:center;">💡 建议先复制完整版提示词，再点击跳转平台粘贴使用</div>
+      </div>
+    </div>
+
     <!-- 话题标签 -->
     <div class="out-block" id="block-tags">
       <div class="out-head">
@@ -269,10 +368,10 @@ textarea{resize:vertical;min-height:110px;line-height:1.7;}
       <div class="out-body"><div class="hashtag-wrap" id="tags-body"></div></div>
     </div>
 
-    <!-- 文案触发 -->
-    <button class="copy-btn-x" id="copywriteBtn" onclick="generateCopywriting()">
+    <!-- 文案触发（暂时隐藏）-->
+    <!--<button class="copy-btn-x" id="copywriteBtn" onclick="generateCopywriting()">
       📝 需要配套爆款文案？点击生成小红书笔记 + 公众号文章
-    </button>
+    </button>-->
 
     <!-- 文案输出 -->
     <div class="out-block" id="block-copywrite" style="display:none;">
@@ -430,10 +529,98 @@ function submitCode() {
 }
 
 // ============ 品类chips ============
+
+// ============ 爆款选题库 ============
+const HOT_TOPICS = [
+  // 批次0 - 生活科普
+  ['光合作用原理','人体血型秘密','睡眠的科学','咖啡因的作用','为什么会做梦','肠道菌群与健康','蓝光伤眼真相','维生素C的功效'],
+  // 批次1 - 美食菜谱
+  ['红烧肉做法','酸菜鱼家常版','小炒牛肉技巧','蒜蓉虾的秘诀','番茄炒蛋升级版','麻婆豆腐正宗做法','可乐鸡翅入味法','土豆丝清脆秘诀'],
+  // 批次2 - 养生健康
+  ['石斛麦冬养阴汤','红枣枸杞功效','黄芪补气食疗','薏米祛湿做法','入秋润燥食材','冬季暖身汤品','春季排毒蔬菜','夏季祛暑凉茶'],
+  // 批次3 - 星座情感
+  ['摩羯座真实性格','天蝎座恋爱特质','双子座双面人生','狮子座的自尊心','处女座完美主义','白羊座的冲劲','天秤座选择困难','水瓶座独特思维'],
+  // 批次4 - 职场技能
+  ['高效时间管理法','职场PPT技巧','简历这样写才过','如何向上管理','会议效率提升','职场沟通技巧','副业选择方向','自媒体起号攻略'],
+  // 批次5 - 护肤美妆
+  ['烟酰胺功效解析','玻尿酸补水原理','视黄醇抗衰指南','防晒成分对比','干皮护肤步骤','敏感肌修护方案','控油祛痘成分','早C晚A使用法'],
+];
+let currentTopicBatch = 0;
+
+function renderHotTopics(batch) {
+  const container = document.getElementById('hot-topics');
+  const topics = HOT_TOPICS[batch % HOT_TOPICS.length];
+  container.innerHTML = topics.map(t =>
+    `<span onclick="useHotTopic('${t}')" style="padding:5px 12px;background:rgba(245,196,74,0.06);border:1px solid rgba(245,196,74,0.15);border-radius:20px;font-size:12px;color:var(--tx2);cursor:pointer;transition:all .2s;white-space:nowrap;"
+    onmouseover="this.style.borderColor='rgba(245,196,74,0.4)';this.style.color='var(--gold)'"
+    onmouseout="this.style.borderColor='rgba(245,196,74,0.15)';this.style.color='var(--tx2)'"
+    >🔥 ${t}</span>`
+  ).join('');
+}
+
+function switchTopicCat(btn) {
+  currentTopicBatch = (currentTopicBatch + 1) % HOT_TOPICS.length;
+  renderHotTopics(currentTopicBatch);
+}
+
+function useHotTopic(topic) {
+  document.getElementById('topic-input').value = topic;
+  document.getElementById('topic-input').focus();
+}
+
+// 页面加载时初始化选题库
+document.addEventListener('DOMContentLoaded', () => {
+  renderHotTopics(0);
+});
+
 document.querySelectorAll('.chip').forEach(c => {
   c.addEventListener('click', () => {
     const wasActive = c.classList.contains('active');
-    document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+    
+// ============ 爆款选题库 ============
+const HOT_TOPICS = [
+  // 批次0 - 生活科普
+  ['光合作用原理','人体血型秘密','睡眠的科学','咖啡因的作用','为什么会做梦','肠道菌群与健康','蓝光伤眼真相','维生素C的功效'],
+  // 批次1 - 美食菜谱
+  ['红烧肉做法','酸菜鱼家常版','小炒牛肉技巧','蒜蓉虾的秘诀','番茄炒蛋升级版','麻婆豆腐正宗做法','可乐鸡翅入味法','土豆丝清脆秘诀'],
+  // 批次2 - 养生健康
+  ['石斛麦冬养阴汤','红枣枸杞功效','黄芪补气食疗','薏米祛湿做法','入秋润燥食材','冬季暖身汤品','春季排毒蔬菜','夏季祛暑凉茶'],
+  // 批次3 - 星座情感
+  ['摩羯座真实性格','天蝎座恋爱特质','双子座双面人生','狮子座的自尊心','处女座完美主义','白羊座的冲劲','天秤座选择困难','水瓶座独特思维'],
+  // 批次4 - 职场技能
+  ['高效时间管理法','职场PPT技巧','简历这样写才过','如何向上管理','会议效率提升','职场沟通技巧','副业选择方向','自媒体起号攻略'],
+  // 批次5 - 护肤美妆
+  ['烟酰胺功效解析','玻尿酸补水原理','视黄醇抗衰指南','防晒成分对比','干皮护肤步骤','敏感肌修护方案','控油祛痘成分','早C晚A使用法'],
+];
+let currentTopicBatch = 0;
+
+function renderHotTopics(batch) {
+  const container = document.getElementById('hot-topics');
+  const topics = HOT_TOPICS[batch % HOT_TOPICS.length];
+  container.innerHTML = topics.map(t =>
+    `<span onclick="useHotTopic('${t}')" style="padding:5px 12px;background:rgba(245,196,74,0.06);border:1px solid rgba(245,196,74,0.15);border-radius:20px;font-size:12px;color:var(--tx2);cursor:pointer;transition:all .2s;white-space:nowrap;"
+    onmouseover="this.style.borderColor='rgba(245,196,74,0.4)';this.style.color='var(--gold)'"
+    onmouseout="this.style.borderColor='rgba(245,196,74,0.15)';this.style.color='var(--tx2)'"
+    >🔥 ${t}</span>`
+  ).join('');
+}
+
+function switchTopicCat(btn) {
+  currentTopicBatch = (currentTopicBatch + 1) % HOT_TOPICS.length;
+  renderHotTopics(currentTopicBatch);
+}
+
+function useHotTopic(topic) {
+  document.getElementById('topic-input').value = topic;
+  document.getElementById('topic-input').focus();
+}
+
+// 页面加载时初始化选题库
+document.addEventListener('DOMContentLoaded', () => {
+  renderHotTopics(0);
+});
+
+document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
     if (!wasActive) {
       c.classList.add('active');
       updateStyleOptions(c.dataset.v); // 联动风格
@@ -496,6 +683,45 @@ function localGenerate(topic, category, size, style) {
   };
 }
 
+
+
+// ============ 风格预览说明 ============
+const STYLE_PREVIEWS = {
+  'AI随机匹配': '系统根据你选择的品类，自动匹配最适合的风格，每次都有惊喜 🎲',
+  '3D悬浮立体风': '当下抖音/小红书最火风格 🔥 玻璃质感卡片+元素3D漂浮+镭射渐变背景，视觉冲击力极强',
+  '国潮赛博风': '国风元素与赛博朋克碰撞，霓虹光效+暗调背景+中文大字，适合年轻用户群体',
+  '莫兰迪高级感': '低饱和度高级灰调，视觉舒适不刺眼，精致排版，适合品质感内容',
+  '清新简约': '白色打底+细线条+淡彩点缀，干净清爽，适合日常科普和生活类内容',
+  '日系治愈风': '奶油白底+手绘插图+温柔色调，温暖治愈感，适合美食/生活/情感类',
+  '马卡龙少女风': '粉紫奶白配色+爱心装饰，甜美少女感，适合美妆/星座/穿搭类',
+  '可爱插画': '马卡龙配色+圆润Q版卡通形象，活泼可爱，适合儿童教育/萌宠类',
+  '扁平插画风': '几何色块+简洁线条图形，现代简约，适合职场/科技/工具类内容',
+  '手绘水彩风': '透明感水彩晕染+细线稿，艺术气质，适合植物/花卉/文艺类内容',
+  '暗调高级': '深色背景+金色标题+奢华感，高端大气，适合财经/高端知识类内容',
+  '极简白卡风': '纯白底+黑色文字+大量留白，简洁优雅，适合知识/职场/品牌类',
+  '杂志封面风': '大字标题+高对比色块，视觉冲击力强，适合热门话题/爆款内容',
+  '国风国潮': '朱红+金色+中式纹样，国潮氛围感，适合节日/文化/传统类内容',
+  '水墨古典风': '宣纸质感+水墨渲染+朱红印章，古典雅致，适合古诗/历史/中药类',
+  '四季浮雕纸雕风': '米白3D微缩立体场景，当下爆款纸雕风，适合节气/植物/文化类',
+  '科技感': '深蓝背景+霓虹线条+数据图表感，科技未来感，适合科普/健身/财经类',
+  '实验室科技风': '白底+分子结构图+数据感，专业干净，适合护肤成分/医学科普类',
+  '复古做旧': '做旧纸色+黑体铅字+复古报纸版式，怀旧感强，适合冷知识/历史类',
+  '博物学手绘': '米白底+精细铅笔线稿+科学标注，博物馆质感，适合植物/动物/自然类',
+  '民国复古风': '做旧米黄+水墨插画+复古排版，民国风情，适合城市文化/历史类',
+};
+
+function showStylePreview(val) {
+  const preview = document.getElementById('style-preview');
+  if (STYLE_PREVIEWS[val] && val !== 'AI随机匹配') {
+    preview.textContent = '👁️ ' + STYLE_PREVIEWS[val];
+    preview.style.display = 'block';
+  } else if (val === 'AI随机匹配') {
+    preview.textContent = '👁️ ' + STYLE_PREVIEWS['AI随机匹配'];
+    preview.style.display = 'block';
+  } else {
+    preview.style.display = 'none';
+  }
+}
 
 // ============ 品类专属风格池 ============
 const STYLE_POOLS = {
@@ -618,15 +844,27 @@ const STYLE_POOLS = {
 };
 
 const DEFAULT_STYLES = [
-  {v:'AI随机匹配', label:'🎲 AI随机匹配（默认）'},
-  {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（当下最火·玻璃质感+立体漂浮元素）'},
-  {v:'国风国潮', label:'🎋 国风国潮'},
-  {v:'清新简约', label:'🌸 清新简约'},
-  {v:'暗调高级', label:'🖤 暗调高级'},
-  {v:'可爱插画', label:'🎨 可爱插画'},
-  {v:'科技感', label:'⚡ 科技感'},
-  {v:'复古做旧', label:'📰 复古做旧'},
-  {v:'博物学手绘', label:'🔬 博物学手绘'},
+  {v:'AI随机匹配', label:'🎲 AI随机匹配（系统自动选最适合的）'},
+  {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（当下最火·玻璃质感+立体漂浮）'},
+  {v:'国潮赛博风', label:'🌆 国潮赛博风（霓虹+国风+暗调）'},
+  {v:'莫兰迪高级感', label:'🎨 莫兰迪高级感（低饱和高级灰）'},
+  {v:'国风国潮', label:'🎋 国风国潮（朱红+金色+中式纹样）'},
+  {v:'清新简约', label:'🌸 清新简约（白底+细线+淡彩）'},
+  {v:'日系治愈风', label:'🍃 日系治愈风（奶油色+手绘）'},
+  {v:'马卡龙少女风', label:'🎀 马卡龙少女风（粉紫奶白）'},
+  {v:'暗调高级', label:'🖤 暗调高级（深色+金色+奢华感）'},
+  {v:'极简白卡风', label:'⬜ 极简白卡风（纯白+黑字+留白）'},
+  {v:'杂志封面风', label:'📰 杂志封面风（大字+高对比）'},
+  {v:'可爱插画', label:'🎨 可爱Q版插画（马卡龙+卡通）'},
+  {v:'扁平插画风', label:'📐 扁平插画风（几何色块）'},
+  {v:'手绘水彩风', label:'🖌️ 手绘水彩风（透明感晕染）'},
+  {v:'科技感', label:'⚡ 赛博科技风（深蓝+霓虹）'},
+  {v:'实验室科技风', label:'🔬 实验室科技风（白底+数据）'},
+  {v:'复古做旧', label:'📰 复古报纸风（做旧纸色）'},
+  {v:'博物学手绘', label:'🔬 博物学手绘（精细线稿）'},
+  {v:'水墨古典风', label:'🖋️ 水墨古典风（宣纸+墨色）'},
+  {v:'四季浮雕纸雕风', label:'🌿 四季浮雕纸雕风（3D微缩）'},
+  {v:'民国复古风', label:'🏮 民国复古风（做旧米黄）'},
 ];
 
 function updateStyleOptions(category) {
@@ -803,6 +1041,25 @@ function bindCopy(btnId, getText) {
       setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('ok'); }, 2000);
     });
   };
+}
+
+function copyAndGo() {
+  const fullPrompt = document.getElementById('full-prompt');
+  if (!fullPrompt || !fullPrompt.textContent) { alert('请先生成提示词！'); return; }
+  const text = fullPrompt.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    const orig = btn.textContent;
+    btn.textContent = '✓ 已复制！去生图吧';
+    btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('ok'); }, 2000);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
+  });
 }
 
 boot();
