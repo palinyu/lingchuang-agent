@@ -998,7 +998,7 @@ async function generate() {
     lastResult = { json: fallback, topic };
     renderResult(fallback);
     btn.disabled = false; btn.textContent = '✨ 一键生成图文提示词';
-  }, 5000);
+  }, 2000);
 
   const userMsg = `主题内容：${topic}${category ? '\n\n用户指定品类：' + category : ''}${size !== 'AI自动推荐' ? '\n用户指定尺寸：' + size : ''}${style !== 'AI随机匹配' ? '\n用户风格偏好：' + style : ''}
 
