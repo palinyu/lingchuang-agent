@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<script>
+// =========================================================================================
+// 🔑 灵创星球 · 本地兜底配置（云端加载失败时自动启用）
+// 日常运营只需修改腾讯云 status.txt，不用动这里
+// =========================================================================================
+const LOCAL_FALLBACK = {
+  locked:      false,          // true = 强制锁死所有人
+  max_clicks:  1,              // 未激活用户可免费试用次数
+  password:    "灵创星球888",  // 激活卡密
+  version:     "unlocked_v9", // 改掉此值 = 让所有旧激活用户重新锁死
+  notice:      "",             // 非空时页面顶部显示公告横幅
+  video_url:   "https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E8%90%8C%E5%AE%A0/0a8645aa3d371e7adbbc2c2961d17ea6_raw.mp4"
+};
+
+// ⬇️ 只需改这一个地址，指向你腾讯云 COS 里的 status.txt
+const REMOTE_CONFIG_URL = "https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E7%B3%BB%E7%BB%9F%E6%80%BB%E6%8E%A7/status.txt";
+// =========================================================================================
+
+// 运行时配置（由远程覆盖或使用兜底值）
+let CFG = { ...LOCAL_FALLBACK };
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI萌宠播客智能体 · 灵创星球</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --g:#111111;--gl:#161616;--gd:#f5c44a;--gm:#d4af37;
+  --bg:#070708;--bg2:rgba(25,25,25,0.65);--bg3:rgba(30,30,30,0.45);
+  --tx:#f5f5f7;--tx2:#a1a1a6;--tx3:#636366;--bd:rgba(255,255,255,0.06);
+  --r:10px;--rl:16px;--amber:#f5c44a;--amber-l:rgba(245,196,74,0.08);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;position:relative;overflow-x:hidden;}
+body::before{content:"";position:absolute;width:700px;height:700px;background:radial-gradient(circle,rgba(212,175,55,0.07) 0%,transparent 100%);top:-150px;left:-150px;z-index:-1;filter:blur(60px);}
+
+/* 公告横幅 */
+#notice-bar{display:none;background:linear-gradient(90deg,#d4af37,#f5c44a);color:#000;font-size:13px;font-weight:700;text-align:center;padding:10px 16px;letter-spacing:.03em;}
+
+/* 加载遮罩 */
+#boot-mask{position:fixed;inset:0;background:#070708;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;}
+#boot-mask .spin{width:36px;height:36px;border:3px solid rgba(255,255,255,0.08);border-top-color:#f5c44a;border-radius:50%;animation:spin .7s linear infinite;}
+#boot-mask p{font-size:13px;color:#636366;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 锁定页 */
+#lock-screen{display:none;position:fixed;inset:0;background:#070708;z-index:9998;align-items:center;justify-content:center;}
+.lock-card{max-width:480px;width:90%;background:rgba(20,20,20,0.9);border:1px solid #f5c44a;border-radius:20px;padding:2.5rem;text-align:center;box-shadow:0 0 40px rgba(245,196,74,0.15);}
+.lock-card h2{color:#f5c44a;font-size:22px;margin-bottom:10px;}
+.lock-card p{color:#a1a1a6;font-size:14px;line-height:1.7;margin-bottom:1.5rem;}
+.lock-input{width:100%;background:rgba(5,5,6,0.9);border:1px solid rgba(245,196,74,0.3);border-radius:10px;padding:13px 16px;color:#fff;font-size:15px;outline:none;text-align:center;letter-spacing:.05em;margin-bottom:12px;}
+.lock-input:focus{border-color:#f5c44a;box-shadow:0 0 0 3px rgba(245,196,74,0.12);}
+.lock-submit{width:100%;background:linear-gradient(135deg,#f5c44a,#d4af37);color:#000;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:900;cursor:pointer;}
+.lock-err{color:#f87171;font-size:13px;margin-top:8px;min-height:20px;}
+
+.shell{max-width:1050px;margin:0 auto;padding:2rem 1.25rem 4rem;position:relative;z-index:1;}
+.header{text-align:center;padding:2.5rem 0 1.5rem}
+.logo{display:inline-flex;align-items:center;gap:8px;background:var(--amber-l);border:1px solid rgba(212,175,55,0.4);border-radius:30px;padding:6px 18px;font-size:12px;color:var(--gd);font-weight:600;margin-bottom:1.25rem;box-shadow:0 0 15px rgba(245,196,74,0.1);}
+.header h1{font-size:32px;font-weight:800;letter-spacing:1.5px;background:linear-gradient(to right,#ffffff,#f5c44a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.header p{font-size:14px;color:var(--tx2);margin-top:8px;}
+.card{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--rl);padding:1.75rem;margin-bottom:1.25rem;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 8px 32px 0 rgba(0,0,0,0.4);}
+.card-title{font-size:13px;font-weight:700;color:var(--gd);letter-spacing:.08em;margin-bottom:1.25rem;display:flex;align-items:center;gap:8px}
+.card-title span{width:6px;height:6px;border-radius:50%;background:var(--gd);box-shadow:0 0 8px var(--gd);}
+.video-wrapper{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:var(--r);border:1px solid var(--bd);background:#000;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.form-row.full{grid-template-columns:1fr}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-label-row{display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:2px;}
+label{font-size:12px;font-weight:600;color:var(--tx2);}
+input,select,textarea{font-size:14px;background:rgba(20,20,20,0.6);border:1px solid var(--bd);border-radius:var(--r);padding:11px 14px;color:var(--tx);outline:none;transition:all .2s;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--gm);background:rgba(30,30,30,0.8);box-shadow:0 0 0 3px rgba(212,175,55,0.12)}
+textarea{resize:vertical;min-height:130px;}
+.quick-select{font-size:11px;color:var(--gd);background:rgba(25,25,25,0.85);border:1px solid rgba(245,196,74,0.2);border-radius:4px;cursor:pointer;padding:3px 10px;width:auto;}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:7px 16px;border-radius:20px;border:1px solid var(--bd);background:rgba(25,25,25,0.5);font-size:13px;color:var(--tx2);cursor:pointer;transition:all .2s;user-select:none}
+.chip.active{background:var(--amber-l);border-color:var(--gm);color:var(--gd);font-weight:600;box-shadow:0 0 10px rgba(212,175,55,0.1);}
+.gen-btn{width:100%;background:linear-gradient(135deg,#f5c44a 0%,#d4af37 100%);color:#000;border:none;border-radius:var(--r);padding:15px;font-size:15px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 15px rgba(212,175,55,0.25);}
+.gen-btn:hover{filter:brightness(1.08);}
+.prompt-box{background:#050505;color:#aaa;font-family:monospace;padding:16px;border-radius:var(--r);margin-top:12px;white-space:pre-wrap;font-size:13px;max-height:240px;overflow-y:auto;border:1px solid var(--bd)}
+.results{margin-top:2.5rem;display:none;}
+.result-block{background:rgba(20,20,20,0.4);border:1px solid var(--bd);border-radius:var(--rl);overflow:hidden;margin-bottom:1.5rem;box-shadow:0 4px 20px rgba(0,0,0,0.3);}
+.result-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--bd);background:rgba(25,25,25,0.7)}
+.result-head-left{display:flex;align-items:center;gap:10px}
+.result-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.result-title{font-size:14px;font-weight:800;color:var(--tx)}
+.copy-btn{padding:6px 14px;border:1px solid rgba(245,196,74,0.4);border-radius:7px;background:var(--amber-l);font-size:12px;color:var(--gd);font-weight:bold;cursor:pointer;transition:all .2s;}
+.copy-btn:hover{border-color:var(--gd);background:linear-gradient(135deg,#f5c44a,#d4af37);color:#000;}
+.result-body{padding:18px;font-size:14px;color:var(--tx2);line-height:1.8;}
+.channel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin-top:16px;}
+.channel-btn{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(25,25,26,0.85);border:1px solid rgba(245,196,74,0.15);border-radius:8px;padding:16px;color:var(--tx);text-decoration:none;font-size:14px;font-weight:700;box-shadow:0 4px 15px rgba(0,0,0,0.3);}
+.channel-btn:hover{border-color:var(--gd);background:var(--amber-l);color:var(--gd);transform:translateY(-2px);}
+.script-row-card{background:rgba(5,5,5,0.4);border:1px solid rgba(255,255,255,0.03);border-radius:8px;padding:14px;margin-bottom:12px;position:relative;}
+.script-row-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px dashed rgba(255,255,255,0.05);padding-bottom:8px;}
+.script-row-badge{font-size:12px;font-weight:800;color:var(--gd);background:rgba(245,196,74,0.08);padding:2px 8px;border-radius:4px;border:1px solid rgba(245,196,74,0.15);}
+.dl-line{font-size:14px;line-height:1.7;padding:10px 14px;border-radius:8px;margin-bottom:6px;}
+.dl-line:last-child{margin-bottom:0;}
+.dl-dog{background:rgba(255,255,255,0.02);color:var(--tx);border-left:4px solid var(--tx3);}
+.dl-cat{background:rgba(245,196,74,0.02);color:var(--gd);border-left:4px solid var(--gm);}
+.platform-box{background:rgba(20,20,20,0.4);border:1px solid var(--bd);border-radius:8px;padding:14px;margin-bottom:12px;position:relative;}
+.platform-title-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.platform-name{font-size:13px;font-weight:bold;color:var(--gd);display:flex;align-items:center;gap:6px;}
+.viral-title-text{background:rgba(245,196,74,0.02);border:1px dashed var(--bd);padding:12px;border-radius:6px;font-size:13.5px;color:#fff;white-space:pre-wrap;line-height:1.6;}
+@media(max-width:768px){.form-row,.channel-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- 公告横幅（云端 notice 字段非空时显示） -->
+<div id="notice-bar"></div>
+
+<!-- 启动加载遮罩（拉取云端配置时显示） -->
+<div id="boot-mask">
+  <div class="spin"></div>
+  <p>正在同步云端配置…</p>
+</div>
+
+<!-- 锁定页（试用次数用完 / 云端强制锁定） -->
+<div id="lock-screen" style="display:none;position:fixed;inset:0;background:#070708;z-index:9998;display:none;align-items:center;justify-content:center;">
+  <div class="lock-card">
+    <h2>🔐 需要激活码</h2>
+    <p>当前设备免费试用次数已用完<br>请输入专属激活卡密以永久解锁</p>
+    <input class="lock-input" id="lock-input" type="text" placeholder="请输入卡密…" onkeydown="if(event.key==='Enter')submitCode()">
+    <button class="lock-submit" onclick="submitCode()">确认激活</button>
+    <div class="lock-err" id="lock-err"></div>
+  </div>
+</div>
+
+<!-- 主体内容 -->
+<div id="main-panel" class="shell" style="display:none;">
+  <div class="header">
+    <div class="logo">🎙️ 灵创星球 · AI萌宠播客智能体</div>
+    <h1>一键生成爆款萌宠播客素材</h1>
+    <p>云端远程管控版 · 自备大模型通道 · 丝滑搞定全套矩阵视频素材</p>
+  </div>
+
+  <div class="card" style="border:1px solid rgba(245,196,74,0.25);background:rgba(15,15,15,0.6);">
+    <div class="card-title"><span></span>🎬 灵创星球 · 官方爆款成品案例视频</div>
+    <div class="video-wrapper">
+      <video id="cloud-player-node" crossorigin="anonymous" preload="auto" controls autoplay muted loop
+        style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;background:#000;"></video>
+    </div>
+  </div>
+
+  <div class="card" style="border:1px solid rgba(245,196,74,0.4);background:linear-gradient(135deg,rgba(25,25,25,0.6),rgba(15,15,15,0.8));">
+    <div class="card-title" style="margin-bottom:12px;">💡 三步生产力工作流</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:flex-start;gap:12px;"><div style="min-width:24px;height:24px;border-radius:50%;background:var(--gd);color:#000;font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center;">1</div><div style="font-size:14px;color:var(--tx2);line-height:1.6;">配置角色和主题 → 点击 <b style="color:#fff;">一键生成超级提示词</b> 并复制</div></div>
+      <div style="display:flex;align-items:flex-start;gap:12px;"><div style="min-width:24px;height:24px;border-radius:50%;background:var(--gd);color:#000;font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center;">2</div><div style="font-size:14px;color:var(--tx2);line-height:1.6;">跳转 DeepSeek / 豆包 发送提示词，复制返回的 JSON 数据</div></div>
+      <div style="display:flex;align-items:flex-start;gap:12px;"><div style="min-width:24px;height:24px;border-radius:50%;background:var(--gd);color:#000;font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center;">3</div><div style="font-size:14px;color:var(--tx2);line-height:1.6;">将 JSON 贴入下方金色大框 → 一键渲染全套素材</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span></span>角色 A 设定</div>
+    <div class="form-row">
+      <div class="form-group">
+        <div class="form-label-row">
+          <label>动物种类</label>
+          <select class="quick-select" onchange="syncInput(this,'pet-a-type')">
+            <option value="">🔮 快捷预设…</option>
+            <optgroup label="🐶 狗狗系">
+            <option value="柯基">柯基犬</option>
+            <option value="哈士奇">哈士奇</option>
+            <option value="柴犬">柴犬</option>
+            <option value="金毛寻回犬">金毛</option>
+            <option value="萨摩耶">萨摩耶</option>
+            <option value="边境牧羊犬">边牧</option>
+            <option value="拉布拉多">拉布拉多</option>
+            <option value="法国斗牛犬">法斗</option>
+            <option value="博美犬">博美</option>
+            </optgroup>
+            <optgroup label="🐾 其他萌宠">
+            <option value="仓鼠">🐹 仓鼠</option>
+            <option value="卡皮巴拉（水豚）">🦛 水豚</option>
+            <option value="龙猫">🐭 龙猫</option>
+            <option value="豚鼠">豚鼠</option>
+            <option value="雪貂">雪貂</option>
+            <option value="浣熊">🦝 浣熊</option>
+            <option value="狐狸">🦊 狐狸</option>
+            </optgroup>
+          </select>
+        </div>
+        <input type="text" id="pet-a-type" value="柯基">
+      </div>
+      <div class="form-group">
+        <div class="form-label-row">
+          <label>性格人设</label>
+          <select class="quick-select" onchange="syncInput(this,'pet-a-role')">
+            <option value="">🔮 快捷预设…</option>
+            <option value="憨厚老实、不懂就问、直线思维、被猫耍得团团转">憨厚老实死脑筋</option>
+            <option value="戏精话密、极度自恋、脑回路清奇的搞笑男">自信戏精搞笑男</option>
+            <option value="胆小怕事、极度敏感焦虑、有点风吹草动就想钻沙发">敏感焦虑胆小鬼</option>
+            <option value="天真无邪、嘴碎爱问十万个为什么、纯真小天使">纯真碎嘴好奇宝宝</option>
+            <option value="话少老实、默默吃苦、偶尔一鸣惊人的老实人">沉默老实人逆袭</option>
+            <option value="社恐宅男、网络冲浪达人、线上线下判若两人">社恐宅男网络冲浪</option>
+            <option value="睡神体质、万年犯困、全场精力最低但存在感最高">睡神犯困冠军</option>
+            <option value="食欲超强、脑子里只有吃、用美食解决一切问题">吃货本欲美食脑</option>
+          </select>
+        </div>
+        <input type="text" id="pet-a-role" value="憨厚老实、不懂就问、直线思维">
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group">
+        <div class="form-label-row">
+          <label>外形 / 穿搭 / 道具特征</label>
+          <select class="quick-select" onchange="syncInput(this,'pet-a-look')">
+            <option value="">🔮 快捷预设…</option>
+            <optgroup label="🎭 经典造型">
+            <option value="戴红色领巾、圆滚滚、眼神单纯憨直、面前放着超大麦克风">红色领巾憨厚款</option>
+            <option value="戴棒球帽、穿卫衣、慵懒躺平风、一脸无所谓">棒球帽躺平风</option>
+            <option value="戴厚框眼镜、背着双肩包、学生感十足、一脸懵懂">厚框眼镜学生党</option>
+            <option value="戴厨师帽、围着围裙、手边放着零食、美食博主感">厨师帽美食博主</option>
+            <option value="穿运动服、头戴发带、精神抖擞、健身达人感">运动服健身达人</option>
+            </optgroup>
+            <optgroup label="💼 职场系列">
+            <option value="穿西装、打领带、表情认真、职场精英感">西装领带精英款</option>
+            <option value="穿格子衬衫、对着笔记本电脑、程序员感满满">格子衫程序员</option>
+            <option value="穿白大褂、挂听诊器、一脸严肃、医生人设">白大褂医生款</option>
+            <option value="穿制服、戴大檐帽、威严十足、警察人设">制服警察款</option>
+            </optgroup>
+            <optgroup label="✨ 潮流个性">
+            <option value="戴墨镜、叼着牙签、一脸痞气、社会大哥范儿">墨镜社会大哥</option>
+            <option value="戴耳机、穿连帽卫衣、沉浸在音乐里、音乐人感">耳机音乐人</option>
+            <option value="戴贝雷帽、拿着画笔、艺术家气质、文艺范儿">贝雷帽艺术家</option>
+            <option value="戴牛仔帽、穿格子衬衫、乡村风、接地气">牛仔帽乡村风</option>
+            </optgroup>
+          </select>
+        </div>
+        <input type="text" id="pet-a-look" value="戴红色领巾、圆滚滚、眼神单纯憨直">
+      </div>
+    </div>
+
+    <div class="card-title" style="margin-top:1.75rem"><span></span>角色 B 设定</div>
+    <div class="form-row">
+      <div class="form-group">
+        <div class="form-label-row">
+          <label>动物种类</label>
+          <select class="quick-select" onchange="syncInput(this,'pet-b-type')">
+            <option value="">🔮 快捷预设…</option>
+            <optgroup label="🐱 猫猫系">
+            <option value="橘猫">橘猫</option>
+            <option value="美国短毛猫">美短</option>
+            <option value="布偶猫">布偶猫</option>
+            <option value="三花猫">三花猫</option>
+            <option value="暹罗猫">暹罗猫</option>
+            <option value="折耳猫">折耳猫</option>
+            <option value="英国短毛猫">英短</option>
+            <option value="黑猫">神秘黑猫</option>
+            </optgroup>
+            <optgroup label="🐾 其他萌宠">
+            <option value="垂耳兔">🐰 垂耳兔</option>
+            <option value="鹦鹉">🦜 鹦鹉</option>
+            <option value="乌龟">🐢 乌龟</option>
+            <option value="猫头鹰">🦉 猫头鹰</option>
+            <option value="刺猬">🦔 刺猬</option>
+            <option value="蜥蜴">🦎 蜥蜴</option>
+            </optgroup>
+          </select>
+        </div>
+        <input type="text" id="pet-b-type" value="橘猫">
+      </div>
+      <div class="form-group">
+        <div class="form-label-row">
+          <label>性格人设</label>
+          <select class="quick-select" onchange="syncInput(this,'pet-b-role')">
+            <option value="">🔮 快捷预设…</option>
+            <option value="腹黑心机、人间清醒、一语道破天机、极度毒舌">腹黑毒舌人间清醒</option>
+            <option value="傲娇女王范、脾气火爆、听不得半句逆耳的话、极其护短">傲娇火爆女王范</option>
+            <option value="看破红尘的世外高人、说话慢条斯理、心思缜密如老狐狸">佛系谋略老狐狸</option>
+            <option value="财迷属性、满脑子都是搞钱和金枪鱼罐头、市井精明小能手">精明搞钱金罐狂</option>
+            <option value="表面极其呆萌柔弱、内心却是疯狂碎碎念的吐槽狂魔">呆萌外表吐槽心</option>
+            <option value="高冷学霸、说话引经据典、用数据和逻辑怼死一切">高冷学霸数据流</option>
+            <option value="资深社会人、见过大风大浪、随便一句话都藏着玄机">老江湖资深社会人</option>
+            <option value="毒舌嘴替、说出所有人想说但不敢说的、专治各种不服">全场毒舌嘴替担当</option>
+          </select>
+        </div>
+        <input type="text" id="pet-b-role" value="腹黑心机、人间清醒、一语道破天机">
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group">
+        <div class="form-label-row">
+          <label>外形 / 穿搭 / 道具特征</label>
+          <select class="quick-select" onchange="syncInput(this,'pet-b-look')">
+            <option value="">🔮 快捷预设…</option>
+            <optgroup label="🎭 经典造型">
+            <option value="戴金框眼镜、表情严肃、一副看透一切的样子、用单爪托着腮">金框眼镜学究款</option>
+            <option value="戴墨镜、叼着雪茄、翘着二郎腿、老大范儿">墨镜雪茄老大款</option>
+            <option value="戴珍珠项链、端着茶杯、优雅贵妇感、眼神凌厉">珍珠项链贵妇款</option>
+            <option value="披着长发、手拿折扇、腹黑公子哥、古风范儿">折扇古风公子哥</option>
+            <option value="穿睡衣、抱着热水袋、慵懒但眼神毒辣">睡衣慵懒毒舌款</option>
+            </optgroup>
+            <optgroup label="💼 精英系列">
+            <option value="穿黑色西装、系着领结、手拿红酒杯、精英掌控感">黑西装精英款</option>
+            <option value="戴博士帽、手拿书本、学霸感十足、不屑与人为伍">博士帽学霸款</option>
+            <option value="穿风衣、戴鸭舌帽、侦探感、洞察一切">风衣侦探款</option>
+            <option value="坐在老板椅上、翘着腿、手指交叉、掌控全局">老板椅掌控款</option>
+            </optgroup>
+            <optgroup label="✨ 神秘个性">
+            <option value="戴巫师帽、手持魔杖、神秘莫测、深不可测">巫师帽神秘款</option>
+            <option value="披着斗篷、站在阴影里、只露出眼睛、冷酷感">斗篷神秘冷酷款</option>
+            <option value="戴皇冠、坐在王座上、女王气质、颐指气使">皇冠女王款</option>
+            <option value="穿和服、端着茶碗、淡然如菊、禅意高人感">和服禅意高人款</option>
+            </optgroup>
+          </select>
+        </div>
+        <input type="text" id="pet-b-look" value="戴金框眼镜、表情严肃、一副看透一切的样子">
+      </div>
+    </div>
+
+    <div class="card-title" style="margin-top:1.75rem"><span></span>内容主题（多选 · 可自定义）</div>
+    <div class="chips" id="topics">
+      <div class="chip active" data-v="拆家">🏠 拆家</div>
+      <div class="chip active" data-v="护食">🍗 护食</div>
+      <div class="chip" data-v="不理主人">😒 不理主人</div>
+      <div class="chip" data-v="蹭吃蹭喝">🐾 蹭吃蹭喝</div>
+      <div class="chip" data-v="偷懒装睡">💤 偷懒装睡</div>
+      <div class="chip" data-v="嫌弃洗澡">🛁 嫌弃洗澡</div>
+      <div class="chip" data-v="乱叫唤">📢 乱叫唤</div>
+      <div class="chip" data-v="踩主人脸">😹 踩主人脸</div>
+      <div class="chip" data-v="偷看手机">📱 偷看手机</div>
+      <div class="chip" data-v="嫌弃铲屎官">😤 嫌弃铲屎官</div>
+      <div class="chip" data-v="装病骗零食">🤒 装病骗零食</div>
+      <div class="chip" data-v="PUA主人">🎭 PUA主人</div>
+      <div class="chip" data-v="争宠大作战">👑 争宠大作战</div>
+      <div class="chip" data-v="摸鱼上班">💼 摸鱼上班</div>
+      <div class="chip" data-v="相亲脱单">💕 相亲脱单</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <input type="text" id="custom-topic" placeholder="输入自定义话题，回车添加…" onkeydown="addTopic(event)">
+      <button onclick="addTopic({key:'Enter'})" style="padding:8px 16px;border:1px solid var(--bd);border-radius:var(--r);background:rgba(30,30,30,0.5);color:var(--tx2);cursor:pointer;white-space:nowrap;font-size:13px;">+ 添加</button>
+    </div>
+
+    <div class="card-title" style="margin-top:1.75rem"><span></span>生成设置</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>脚本组数</label>
+        <select id="script-count">
+          <option value="3">3组</option>
+          <option value="5" selected>5组</option>
+          <option value="8">8组</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>录音室风格</label>
+        <select id="studio-style" onchange="toggleCustomStudio(this)">
+          <option value="专业深色木质（经典黑金配色、电影级体积光、温暖微光质感）">专业深色木质（经典黑金）</option>
+          <option value="霓虹赛博朋克（极简潮流、蓝粉全息投影、绚丽霓虹环绕）">霓虹赛博朋克</option>
+          <option value="温馨原木北欧（现代简约、明亮日光散射、清新绿植环绕）">温馨原木北欧</option>
+          <option value="美式复古老电台（暗调复古大麦克风、老式黑胶唱片装饰墙）">美式复古电台</option>
+          <option value="未来主义宇航舱（极简纯白流线冷光LED、科幻舷窗星空背景）">未来太空舱</option>
+          <option value="日式和风禅意（枯山水庭院、和纸屏风、温柔暖橙灯笼）">日式和风禅意</option>
+          <option value="都市摩登高楼（落地玻璃幕墙夜景、城市霓虹倒影、极简黑白配色）">都市摩登高楼夜景</option>
+          <option value="请联网搜索当月抖音萌宠视频最火爆的场景风格，并以此为基础生成提示词">🌐 联网适配当月最火爆风格</option>
+          <option value="CUSTOM">✍️ 自定义场景…</option>
+        </select>
+        <input type="text" id="custom-studio-input" placeholder="请描述你想要的任意场景风格…" style="display:none;margin-top:8px;">
+      </div>
+    </div>
+  </div>
+
+  <button class="gen-btn" onclick="generatePrompt()">✨ 第一步：一键生成超级提示词</button>
+
+  <div id="prompt-output-section" style="display:none;margin-top:1.5rem;">
+    <div class="card" style="background:#050505;border:1px dashed var(--gm);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <label style="color:var(--gd);font-weight:700;">🎉 提示词已生成！去 DeepSeek / 豆包 粘贴发送</label>
+        <button class="copy-btn" onclick="copyEl('promptText',this)">一键复制</button>
+      </div>
+      <div class="prompt-box" id="promptText"></div>
+    </div>
+    <div class="card" style="background:rgba(20,20,22,0.8);border:1px solid rgba(245,196,74,0.35);margin-top:1.25rem;">
+      <div class="card-title" style="margin-bottom:4px;">⚡ 大模型直连通道</div>
+      <div class="channel-grid">
+        <a href="https://chat.deepseek.com/" target="_blank" class="channel-btn" style="color:#68a0ff;border-color:rgba(104,160,255,0.2);">🐳 DeepSeek（极速推理）</a>
+        <a href="https://www.doubao.com/" target="_blank" class="channel-btn" style="color:#ff8444;border-color:rgba(255,132,68,0.2);">🤖 豆包</a>
+        <a href="https://kimi.moonshot.cn/" target="_blank" class="channel-btn" style="color:#f5c44a;border-color:rgba(245,196,74,0.2);">🌙 Kimi</a>
+        <a href="https://tongyi.aliyun.com/" target="_blank" class="channel-btn" style="color:#4ade80;border-color:rgba(74,222,128,0.2);">🍊 通义千问</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:2.5rem;border:2px solid #f5c44a;background:linear-gradient(135deg,#111112,#0c0c0d);box-shadow:0 0 30px rgba(245,196,74,0.18);">
+    <div class="card-title" style="color:#f5c44a;font-weight:900;font-size:15px;margin-bottom:14px;">
+      <span style="background:#f5c44a;box-shadow:0 0 15px #f5c44a;width:8px;height:8px;"></span>
+      🔥 第二步：粘贴大模型返回的 JSON 数据
+    </div>
+    <textarea id="ai-json-input" placeholder="将 DeepSeek / 豆包 返回的完整 { } JSON 数据粘贴到这里…"></textarea>
+    <button class="gen-btn" style="margin-top:18px;box-shadow:0 6px 25px rgba(245,196,74,0.35);" onclick="renderUserJson()">🚀 第三步：一键渲染全套爆款素材</button>
+  </div>
+
+  <div id="output" class="results"></div>
+</div>
+
+<script>
+// ==========================================
+// 启动：拉取远程配置 → 检查锁定 → 显示页面
+// ==========================================
+async function boot() {
+  try {
+    const res = await fetch(REMOTE_CONFIG_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) {
+      const remote = await res.json();
+      // 云端字段逐项覆盖本地兜底，缺失的字段保留本地默认值
+      Object.assign(CFG, remote);
+    }
+  } catch(e) {
+    // 云端拉取失败 → 静默使用本地兜底配置，不影响用户使用
+    console.warn('云端配置加载失败，使用本地兜底配置');
+  }
+
+  // 显示公告横幅
+  if (CFG.notice) {
+    const bar = document.getElementById('notice-bar');
+    bar.textContent = '📢 ' + CFG.notice;
+    bar.style.display = 'block';
+  }
+
+  // 设置视频
+  const vid = document.getElementById('cloud-player-node');
+  if (vid && CFG.video_url) { vid.src = CFG.video_url; vid.load(); }
+
+  // 隐藏启动遮罩
+  document.getElementById('boot-mask').style.display = 'none';
+
+  // 检查是否需要锁定
+  if (CFG.locked || isUsageLocked()) {
+    showLockScreen();
+  } else {
+    document.getElementById('main-panel').style.display = 'block';
+  }
+}
+
+// ==========================================
+// 锁定逻辑（基于 localStorage + 版本号隔离）
+// ==========================================
+function storageKey(suffix) {
+  return 'lc_' + suffix + '_' + CFG.version;
+}
+
+function isForeverUnlocked() {
+  return localStorage.getItem(storageKey('forever')) === 'true';
+}
+
+function isUsageLocked() {
+  if (isForeverUnlocked()) return false;
+  const count = parseInt(localStorage.getItem(storageKey('count')) || '0', 10);
+  return count >= CFG.max_clicks;
+}
+
+function incrementCount() {
+  if (isForeverUnlocked()) return;
+  const count = parseInt(localStorage.getItem(storageKey('count')) || '0', 10);
+  localStorage.setItem(storageKey('count'), count + 1);
+}
+
+function showLockScreen() {
+  const ls = document.getElementById('lock-screen');
+  ls.style.display = 'flex';
+}
+
+function submitCode() {
+  const val = document.getElementById('lock-input').value.trim();
+  const err = document.getElementById('lock-err');
+  if (val === CFG.password) {
+    localStorage.setItem(storageKey('forever'), 'true');
+    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('main-panel').style.display = 'block';
+    err.textContent = '';
+  } else {
+    err.textContent = '❌ 卡密错误，请重新输入';
+    document.getElementById('lock-input').value = '';
+  }
+}
+
+// ==========================================
+// 表单交互
+// ==========================================
+function syncInput(sel, id) { if (sel.value) document.getElementById(id).value = sel.value; }
+function toggleCustomStudio(sel) {
+  const ci = document.getElementById('custom-studio-input');
+  if (sel.value === 'CUSTOM') { ci.style.display = 'block'; ci.focus(); }
+  else { ci.style.display = 'none'; }
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  document.getElementById('topics').addEventListener('click', function(e){
+    if (e.target.classList.contains('chip')) e.target.classList.toggle('active');
+  });
+});
+
+function addTopic(e) {
+  if (e.key !== 'Enter') return;
+  const inp = document.getElementById('custom-topic');
+  const v = inp.value.trim();
+  if (!v) return;
+  const c = document.createElement('div');
+  c.className = 'chip active'; c.dataset.v = v; c.textContent = '✨ ' + v;
+  c.addEventListener('click', () => c.classList.toggle('active'));
+  document.getElementById('topics').appendChild(c);
+  inp.value = '';
+}
+
+function getTopics() {
+  const active = [...document.querySelectorAll('.chip.active')];
+  return active.length ? active.map(c => c.dataset.v).join('、') : '拆家、护食';
+}
+
+// ==========================================
+// 生成提示词
+// ==========================================
+function generatePrompt() {
+  incrementCount();
+  if (isUsageLocked() && !isForeverUnlocked()) { showLockScreen(); return; }
+
+  const a = document.getElementById('pet-a-type').value.trim() || '柯基';
+  const aRole = document.getElementById('pet-a-role').value.trim();
+  const aLook = document.getElementById('pet-a-look').value.trim();
+  const b = document.getElementById('pet-b-type').value.trim() || '橘猫';
+  const bRole = document.getElementById('pet-b-role').value.trim();
+  const bLook = document.getElementById('pet-b-look').value.trim();
+  const topics = getTopics();
+  const n = document.getElementById('script-count').value;
+  let studio = document.getElementById('studio-style').value;
+  if (studio === 'CUSTOM') {
+    studio = document.getElementById('custom-studio-input').value.trim() || '专业深色木质（经典黑金）';
+  }
+
+  const prompt = `你是专业短视频爆款内容创作智能体，专注「萌宠播客」矩阵视频。
+
+角色设定：
+- 角色A（${a}）：性格=${aRole}；外形=${aLook}
+- 角色B（${b}）：性格=${bRole}；外形=${bLook}
+录音室风格：${studio}
+可选主题：${topics}
+
+请只输出一段合法 JSON，不要有任何额外说明或 Markdown 代码块：
+{
+  "image_prompt": "用于即梦AI的中文图片提示词，描述${a}和${b}在播客录音室的逼真摄影照片，含品种外形道具灯光风格，100字以内",
+  "scripts": [
+    {"topic":"主题","role_a":"角色A台词（一句，简短憨厚）","role_b":"角色B神反转台词（一句，腹黑精明）"},
+    ...共${n}组...
+  ],
+  "viral_titles": {
+    "dy": ["抖音爆款标题1","抖音爆款标题2"],
+    "xhs": ["某红书情绪化标题1","某红书情绪化标题2"],
+    "kuaishou": ["快手老铁互动标题1"]
+  },
+  "comment_hooks": ["高赞截流评论话术1","高赞截流评论话术2"]
+}`;
+
+  document.getElementById('promptText').textContent = prompt;
+  document.getElementById('prompt-output-section').style.display = 'block';
+  document.getElementById('prompt-output-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function copyEl(id, btn) {
+  const text = document.getElementById(id).textContent;
+  try {
+    navigator.clipboard.writeText(text).then(() => {
+      const t = btn.textContent; btn.textContent = '✓ 已复制';
+      btn.style.background = 'linear-gradient(135deg,#4ade80,#22c55e)'; btn.style.color = '#000';
+      setTimeout(() => { btn.textContent = t; btn.style.background = ''; btn.style.color = ''; }, 2000);
+    }).catch(() => fallbackCopy(text, btn));
+  } catch(e) { fallbackCopy(text, btn); }
+}
+function fallbackCopy(text, btn) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  const t = btn.textContent; btn.textContent = '✓ 已复制';
+  btn.style.background = 'linear-gradient(135deg,#4ade80,#22c55e)'; btn.style.color = '#000';
+  setTimeout(() => { btn.textContent = t; btn.style.background = ''; btn.style.color = ''; }, 2000);
+}
+
+function doCopy(text, btnId) {
+  const applyDone = (b) => {
+    if (!b) return;
+    const t = b.textContent; b.textContent = '✓ 已复制';
+    b.style.background = 'linear-gradient(135deg,#4ade80,#22c55e)'; b.style.color = '#000';
+    setTimeout(() => { b.textContent = t; b.style.background = ''; b.style.color = ''; }, 2000);
+  };
+  try {
+    navigator.clipboard.writeText(text).then(() => applyDone(document.getElementById(btnId)))
+      .catch(() => { fallbackCopyRaw(text); applyDone(document.getElementById(btnId)); });
+  } catch(e) { fallbackCopyRaw(text); applyDone(document.getElementById(btnId)); }
+}
+function fallbackCopyRaw(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
+// ==========================================
+// 渲染 JSON 素材
+// ==========================================
+function renderUserJson() {
+  incrementCount();
+  if (isUsageLocked() && !isForeverUnlocked()) { showLockScreen(); return; }
+
+  const raw = document.getElementById('ai-json-input').value.trim();
+  let json;
+  try {
+    const m = raw.match(/\{[\s\S]*\}/);
+    json = JSON.parse(m ? m[0] : raw);
+  } catch(e) {
+    alert('JSON 格式有误，请确认从大模型处完整复制了 { } 内容');
+    return;
+  }
+
+  const out = document.getElementById('output');
+  out.style.display = 'block';
+  out.innerHTML = '';
+
+  // 块1：图片提示词
+  if (json.image_prompt) {
+    const b = mkBlock('🖼️', '1. 即梦 AI 图片 / 视频提示词', 'rgba(245,196,74,0.35)');
+    const code = document.createElement('div');
+    code.style = 'font-family:monospace;font-size:13.5px;color:#f5f5f7;background:#050505;padding:16px;border-radius:8px;word-break:break-all;';
+    code.textContent = json.image_prompt;
+    b.body.appendChild(code);
+    const btn = mkCopyBtn('copy-img', () => doCopy(json.image_prompt, 'copy-img'));
+    b.head.appendChild(btn);
+    out.appendChild(b.block);
+  }
+
+  // 块2：对话脚本
+  if (json.scripts && json.scripts.length) {
+    const b = mkBlock('🎙️', '2. 爆款双人对白脚本（分幕独立复制）', 'rgba(255,255,255,0.06)');
+    json.scripts.forEach((s, i) => {
+      const row = document.createElement('div'); row.className = 'script-row-card';
+      const hdr = document.createElement('div'); hdr.className = 'script-row-header';
+      const badge = document.createElement('span'); badge.className = 'script-row-badge';
+      badge.textContent = `第 ${i+1} 幕 · ${s.topic || ''}`;
+      const rowText = `角色A：${s.role_a||''}\n角色B：${s.role_b||''}`;
+      const rb = mkCopyBtn(`copy-row-${i}`, () => doCopy(rowText, `copy-row-${i}`));
+      hdr.appendChild(badge); hdr.appendChild(rb); row.appendChild(hdr);
+      if (s.role_a) { const la = document.createElement('div'); la.className = 'dl-line dl-dog'; la.textContent = '角色 A：' + s.role_a; row.appendChild(la); }
+      if (s.role_b) { const lb = document.createElement('div'); lb.className = 'dl-line dl-cat'; lb.textContent = '角色 B：' + s.role_b; row.appendChild(lb); }
+      b.body.appendChild(row);
+    });
+    out.appendChild(b.block);
+  }
+
+  // 块3：多平台标题
+  if (json.viral_titles) {
+    const b = mkBlock('🔥', '3. 多平台矩阵爆款标题', 'rgba(245,196,74,0.15)');
+    const map = { dy:'🎵 抖音 / TikTok', xhs:'📕 某红书', kuaishou:'⚡ 快手 / B站' };
+    let pi = 0;
+    for (const k in map) {
+      if (!json.viral_titles[k]) continue;
+      pi++;
+      const lines = Array.isArray(json.viral_titles[k]) ? json.viral_titles[k] : [json.viral_titles[k]];
+      const txt = lines.join('\n');
+      const pb = document.createElement('div'); pb.className = 'platform-box';
+      const pr = document.createElement('div'); pr.className = 'platform-title-row';
+      const pn = document.createElement('div'); pn.className = 'platform-name'; pn.textContent = map[k];
+      const pcb = mkCopyBtn(`copy-p-${pi}`, () => doCopy(txt, `copy-p-${pi}`));
+      pr.appendChild(pn); pr.appendChild(pcb); pb.appendChild(pr);
+      const pt = document.createElement('div'); pt.className = 'viral-title-text'; pt.textContent = txt;
+      pb.appendChild(pt); b.body.appendChild(pb);
+    }
+    out.appendChild(b.block);
+  }
+
+  // 块4：评论引流
+  if (json.comment_hooks && json.comment_hooks.length) {
+    const b = mkBlock('💬', '4. 评论区高转化截流话术', 'rgba(74,222,128,0.25)');
+    b.head.querySelector('.result-title').style.color = '#4ade80';
+    json.comment_hooks.forEach((h, hi) => {
+      const hb = document.createElement('div'); hb.className = 'platform-box'; hb.style.borderColor = 'rgba(74,222,128,0.1)';
+      const hr2 = document.createElement('div'); hr2.className = 'platform-title-row';
+      const hn = document.createElement('div'); hn.className = 'platform-name'; hn.style.color = '#4ade80'; hn.textContent = `📌 引流话术 0${hi+1}`;
+      const hcb = mkCopyBtn(`copy-h-${hi}`, () => doCopy(h, `copy-h-${hi}`));
+      hr2.appendChild(hn); hr2.appendChild(hcb); hb.appendChild(hr2);
+      const ht = document.createElement('div'); ht.className = 'viral-title-text'; ht.style.color = '#e4e4e7'; ht.textContent = h;
+      hb.appendChild(ht); b.body.appendChild(hb);
+    });
+    out.appendChild(b.block);
+  }
+
+  out.scrollIntoView({ behavior: 'smooth' });
+}
+
+function mkBlock(icon, title, borderColor) {
+  const block = document.createElement('div'); block.className = 'result-block';
+  block.style.border = `1px solid ${borderColor}`;
+  const head = document.createElement('div'); head.className = 'result-head';
+  const left = document.createElement('div'); left.className = 'result-head-left';
+  const ic = document.createElement('div'); ic.className = 'result-icon'; ic.style.background = 'var(--amber-l)'; ic.textContent = icon;
+  const ti = document.createElement('div');
+  const tt = document.createElement('div'); tt.className = 'result-title'; tt.textContent = title;
+  ti.appendChild(tt); left.appendChild(ic); left.appendChild(ti);
+  head.appendChild(left);
+  const body = document.createElement('div'); body.className = 'result-body';
+  block.appendChild(head); block.appendChild(body);
+  return { block, head, body };
+}
+
+function mkCopyBtn(id, fn) {
+  const btn = document.createElement('button'); btn.className = 'copy-btn'; btn.id = id; btn.textContent = '复制';
+  btn.onclick = fn; return btn;
+}
+
+// 启动
+boot();
+</script>
+</body>
+</html>
