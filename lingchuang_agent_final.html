@@ -204,7 +204,31 @@ textarea{resize:vertical;min-height:130px;}
     </div>
     <div class="form-row full">
       <div class="form-group">
-        <label>外形 / 穿搭 / 道具特征</label>
+        <div class="form-label-row">
+          <label>外形 / 穿搭 / 道具特征</label>
+          <select class="quick-select" onchange="syncInput(this,'pet-a-look')">
+            <option value="">🔮 快捷预设…</option>
+            <optgroup label="🎭 经典造型">
+            <option value="戴红色领巾、圆滚滚、眼神单纯憨直、面前放着超大麦克风">红色领巾憨厚款</option>
+            <option value="戴棒球帽、穿卫衣、慵懒躺平风、一脸无所谓">棒球帽躺平风</option>
+            <option value="戴厚框眼镜、背着双肩包、学生感十足、一脸懵懂">厚框眼镜学生党</option>
+            <option value="戴厨师帽、围着围裙、手边放着零食、美食博主感">厨师帽美食博主</option>
+            <option value="穿运动服、头戴发带、精神抖擞、健身达人感">运动服健身达人</option>
+            </optgroup>
+            <optgroup label="💼 职场系列">
+            <option value="穿西装、打领带、表情认真、职场精英感">西装领带精英款</option>
+            <option value="穿格子衬衫、对着笔记本电脑、程序员感满满">格子衫程序员</option>
+            <option value="穿白大褂、挂听诊器、一脸严肃、医生人设">白大褂医生款</option>
+            <option value="穿制服、戴大檐帽、威严十足、警察人设">制服警察款</option>
+            </optgroup>
+            <optgroup label="✨ 潮流个性">
+            <option value="戴墨镜、叼着牙签、一脸痞气、社会大哥范儿">墨镜社会大哥</option>
+            <option value="戴耳机、穿连帽卫衣、沉浸在音乐里、音乐人感">耳机音乐人</option>
+            <option value="戴贝雷帽、拿着画笔、艺术家气质、文艺范儿">贝雷帽艺术家</option>
+            <option value="戴牛仔帽、穿格子衬衫、乡村风、接地气">牛仔帽乡村风</option>
+            </optgroup>
+          </select>
+        </div>
         <input type="text" id="pet-a-look" value="戴红色领巾、圆滚滚、眼神单纯憨直">
       </div>
     </div>
@@ -258,7 +282,31 @@ textarea{resize:vertical;min-height:130px;}
     </div>
     <div class="form-row full">
       <div class="form-group">
-        <label>外形 / 穿搭 / 道具特征</label>
+        <div class="form-label-row">
+          <label>外形 / 穿搭 / 道具特征</label>
+          <select class="quick-select" onchange="syncInput(this,'pet-b-look')">
+            <option value="">🔮 快捷预设…</option>
+            <optgroup label="🎭 经典造型">
+            <option value="戴金框眼镜、表情严肃、一副看透一切的样子、用单爪托着腮">金框眼镜学究款</option>
+            <option value="戴墨镜、叼着雪茄、翘着二郎腿、老大范儿">墨镜雪茄老大款</option>
+            <option value="戴珍珠项链、端着茶杯、优雅贵妇感、眼神凌厉">珍珠项链贵妇款</option>
+            <option value="披着长发、手拿折扇、腹黑公子哥、古风范儿">折扇古风公子哥</option>
+            <option value="穿睡衣、抱着热水袋、慵懒但眼神毒辣">睡衣慵懒毒舌款</option>
+            </optgroup>
+            <optgroup label="💼 精英系列">
+            <option value="穿黑色西装、系着领结、手拿红酒杯、精英掌控感">黑西装精英款</option>
+            <option value="戴博士帽、手拿书本、学霸感十足、不屑与人为伍">博士帽学霸款</option>
+            <option value="穿风衣、戴鸭舌帽、侦探感、洞察一切">风衣侦探款</option>
+            <option value="坐在老板椅上、翘着腿、手指交叉、掌控全局">老板椅掌控款</option>
+            </optgroup>
+            <optgroup label="✨ 神秘个性">
+            <option value="戴巫师帽、手持魔杖、神秘莫测、深不可测">巫师帽神秘款</option>
+            <option value="披着斗篷、站在阴影里、只露出眼睛、冷酷感">斗篷神秘冷酷款</option>
+            <option value="戴皇冠、坐在王座上、女王气质、颐指气使">皇冠女王款</option>
+            <option value="穿和服、端着茶碗、淡然如菊、禅意高人感">和服禅意高人款</option>
+            </optgroup>
+          </select>
+        </div>
         <input type="text" id="pet-b-look" value="戴金框眼镜、表情严肃、一副看透一切的样子">
       </div>
     </div>
