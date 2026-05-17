@@ -991,19 +991,35 @@ async function generate() {
   btn.disabled = true; btn.textContent = '⏳ AI正在分析生成…';
   document.getElementById('outSection').style.display = 'none';
 
-  // 直接本地生成，稳定可靠
-  setTimeout(() => {
-    try {
-      const fallback = localGenerate(topic, category, size, style);
-      lastResult = { json: fallback, topic };
-      renderResult(fallback);
-    } catch(e) {
-      document.getElementById('outSection').innerHTML = '<div style="padding:1rem;color:#f87171;">生成失败，请刷新重试</div>';
-      document.getElementById('outSection').style.display = 'block';
-    }
-    btn.disabled = false;
-    btn.textContent = '✨ 一键生成图文提示词';
-  }, 800);
+  const userMsg = `主题内容：${topic}${size !== 'AI自动推荐' ? '\n用户指定尺寸：' + size : ''}${style !== 'AI随机匹配' ? '\n用户风格偏好：' + style : ''}
+
+请分析以上内容，自动判定品类、匹配手法、随机选择风格，生成完整的即梦生图提示词。严格按JSON格式输出。`;
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userMsg }]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '请求失败');
+    const raw = data.content[0].text;
+    const match = raw.match(/\{[\s\S]*\}/);
+    const json = JSON.parse(match[0]);
+    lastResult = { json, topic };
+    renderResult(json);
+  } catch(e) {
+    // 降级本地生成
+    const fallback = localGenerate(topic, category, size, style);
+    lastResult = { json: fallback, topic };
+    renderResult(fallback);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '✨ 一键生成图文提示词';
 }
 
 function renderResult(j) {
