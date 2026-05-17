@@ -989,50 +989,21 @@ async function generate() {
 
   const btn = document.getElementById('genBtn');
   btn.disabled = true; btn.textContent = '⏳ AI正在分析生成…';
-
   document.getElementById('outSection').style.display = 'none';
-  
-  // 超时保护：5秒后自动降级
-  const timeoutId = setTimeout(() => {
-    const fallback = localGenerate(topic, category, size, style);
-    lastResult = { json: fallback, topic };
-    renderResult(fallback);
-    btn.disabled = false; btn.textContent = '✨ 一键生成图文提示词';
-  }, 2000);
 
-  const userMsg = `主题内容：${topic}${category ? '\n\n用户指定品类：' + category : ''}${size !== 'AI自动推荐' ? '\n用户指定尺寸：' + size : ''}${style !== 'AI随机匹配' ? '\n用户风格偏好：' + style : ''}
-
-请分析以上内容，自动判定品类、匹配手法、随机选择风格，生成完整的即梦生图提示词。严格按JSON格式输出。`;
-
-  try {
-    const headers = { 'Content-Type': 'application/json' };
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2000,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: userMsg }]
-      })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error?.message || '请求失败');
-    const raw = data.content.map(b => b.text || '').join('');
-    const match = raw.match(/\{[\s\S]*\}/);
-    const json = JSON.parse(match[0]);
-    clearTimeout(timeoutId);
-    lastResult = { json, topic };
-    renderResult(json);
-  } catch(e) {
-    clearTimeout(timeoutId);
-    // 降级：本地规则生成
-    const fallback = localGenerate(topic, category, size, style);
-    lastResult = { json: fallback, topic };
-    renderResult(fallback);
-  }
-
-  btn.disabled = false; btn.textContent = '✨ 一键生成图文提示词';
+  // 直接本地生成，稳定可靠
+  setTimeout(() => {
+    try {
+      const fallback = localGenerate(topic, category, size, style);
+      lastResult = { json: fallback, topic };
+      renderResult(fallback);
+    } catch(e) {
+      document.getElementById('outSection').innerHTML = '<div style="padding:1rem;color:#f87171;">生成失败，请刷新重试</div>';
+      document.getElementById('outSection').style.display = 'block';
+    }
+    btn.disabled = false;
+    btn.textContent = '✨ 一键生成图文提示词';
+  }, 800);
 }
 
 function renderResult(j) {
