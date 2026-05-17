@@ -124,6 +124,26 @@ textarea{resize:vertical;min-height:110px;line-height:1.7;}
   #float-card-mobile{display:flex!important;}
   .shell{padding-bottom:80px!important;}
 }
+
+/* 效果展示墙 */
+.showcase-section{margin-bottom:2rem;}
+.showcase-header{display:flex;flex-direction:column;gap:4px;margin-bottom:1rem;}
+.showcase-title{font-size:15px;font-weight:700;color:var(--tx);}
+.showcase-sub{font-size:12px;color:var(--tx3);}
+.showcase-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:8px;}
+.showcase-scroll::-webkit-scrollbar{display:none;}
+.showcase-track{display:flex;gap:12px;width:max-content;}
+.showcase-card{width:160px;flex-shrink:0;cursor:pointer;transition:transform .2s;}
+.showcase-card:hover{transform:translateY(-3px);}
+.showcase-img-wrap{width:160px;height:220px;border-radius:12px;overflow:hidden;position:relative;background:rgba(255,255,255,0.04);border:1px solid var(--bd);}
+.showcase-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+.showcase-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));padding:20px 8px 8px;opacity:0;transition:opacity .2s;}
+.showcase-card:hover .showcase-overlay{opacity:1;}
+.showcase-style{font-size:10px;font-weight:600;color:var(--gold);background:rgba(0,0,0,0.5);padding:2px 8px;border-radius:10px;}
+.showcase-info{display:flex;align-items:center;justify-content:center;padding:6px 0 0;}
+.showcase-cat{font-size:11px;color:var(--tx3);}
+.showcase-hint{text-align:center;font-size:11px;color:var(--tx3);margin-top:6px;}
+@media(min-width:900px){.showcase-hint{display:none;}}
 </style>
 </head>
 <body>
@@ -146,8 +166,110 @@ textarea{resize:vertical;min-height:110px;line-height:1.7;}
     <p>输入主题 → AI自动判定品类 → 匹配手法风格 → 一键生成即梦提示词</p>
   </div>
 
+
+  <!-- 效果展示墙 -->
+  <div class="showcase-section">
+    <div class="showcase-header">
+      <div class="showcase-title">✨ 真实效果展示</div>
+      <div class="showcase-sub">以下均为AI生成效果图，复制提示词即可在即梦AI复现</div>
+    </div>
+    <div class="showcase-scroll">
+      <div class="showcase-track">
+          <div class="showcase-card">
+            <div class="showcase-img-wrap">
+              <img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/3D%E8%8D%B7%E8%8A%B1.png" alt="植物科普" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'">
+              <div class="showcase-overlay">
+                <span class="showcase-style">3D悬浮立体风</span>
+              </div>
+            </div>
+            <div class="showcase-info">
+              <span class="showcase-cat">植物科普</span>
+            </div>
+          </div>
+          <div class="showcase-card">
+            <div class="showcase-img-wrap">
+              <img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/3D%E8%8E%B2%E8%8A%B1%E7%99%BE%E7%A7%91.png" alt="植物百科" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'">
+              <div class="showcase-overlay">
+                <span class="showcase-style">3D悬浮立体风</span>
+              </div>
+            </div>
+            <div class="showcase-info">
+              <span class="showcase-cat">植物百科</span>
+            </div>
+          </div>
+          <div class="showcase-card">
+            <div class="showcase-img-wrap">
+              <img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E6%A1%82%E8%8A%B1.png" alt="植物科普" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'">
+              <div class="showcase-overlay">
+                <span class="showcase-style">国风水彩</span>
+              </div>
+            </div>
+            <div class="showcase-info">
+              <span class="showcase-cat">植物科普</span>
+            </div>
+          </div>
+          <div class="showcase-card">
+            <div class="showcase-img-wrap">
+              <img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E8%8B%8F%E5%B7%9E3D.png" alt="城市文化" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'">
+              <div class="showcase-overlay">
+                <span class="showcase-style">3D悬浮立体风</span>
+              </div>
+            </div>
+            <div class="showcase-info">
+              <span class="showcase-cat">城市文化</span>
+            </div>
+          </div>
+          <div class="showcase-card">
+            <div class="showcase-img-wrap">
+              <img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E9%95%BF%E6%B2%99.png" alt="城市文化" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'">
+              <div class="showcase-overlay">
+                <span class="showcase-style">手绘地图风</span>
+              </div>
+            </div>
+            <div class="showcase-info">
+              <span class="showcase-cat">城市文化</span>
+            </div>
+          </div>
+          <div class="showcase-card">
+            <div class="showcase-img-wrap">
+              <img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E7%81%AB%E9%94%85.png" alt="美食菜谱" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'">
+              <div class="showcase-overlay">
+                <span class="showcase-style">暖色插画风</span>
+              </div>
+            </div>
+            <div class="showcase-info">
+              <span class="showcase-cat">美食菜谱</span>
+            </div>
+          </div>
+          <div class="showcase-card">
+            <div class="showcase-img-wrap">
+              <img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/ChatGPT%20Image%202026%E5%B9%B45%E6%9C%8815%E6%97%A5%2012_30_04.png" alt="知识图文" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'">
+              <div class="showcase-overlay">
+                <span class="showcase-style">精美插画风</span>
+              </div>
+            </div>
+            <div class="showcase-info">
+              <span class="showcase-cat">知识图文</span>
+            </div>
+          </div>
+          <div class="showcase-card">
+            <div class="showcase-img-wrap">
+              <img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E9%BB%84%E5%B1%B1.png" alt="城市旅游" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'">
+              <div class="showcase-overlay">
+                <span class="showcase-style">山水国风</span>
+              </div>
+            </div>
+            <div class="showcase-info">
+              <span class="showcase-cat">城市旅游</span>
+            </div>
+          </div>
+      </div>
+    </div>
+    <div class="showcase-hint">← 左右滑动查看更多 →</div>
+  </div>
+
   <div class="card">
-    <div class="card-title"><span></span>输入你的知识主题</div>
+    <div class="card-title"><span></span>输入主题，AI自动生成即梦提示词</div>
     <!-- 爆款选题库 -->
     <div style="margin-bottom:16px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -162,29 +284,11 @@ textarea{resize:vertical;min-height:110px;line-height:1.7;}
       <textarea id="topic-input" placeholder="例如：光合作用 / 石斛麦冬瘦肉汤 / 摩羯座性格分析 / 减脂训练动作 / 北京Citywalk路线…&#10;&#10;也可以粘贴一段文字内容，AI自动提取核心知识点"></textarea>
     </div>
 
-    <div style="margin-bottom:14px;">
-      <label>快速选择品类（可选，留空让AI自动判定）</label>
-      <div class="chips" id="cat-chips">
-        <div class="chip" data-v="教育学科">📚 教育学科</div>
-        <div class="chip" data-v="生活科普">🌿 生活科普</div>
-        <div class="chip" data-v="菜谱教程">🍳 菜谱教程</div>
-        <div class="chip" data-v="中药本草">🌱 中药本草</div>
-        <div class="chip" data-v="护肤美妆">💄 护肤美妆</div>
-        <div class="chip" data-v="健身减脂">💪 健身减脂</div>
-        <div class="chip" data-v="财经理财">💰 财经理财</div>
-        <div class="chip" data-v="穿搭时尚">👗 穿搭时尚</div>
-        <div class="chip" data-v="城市文化">🗺️ 城市文化</div>
-        <div class="chip" data-v="Citywalk探店">📍 探店</div>
-        <div class="chip" data-v="职场副业">💼 职场副业</div>
-        <div class="chip" data-v="星座情感">⭐ 星座情感</div>
-        <div class="chip" data-v="室内家装">🏠 家装设计</div>
-        <div class="chip" data-v="古诗图解">📜 古诗图解</div>
-      </div>
-    </div>
+
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
       <div>
-        <label>图片尺寸偏好</label>
+        <label>输出尺寸</label>
         <select id="size-pref">
           <option value="AI自动推荐">🤖 AI自动推荐（默认）</option>
           <optgroup label="📱 竖版">
@@ -631,8 +735,7 @@ document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
 });
 
 function getCategory() {
-  const active = document.querySelector('.chip.active');
-  return active ? active.dataset.v : '';
+  return ''; // 品类完全由AI自动识别
 }
 
 
