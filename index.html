@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>灵创星球 · AI智能体矩阵</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#f5c44a;--gold2:#d4af37;--gold-l:rgba(245,196,74,0.08);--gold-m:rgba(245,196,74,0.15);
+  --bg:#07070a;--tx:#f5f5f7;--tx2:#a1a1a6;--tx3:#48484a;--bd:rgba(255,255,255,0.07);
+}
+html,body{min-height:100vh;overflow-x:hidden;}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:var(--bg);color:var(--tx);position:relative;}
+
+/* 背景粒子层 */
+.bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.bg-glow::before{content:"";position:absolute;width:900px;height:900px;background:radial-gradient(circle,rgba(212,175,55,0.06) 0%,transparent 65%);top:-200px;left:50%;transform:translateX(-50%);}
+.bg-glow::after{content:"";position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(100,80,200,0.04) 0%,transparent 65%);bottom:-100px;right:-100px;}
+canvas#stars{position:fixed;inset:0;z-index:0;opacity:.5;}
+
+.shell{max-width:1100px;margin:0 auto;padding:0 1.5rem 5rem;position:relative;z-index:1;}
+
+/* 顶部导航 */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:1.5rem 0 0;}
+.nav-logo{display:flex;align-items:center;gap:10px;}
+.nav-logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#000;box-shadow:0 0 16px rgba(245,196,74,0.3);}
+.nav-logo-text{font-size:16px;font-weight:700;color:var(--tx);}
+.nav-logo-sub{font-size:11px;color:var(--tx2);margin-top:1px;}
+.nav-link{font-size:13px;color:var(--tx2);text-decoration:none;transition:color .2s;}
+.nav-link:hover{color:var(--gold);}
+
+/* Hero */
+.hero{text-align:center;padding:4rem 0 3rem;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--gold-l);border:1px solid rgba(212,175,55,0.3);border-radius:30px;padding:6px 18px;font-size:12px;color:var(--gold);font-weight:600;margin-bottom:1.5rem;animation:fadeUp .6s ease both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.hero h1{font-size:clamp(32px,6vw,56px);font-weight:900;line-height:1.15;margin-bottom:1rem;animation:fadeUp .7s ease .1s both;}
+.hero h1 .gold{background:linear-gradient(135deg,var(--gold),#fff8e0,var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-desc{font-size:16px;color:var(--tx2);line-height:1.7;max-width:560px;margin:0 auto 2.5rem;animation:fadeUp .7s ease .2s both;}
+.hero-cta{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:15px;font-weight:800;padding:13px 32px;border-radius:50px;text-decoration:none;box-shadow:0 4px 24px rgba(212,175,55,0.3);animation:fadeUp .7s ease .3s both;transition:all .2s;}
+.hero-cta:hover{box-shadow:0 8px 32px rgba(212,175,55,0.45);transform:translateY(-2px);}
+
+/* 统计栏 */
+.stats{display:flex;align-items:center;justify-content:center;gap:2.5rem;padding:2rem 0 3rem;animation:fadeUp .7s ease .4s both;flex-wrap:wrap;}
+.stat-item{text-align:center;}
+.stat-num{font-size:28px;font-weight:800;color:var(--gold);}
+.stat-label{font-size:12px;color:var(--tx3);margin-top:3px;}
+.stat-divider{width:1px;height:32px;background:var(--bd);}
+
+/* 分区标题 */
+.section-head{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;}
+.section-head h2{font-size:18px;font-weight:700;color:var(--tx);}
+.section-badge{padding:3px 10px;background:var(--gold-l);border:1px solid rgba(212,175,55,0.2);border-radius:20px;font-size:11px;color:var(--gold);font-weight:600;}
+
+/* 工具卡片 */
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.25rem;margin-bottom:3rem;}
+.tool-card{background:rgba(18,18,22,0.7);border:1px solid var(--bd);border-radius:20px;padding:1.75rem;position:relative;overflow:hidden;cursor:pointer;transition:all .3s ease;text-decoration:none;display:block;backdrop-filter:blur(12px);}
+.tool-card::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(245,196,74,0.03),transparent);opacity:0;transition:opacity .3s;}
+.tool-card:hover{border-color:rgba(245,196,74,0.35);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,0.4),0 0 0 1px rgba(245,196,74,0.1);}
+.tool-card:hover::before{opacity:1;}
+
+.tool-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem;}
+.tool-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.tool-status{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;}
+.status-live{background:rgba(52,199,89,0.1);border:1px solid rgba(52,199,89,0.25);color:#34c759;}
+.status-live::before{content:"";width:6px;height:6px;border-radius:50%;background:#34c759;box-shadow:0 0 6px #34c759;}
+.status-soon{background:rgba(255,159,10,0.1);border:1px solid rgba(255,159,10,0.25);color:#ff9f0a;}
+.status-soon::before{content:"";width:6px;height:6px;border-radius:50%;background:#ff9f0a;}
+
+.tool-name{font-size:18px;font-weight:700;color:var(--tx);margin-bottom:6px;}
+.tool-desc{font-size:13px;color:var(--tx2);line-height:1.6;margin-bottom:1.25rem;}
+
+.tool-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1.25rem;}
+.tool-tag{padding:3px 10px;background:rgba(255,255,255,0.04);border:1px solid var(--bd);border-radius:20px;font-size:11px;color:var(--tx3);}
+
+.tool-footer{display:flex;align-items:center;justify-content:space-between;}
+.tool-arrow{width:32px;height:32px;border-radius:50%;background:var(--gold-l);border:1px solid rgba(245,196,74,0.2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--gold);transition:all .3s;}
+.tool-card:hover .tool-arrow{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border-color:transparent;transform:translateX(3px);}
+.tool-use-count{font-size:12px;color:var(--tx3);}
+
+/* 特色大卡片 */
+.tool-card.featured{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:center;}
+.tool-card.featured .tool-desc{font-size:14px;}
+.featured-visual{background:linear-gradient(135deg,rgba(245,196,74,0.06),rgba(100,80,200,0.06));border-radius:14px;padding:1.5rem;display:flex;align-items:center;justify-content:center;font-size:60px;min-height:140px;}
+
+/* Coming soon 卡片 */
+.tool-card.coming{opacity:.6;cursor:default;}
+.tool-card.coming:hover{transform:none;box-shadow:none;border-color:var(--bd);}
+.tool-card.coming:hover::before{opacity:0;}
+.tool-card.coming .tool-arrow{opacity:.4;}
+
+/* 聚合站入口 */
+.hub-banner{background:linear-gradient(135deg,rgba(18,18,22,0.9),rgba(25,22,40,0.9));border:1px solid rgba(245,196,74,0.2);border-radius:20px;padding:2rem;display:flex;align-items:center;justify-content:space-between;gap:1.5rem;backdrop-filter:blur(12px);margin-bottom:2rem;}
+.hub-left{display:flex;align-items:center;gap:16px;}
+.hub-icon{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 20px rgba(245,196,74,0.25);}
+.hub-title{font-size:17px;font-weight:700;color:var(--tx);margin-bottom:4px;}
+.hub-desc{font-size:13px;color:var(--tx2);}
+.hub-btn{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:14px;font-weight:800;padding:11px 24px;border-radius:12px;text-decoration:none;white-space:nowrap;box-shadow:0 4px 16px rgba(212,175,55,0.25);transition:all .2s;flex-shrink:0;}
+.hub-btn:hover{box-shadow:0 6px 24px rgba(212,175,55,0.4);transform:translateY(-1px);}
+
+/* 底部 */
+.footer{text-align:center;padding:2rem 0;border-top:1px solid var(--bd);}
+.footer p{font-size:12px;color:var(--tx3);line-height:1.8;}
+
+@media(max-width:768px){
+  .tools-grid{grid-template-columns:1fr;}
+  .tool-card.featured{grid-template-columns:1fr;}
+  .featured-visual{display:none;}
+  .stats{gap:1.5rem;}
+  .hub-banner{flex-direction:column;text-align:center;}
+  .hub-left{flex-direction:column;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-glow"></div>
+<canvas id="stars"></canvas>
+
+<div class="shell">
+  <!-- 导航 -->
+  <nav class="nav">
+    <div class="nav-logo">
+      <div class="nav-logo-icon">灵</div>
+      <div>
+        <div class="nav-logo-text">灵创星球</div>
+        <div class="nav-logo-sub">AI智能体矩阵</div>
+      </div>
+    </div>
+    <a href="https://lc.wazgz.com/" target="_blank" class="nav-link">进入AI聚合站 →</a>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">✦ 灵创星球 · AIGC生产力工具矩阵</div>
+    <h1>用AI把创意<br><span class="gold">变成爆款内容</span></h1>
+    <p class="hero-desc">专为内容创作者打造的AI智能体矩阵，萌宠播客·知识图文·更多工具持续上线，一键生成即梦提示词，让每一张图都能刷屏</p>
+    <a href="#tools" class="hero-cta">🚀 立即体验 →</a>
+  </div>
+
+  <!-- 统计 -->
+  <div class="stats">
+    <div class="stat-item"><div class="stat-num">2+</div><div class="stat-label">AI智能体</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat-item"><div class="stat-num">44</div><div class="stat-label">图文创作手法</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat-item"><div class="stat-num">0元</div><div class="stat-label">入门成本</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat-item"><div class="stat-num">即梦</div><div class="stat-label">直连生图</div></div>
+  </div>
+
+  <!-- 工具矩阵 -->
+  <div id="tools">
+    <div class="section-head">
+      <h2>🛠️ AI智能体矩阵</h2>
+      <span class="section-badge">持续更新</span>
+    </div>
+
+    <div class="tools-grid">
+
+      <!-- 萌宠播客 -->
+      <a href="/lingchuang_agent_final.html" class="tool-card">
+        <div class="tool-card-top">
+          <div class="tool-icon" style="background:linear-gradient(135deg,rgba(245,196,74,0.15),rgba(212,175,55,0.08));">🐾</div>
+          <div class="tool-status status-live">已上线</div>
+        </div>
+        <div class="tool-name">AI萌宠播客智能体</div>
+        <div class="tool-desc">一键生成爆款萌宠播客视频素材。自定义猫狗角色+性格+外形，AI自动生成对话脚本、即梦图片提示词、多平台爆款标题，点赞高达39万的爆款内容同款。</div>
+        <div class="tool-tags">
+          <span class="tool-tag">🎙️ 播客脚本</span>
+          <span class="tool-tag">🐱 萌宠视频</span>
+          <span class="tool-tag">📝 爆款文案</span>
+          <span class="tool-tag">🎨 即梦提示词</span>
+        </div>
+        <div class="tool-footer">
+          <span class="tool-use-count">适合 · 抖音/小红书创作者</span>
+          <div class="tool-arrow">→</div>
+        </div>
+      </a>
+
+      <!-- 知识图文魔方 -->
+      <a href="/zhishi_mofang.html" class="tool-card">
+        <div class="tool-card-top">
+          <div class="tool-icon" style="background:linear-gradient(135deg,rgba(100,80,200,0.15),rgba(80,60,180,0.08));">🔮</div>
+          <div class="tool-status status-live">已上线</div>
+        </div>
+        <div class="tool-name">知识图文魔方</div>
+        <div class="tool-desc">把任意知识变成刷屏图。输入主题→AI自动判定品类→匹配44种创作手法→生成即梦高质量提示词。支持教育/科普/菜谱/中药/护肤/健身等13大品类。</div>
+        <div class="tool-tags">
+          <span class="tool-tag">📚 知识科普</span>
+          <span class="tool-tag">🍳 菜谱教程</span>
+          <span class="tool-tag">💄 护肤美妆</span>
+          <span class="tool-tag">🌱 中药本草</span>
+        </div>
+        <div class="tool-footer">
+          <span class="tool-use-count">适合 · 知识类博主/运营</span>
+          <div class="tool-arrow">→</div>
+        </div>
+      </a>
+
+      <!-- 即将上线占位 -->
+      <div class="tool-card coming">
+        <div class="tool-card-top">
+          <div class="tool-icon" style="background:rgba(255,255,255,0.04);">⚡</div>
+          <div class="tool-status status-soon">即将上线</div>
+        </div>
+        <div class="tool-name">更多智能体</div>
+        <div class="tool-desc">更多AI内容创作智能体正在开发中，包含视频脚本、电商文案、职场工具等多个方向，持续为创作者提供生产力工具。</div>
+        <div class="tool-tags">
+          <span class="tool-tag">🎬 视频脚本</span>
+          <span class="tool-tag">🛒 电商文案</span>
+          <span class="tool-tag">💼 职场工具</span>
+        </div>
+        <div class="tool-footer">
+          <span class="tool-use-count">敬请期待</span>
+          <div class="tool-arrow" style="opacity:.3;">→</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 聚合站入口 -->
+    <div class="hub-banner">
+      <div class="hub-left">
+        <div class="hub-icon">🌐</div>
+        <div>
+          <div class="hub-title">灵创星球 · AI生产力全能聚合平台</div>
+          <div class="hub-desc">Sora视频 · 即梦生图 · Seedream · GPT图像 · 全球AI API集成，一站式AIGC创作平台</div>
+        </div>
+      </div>
+      <a href="https://lc.wazgz.com/" target="_blank" class="hub-btn">立即进入 →</a>
+    </div>
+
+  </div>
+
+  <!-- 底部 -->
+  <div class="footer">
+    <p>© 2026 灵创星球 · AI智能体矩阵 · 持续更新中<br>
+    所有AI生成内容仅供参考，发布前请结合个人实际情况调整</p>
+  </div>
+</div>
+
+<script>
+// 星空背景
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+let stars = [];
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+function initStars() {
+  stars = [];
+  for (let i = 0; i < 120; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.2 + 0.2,
+      a: Math.random(),
+      speed: Math.random() * 0.003 + 0.001,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+}
+
+function drawStars(t) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  stars.forEach(s => {
+    const alpha = (Math.sin(t * s.speed + s.phase) + 1) / 2 * 0.6 + 0.1;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(245,196,74,${alpha})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+
+resize();
+initStars();
+window.addEventListener('resize', () => { resize(); initStars(); });
+requestAnimationFrame(drawStars);
+
+// 平滑滚动
+document.querySelector('.hero-cta').addEventListener('click', e => {
+  e.preventDefault();
+  document.getElementById('tools').scrollIntoView({ behavior: 'smooth' });
+});
+</script>
+</body>
+</html>

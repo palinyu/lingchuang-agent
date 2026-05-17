@@ -107,8 +107,10 @@ textarea{resize:vertical;min-height:110px;line-height:1.7;}
 /* 悬浮卡片 */
 #float-card-desktop{display:block;}
 #float-card-mobile{display:none;}
-@media(max-width:768px){
+@media(max-width:1200px){
   #float-card-desktop{display:none!important;}
+}
+@media(max-width:768px){
   #float-card-mobile{display:flex!important;}
   .shell{padding-bottom:80px!important;}
 }
@@ -286,8 +288,8 @@ textarea{resize:vertical;min-height:110px;line-height:1.7;}
   </div>
 </div>
 
-<!-- 桌面悬浮卡片 -->
-<div id="float-card-desktop" style="position:fixed;right:24px;top:50%;transform:translateY(-50%);width:120px;z-index:9999;">
+<!-- 桌面悬浮卡片（仅在宽屏显示，不遮挡内容）-->
+<div id="float-card-desktop" style="position:fixed;right:20px;top:50%;transform:translateY(-50%);width:120px;z-index:999;">
   <a href="https://lc.wazgz.com/" target="_blank" style="text-decoration:none;">
     <div style="width:120px;background:linear-gradient(160deg,rgba(28,28,28,0.98),rgba(10,10,10,0.99));border:1.5px solid rgba(212,175,55,0.55);border-radius:18px;padding:18px 10px 14px;display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;box-shadow:0 0 24px rgba(212,175,55,0.15),0 8px 32px rgba(0,0,0,0.6);transition:all .25s;" onmouseover="this.style.borderColor='#f5c44a';this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='rgba(212,175,55,0.55)';this.style.transform='none'">
       <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#f5c44a,#d4af37);display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 14px rgba(245,196,74,0.4);">🌐</div>
@@ -429,14 +431,222 @@ function submitCode() {
 // ============ 品类chips ============
 document.querySelectorAll('.chip').forEach(c => {
   c.addEventListener('click', () => {
+    const wasActive = c.classList.contains('active');
     document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
-    c.classList.toggle('active');
+    if (!wasActive) {
+      c.classList.add('active');
+      updateStyleOptions(c.dataset.v); // 联动风格
+    } else {
+      updateStyleOptions(''); // 取消选中时重置风格
+    }
   });
 });
 
 function getCategory() {
   const active = document.querySelector('.chip.active');
   return active ? active.dataset.v : '';
+}
+
+
+// ============ 本地降级生成（API不可用时自动启用）============
+function localGenerate(topic, category, size, style) {
+  const cats = {
+    '教育学科':'教育学科', '生活科普':'生活科普', '菜谱教程':'菜谱教程',
+    '中药本草':'中药本草', '护肤美妆':'护肤美妆', '健身减脂':'健身减脂',
+    '财经理财':'财经理财', '穿搭时尚':'穿搭时尚', '城市文化':'城市文化',
+    'Citywalk探店':'Citywalk探店', '职场副业':'职场副业', '星座情感':'星座情感',
+    '室内家装':'室内家装', '古诗图解':'古诗图解'
+  };
+  const cat = category || '生活科普';
+  const sizeMap = { 'AI自动推荐':'9:16', '9:16竖版':'9:16', '1:1方版':'1:1', '3:4竖版':'3:4', '16:9横版':'16:9' };
+  const sz = sizeMap[size] || '9:16';
+  const styleMap = {
+    'AI随机匹配':'国潮手绘温暖风（暖红+金黄+做旧纸色）',
+    '3D悬浮立体风':'3D floating levitation style, glass morphism effect, frosted glass cards, holographic gradient background, floating 3D elements with soft shadows and reflections, depth layers, translucent materials, neon glow accents',
+    '国风国潮':'国潮手绘温暖风（暖红+金黄+做旧纸色）',
+    '清新简约':'日系清透风（白底+粉色+细线条）',
+    '暗调高级':'高级感暗调风（深棕+暗金+烛光场景）',
+    '可爱插画':'可爱Q版插画风（马卡龙色+圆润卡通）',
+    '科技感':'实验室科技风（白底+分子结构图+数据感）',
+    '复古做旧':'博物学古典风（米白+橄榄绿+棕色）',
+    '博物学手绘':'博物学古典风（米白+橄榄绿+棕色）'
+  };
+  const st = styleMap[style] || styleMap['AI随机匹配'];
+
+  const fullPrompt = `Knowledge infographic poster about "${topic}", ${cat} category, ${st} style, ${sz} ratio, professional editorial design, multi-layer layout with rich visual elements, large title text in Chinese, 3-5 knowledge points with icons, decorative borders and background texture, warm color palette, high information density, no watermark, no blurry text, clean structured layout, at least 5 different visual element types, professional illustration quality, high quality`;
+
+  const shortPrompt = `关于"${topic}"的${cat}知识图文海报，${st}，${sz}竖版，大标题突出，3-5个知识点配图标，信息密度高，排版精美，中文字体清晰`;
+
+  return {
+    detect: {
+      knowledge_points: [topic + '核心概念', topic + '应用场景', topic + '注意事项'],
+      category: cat,
+      user_type: '内容创作者',
+      technique: '结构化知识模块法',
+      style: st,
+      size: sz,
+      size_reason: '竖版适合手机端阅读和社交媒体传播'
+    },
+    knowledge_structure: `【${topic}】知识结构化\n\n① 核心概念：${topic}的基本定义和原理\n② 关键要点：3-5个核心知识点逐一说明\n③ 实用技巧：具体可操作的建议\n④ 注意事项：常见误区和避坑提示\n⑤ 总结金句：一句话概括核心价值`,
+    full_prompt: fullPrompt,
+    short_prompt: shortPrompt,
+    settings: { model: '图片5.0 Lite', size: sz, strength: '0', note: '生成4张取文字最清晰一张' },
+    hashtags: ['#' + topic, '#' + cat, '#灵创星球', '#AI知识图文', '#即梦AI生图']
+  };
+}
+
+
+// ============ 品类专属风格池 ============
+const STYLE_POOLS = {
+  '菜谱教程': [
+    {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（食材3D漂浮+玻璃质感容器）'},
+    {v:'暖色插画风', label:'🍊 暖色插画风（橙红+奶白，卡通食材）'},
+    {v:'日式手账风', label:'📓 日式手账风（牛皮纸底+手写体+胶带）'},
+    {v:'潮流扁平风', label:'🎨 潮流扁平风（高饱和色块+粗线条）'},
+    {v:'极简白卡风', label:'⬜ 极简白卡风（纯白底+黑色线稿）'},
+    {v:'复古美食杂志风', label:'📰 复古美食杂志风（深色背景+金色标题）'},
+  ],
+  '中药本草': [
+    {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（药材3D立体漂浮+国风渐变背景）'},
+    {v:'国潮手绘温暖风', label:'🏮 国潮手绘温暖风（暖红+金黄+做旧纸色）'},
+    {v:'博物学古典风', label:'🔬 博物学古典风（米白+橄榄绿+棕色）'},
+    {v:'现代简约医疗风', label:'🏥 现代简约医疗风（白底+绿色+清洁感）'},
+    {v:'中式水墨山水风', label:'🖋️ 中式水墨山水风（淡墨+朱红印章）'},
+    {v:'高级感暗调风', label:'🕯️ 高级感暗调风（深棕+暗金+烛光）'},
+    {v:'四季浮雕本草图鉴风', label:'🌿 四季浮雕本草图鉴风（米白浮雕+3D药材）'},
+  ],
+  '教育学科': [
+    {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（知识元素3D漂浮+渐变背景）'},
+    {v:'清新扁平插画风', label:'🎈 清新扁平插画风（天蓝+明黄+薄荷绿）'},
+    {v:'暖黄手账牛皮纸风', label:'📒 暖黄手账牛皮纸风（胶带+手写体）'},
+    {v:'高饱和活力风', label:'⚡ 高饱和活力风（珊瑚+紫+亮黄）'},
+    {v:'极简白卡知识图风', label:'📋 极简白卡知识图风（白底+彩色标题条）'},
+    {v:'卡通故事绘本风', label:'🎠 卡通故事绘本风（柔和色调+大卡通插图）'},
+    {v:'四季浮雕儿童立体图鉴风', label:'🧩 四季浮雕儿童立体图鉴风'},
+  ],
+  '生活科普': [
+    {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（科普元素立体漂浮+透明质感）'},
+    {v:'国潮手绘温暖风', label:'🏮 国潮手绘温暖风'},
+    {v:'博物学古典风', label:'🔬 博物学古典风'},
+    {v:'现代简约医疗风', label:'🏥 现代简约医疗风'},
+    {v:'中式水墨山水风', label:'🖋️ 中式水墨山水风'},
+    {v:'高级感暗调风', label:'🕯️ 高级感暗调风'},
+  ],
+  '护肤美妆': [
+    {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（产品3D漂浮+镭射光效+玻璃质感）'},
+    {v:'实验室科技风', label:'🔭 实验室科技风（白底+分子结构图）'},
+    {v:'日系清透风', label:'🌸 日系清透风（白底+粉色+樱花装饰）'},
+    {v:'高级感杂志风', label:'💎 高级感杂志风（深色底+金色标题）'},
+    {v:'可爱插画风', label:'🎀 可爱插画风（马卡龙色+卡通成分人物）'},
+    {v:'极简白卡风', label:'⬜ 极简白卡风（纯白底+黑色线稿）'},
+  ],
+  '健身减脂': [
+    {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（人体/器械3D立体+霓虹光效）'},
+    {v:'运动科技风', label:'⚡ 运动科技风（深蓝+荧光绿+几何线条）'},
+    {v:'清新活力风', label:'🏃 清新活力风（天蓝+白+橙色点缀）'},
+    {v:'极简白卡风', label:'⬜ 极简白卡风（白底+黑色人体线稿）'},
+    {v:'国潮运动风', label:'🔴 国潮运动风（朱红+黑+汉字大字）'},
+    {v:'医疗科普风', label:'🏥 医疗科普风（白底+绿色+人体解剖图）'},
+  ],
+  '财经理财': [
+    {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（金融元素3D漂浮+科技光效）'},
+    {v:'商务深色风', label:'💼 商务深色风（深蓝+金色+数据图表）'},
+    {v:'极简白卡风', label:'⬜ 极简白卡风（白底+黑字+彩色图表）'},
+    {v:'杂志封面风', label:'📰 杂志封面风（大字标题+高对比色块）'},
+    {v:'扁平插画风', label:'🎨 扁平插画风（天蓝+明黄+卡通人物）'},
+    {v:'报纸新闻风', label:'🗞️ 报纸新闻风（做旧纸色+黑体标题）'},
+  ],
+  '穿搭时尚': [
+    {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（服装/单品3D漂浮+镭射渐变）'},
+    {v:'时尚杂志风', label:'👗 时尚杂志风（大字标题+高对比色块）'},
+    {v:'清新插画风', label:'🌸 清新插画风（奶油色+细线条+小清新）'},
+    {v:'复古港风', label:'📸 复古港风（做旧滤镜+胶片感+暖色调）'},
+    {v:'极简白卡风', label:'⬜ 极简白卡风（纯白底+黑色线稿）'},
+    {v:'国潮撞色风', label:'🔴 国潮撞色风（朱红+靛蓝+金色）'},
+  ],
+  '城市文化': [
+    {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（城市建筑3D微缩漂浮+玻璃质感）'},
+    {v:'民国复古手绘风', label:'🏮 民国复古手绘风（做旧米黄+水墨插画）'},
+    {v:'清新水彩旅游风', label:'🎨 清新水彩旅游风（天蓝+草绿+粉橙）'},
+    {v:'赛博朋克城市风', label:'🌃 赛博朋克城市风（深色+霓虹线条）'},
+    {v:'日系治愈插画风', label:'🌸 日系治愈插画风（奶油色+细线条）'},
+    {v:'国潮撞色风', label:'🔴 国潮撞色风（朱红+靛蓝+金色）'},
+    {v:'四季浮雕立体地图风', label:'🗺️ 四季浮雕立体地图风（米白浮雕+3D建筑）'},
+  ],
+  'Citywalk探店': [
+    {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（探店元素3D漂浮+玻璃卡片）'},
+    {v:'手绘插画地图风', label:'🗺️ 手绘插画地图风（奶油色+手绘线条）'},
+    {v:'清新水彩旅游风', label:'🎨 清新水彩旅游风（天蓝+草绿+粉橙）'},
+    {v:'复古街拍风', label:'📸 复古街拍风（做旧滤镜+胶片感）'},
+    {v:'小清新摄影风', label:'📷 小清新摄影风（白底+实拍图+极简）'},
+    {v:'国风水墨地图风', label:'🖋️ 国风水墨地图风（宣纸白+水墨线条）'},
+  ],
+  '职场副业': [
+    {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（职场元素3D漂浮+科技光效）'},
+    {v:'商务简约风', label:'💼 商务简约风（深蓝+白+金色线条）'},
+    {v:'扁平插画风', label:'🎨 扁平插画风（天蓝+明黄+卡通人物）'},
+    {v:'手账便签风', label:'📓 手账便签风（牛皮纸底+胶带+手写体）'},
+    {v:'杂志封面风', label:'📰 杂志封面风（大字标题+高对比色块）'},
+    {v:'数据可视化风', label:'📊 数据可视化风（深色底+彩色图表）'},
+  ],
+  '星座情感': [
+    {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（星座符号3D漂浮+深空渐变）'},
+    {v:'古风金色宫廷风', label:'✨ 古风金色宫廷风（暖金+米白+星座符号）'},
+    {v:'赛博星云风', label:'🌌 赛博星云风（深空紫+霓虹蓝+星点）'},
+    {v:'马卡龙少女风', label:'🎀 马卡龙少女风（粉+紫+奶白+爱心）'},
+    {v:'复古欧式插画风', label:'🏛️ 复古欧式插画风（做旧米色+线稿人物）'},
+    {v:'极简黑白对比风', label:'⚫ 极简黑白对比风（纯黑底+白字+金色点缀）'},
+  ],
+  '家装设计': [
+    {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（家具/空间3D等距视角+玻璃质感）'},
+    {v:'现代简约风', label:'🏠 现代简约风（白色+原木色+灰色）'},
+    {v:'北欧清新风', label:'🌿 北欧清新风（浅色系+绿植+原木）'},
+    {v:'新中式风', label:'🏯 新中式风（深木色+水墨元素+禅意）'},
+    {v:'轻奢现代风', label:'💎 轻奢现代风（大理石+金属线条+高级灰）'},
+    {v:'工业复古风', label:'🔧 工业复古风（裸砖+铁艺+深色）'},
+  ],
+  '古诗图解': [
+    {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（诗词场景3D微缩漂浮+国风渐变）'},
+    {v:'国风水彩插画风', label:'🎨 国风水彩插画风（荷塘/山水，暖色）'},
+    {v:'卷轴沉浸式', label:'📜 卷轴沉浸式（做旧羊皮纸+毛笔大字）'},
+    {v:'童趣Q版场景风', label:'🎠 童趣Q版场景风（卡通人物活在诗境）'},
+    {v:'极简文字卡风', label:'⬛ 极简文字卡风（黑白水墨+大字排版）'},
+    {v:'民国复古报纸风', label:'📰 民国复古报纸风（做旧纸纹+铅字）'},
+    {v:'四季浮雕纸雕风', label:'🌸 四季浮雕纸雕风（米白浮雕+3D古诗意境）'},
+  ],
+};
+
+const DEFAULT_STYLES = [
+  {v:'AI随机匹配', label:'🎲 AI随机匹配（默认）'},
+  {v:'3D悬浮立体风', label:'🧊 3D悬浮立体风（当下最火·玻璃质感+立体漂浮元素）'},
+  {v:'国风国潮', label:'🎋 国风国潮'},
+  {v:'清新简约', label:'🌸 清新简约'},
+  {v:'暗调高级', label:'🖤 暗调高级'},
+  {v:'可爱插画', label:'🎨 可爱插画'},
+  {v:'科技感', label:'⚡ 科技感'},
+  {v:'复古做旧', label:'📰 复古做旧'},
+  {v:'博物学手绘', label:'🔬 博物学手绘'},
+];
+
+function updateStyleOptions(category) {
+  const select = document.getElementById('style-pref');
+  const pool = STYLE_POOLS[category] || DEFAULT_STYLES;
+  const currentVal = select.value;
+  select.innerHTML = '';
+  // 始终加一个默认选项
+  const defOpt = document.createElement('option');
+  defOpt.value = 'AI随机匹配'; defOpt.textContent = '🎲 AI随机匹配（默认）';
+  select.appendChild(defOpt);
+  pool.forEach(s => {
+    if (s.v === 'AI随机匹配') return;
+    const opt = document.createElement('option');
+    opt.value = s.v; opt.textContent = s.label;
+    select.appendChild(opt);
+  });
+  // 尝试保留之前选择的值
+  if ([...select.options].some(o => o.value === currentVal)) {
+    select.value = currentVal;
+  }
 }
 
 // ============ 生成提示词 ============
@@ -463,9 +673,10 @@ async function generate() {
 请分析以上内容，自动判定品类、匹配手法、随机选择风格，生成完整的即梦生图提示词。严格按JSON格式输出。`;
 
   try {
+    const headers = { 'Content-Type': 'application/json' };
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 2000,
@@ -481,8 +692,10 @@ async function generate() {
     lastResult = { json, topic };
     renderResult(json);
   } catch(e) {
-    document.getElementById('outSection').style.display = 'block';
-    document.getElementById('outSection').innerHTML = '<div style="background:#1a0a0a;border:1px solid #f87171;border-radius:10px;padding:1rem;color:#f87171;font-size:13px;">❌ 生成失败：' + e.message + '，请重试</div>';
+    // 降级：本地规则生成
+    const fallback = localGenerate(topic, category, size, style);
+    lastResult = { json: fallback, topic };
+    renderResult(fallback);
   }
 
   btn.disabled = false; btn.textContent = '✨ 一键生成图文提示词';
