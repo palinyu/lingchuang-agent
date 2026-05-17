@@ -713,63 +713,71 @@ function mkCopyBtn(id, fn) {
 boot();
 </script>
 
-<!-- 右侧悬浮跳转卡片 -->
-<div id="float-card" style="
-  position:fixed;
-  right:24px;
-  top:50%;
-  transform:translateY(-50%);
-  width:130px;
-  z-index:9999;
+<!-- 跳转入口：桌面端右侧悬浮卡片 + 手机端底部导航条 -->
+<style>
+#float-card-desktop { display:block; }
+#float-card-mobile  { display:none;  }
+@media(max-width:768px){
+  #float-card-desktop { display:none !important; }
+  #float-card-mobile  { display:flex !important; }
+  .shell { padding-bottom: 80px !important; }
+}
+</style>
+
+<!-- 桌面端：右侧悬浮卡片 -->
+<div id="float-card-desktop" style="
+  position:fixed;right:24px;top:50%;
+  transform:translateY(-50%);width:130px;z-index:9999;
 ">
-  <a href="https://lc.wazgz.com/" target="_blank" style="text-decoration:none;" title="返回灵创星球">
+  <a href="https://lc.wazgz.com/" target="_blank" style="text-decoration:none;">
     <div style="
       width:130px;
       background:linear-gradient(160deg,rgba(28,28,28,0.98),rgba(10,10,10,0.99));
-      border:1.5px solid rgba(212,175,55,0.55);
-      border-radius:18px;
-      padding:20px 12px 16px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:10px;
-      cursor:pointer;
-      box-shadow:0 0 24px rgba(212,175,55,0.18), 0 8px 32px rgba(0,0,0,0.6);
+      border:1.5px solid rgba(212,175,55,0.55);border-radius:18px;
+      padding:20px 12px 16px;display:flex;flex-direction:column;
+      align-items:center;gap:10px;cursor:pointer;
+      box-shadow:0 0 24px rgba(212,175,55,0.18),0 8px 32px rgba(0,0,0,0.6);
       transition:all .25s ease;
     "
-    onmouseover="this.style.borderColor='#f5c44a';this.style.boxShadow='0 0 36px rgba(245,196,74,0.38), 0 8px 32px rgba(0,0,0,0.7)';this.style.transform='translateY(-3px)'"
-    onmouseout="this.style.borderColor='rgba(212,175,55,0.55)';this.style.boxShadow='0 0 24px rgba(212,175,55,0.18), 0 8px 32px rgba(0,0,0,0.6)';this.style.transform='translateY(0)'"
+    onmouseover="this.style.borderColor='#f5c44a';this.style.boxShadow='0 0 36px rgba(245,196,74,0.38),0 8px 32px rgba(0,0,0,0.7)';this.style.transform='translateY(-3px)'"
+    onmouseout="this.style.borderColor='rgba(212,175,55,0.55)';this.style.boxShadow='0 0 24px rgba(212,175,55,0.18),0 8px 32px rgba(0,0,0,0.6)';this.style.transform='translateY(0)'"
     >
-      <!-- Logo图标 -->
-      <div style="
-        width:64px;height:64px;
-        border-radius:50%;
-        background:linear-gradient(135deg,#f5c44a,#d4af37);
-        display:flex;align-items:center;justify-content:center;
-        font-size:32px;
-        box-shadow:0 0 18px rgba(245,196,74,0.45);
-      ">🌐</div>
-      <!-- 文字 -->
+      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#f5c44a,#d4af37);display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 0 18px rgba(245,196,74,0.45);">🌐</div>
       <div style="text-align:center;">
-        <div style="font-size:15px;font-weight:900;color:#f5c44a;letter-spacing:.05em;line-height:1.4;">灵创星球</div>
-        <div style="font-size:12px;color:#999;margin-top:4px;line-height:1.4;">AI聚合平台</div>
+        <div style="font-size:15px;font-weight:900;color:#f5c44a;letter-spacing:.05em;">灵创星球</div>
+        <div style="font-size:12px;color:#999;margin-top:4px;">AI聚合平台</div>
       </div>
-      <!-- 分割线 -->
       <div style="width:80%;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);"></div>
-      <!-- 按钮 -->
-      <div style="
-        width:100%;
-        text-align:center;
-        font-size:13px;
-        font-weight:700;
-        color:#000;
-        background:linear-gradient(135deg,#f5c44a,#d4af37);
-        border-radius:8px;
-        padding:7px 0;
-        letter-spacing:.03em;
-        box-shadow:0 2px 10px rgba(212,175,55,0.3);
-      ">点击进入 →</div>
+      <div style="width:100%;text-align:center;font-size:13px;font-weight:700;color:#000;background:linear-gradient(135deg,#f5c44a,#d4af37);border-radius:8px;padding:7px 0;box-shadow:0 2px 10px rgba(212,175,55,0.3);">点击进入 →</div>
     </div>
+  </a>
+</div>
+
+<!-- 手机端：底部固定导航条 -->
+<div id="float-card-mobile" style="
+  position:fixed;bottom:0;left:0;right:0;z-index:9999;
+  background:linear-gradient(135deg,rgba(18,18,18,0.98),rgba(8,8,8,0.99));
+  border-top:1.5px solid rgba(212,175,55,0.45);
+  padding:10px 20px;
+  display:none;
+  align-items:center;justify-content:space-between;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.5);
+">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f5c44a,#d4af37);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 10px rgba(245,196,74,0.4);">🌐</div>
+    <div>
+      <div style="font-size:13px;font-weight:900;color:#f5c44a;">灵创星球</div>
+      <div style="font-size:11px;color:#888;">AI生产力全能聚合平台</div>
+    </div>
+  </div>
+  <a href="https://lc.wazgz.com/" target="_blank" style="text-decoration:none;">
+    <div style="
+      background:linear-gradient(135deg,#f5c44a,#d4af37);
+      color:#000;font-size:13px;font-weight:900;
+      padding:9px 18px;border-radius:10px;
+      box-shadow:0 2px 12px rgba(212,175,55,0.35);
+      white-space:nowrap;
+    ">立即进入 →</div>
   </a>
 </div>
 
