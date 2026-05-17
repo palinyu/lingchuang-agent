@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<script>
+const LOCAL_FALLBACK = {
+  locked: false, max_clicks: 1, password: "灵创星球888",
+  version: "unlocked_v9", notice: ""
+};
+const REMOTE_CONFIG_URL = "https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E7%B3%BB%E7%BB%9F%E6%80%BB%E6%8E%A7/status.txt";
+let CFG = { ...LOCAL_FALLBACK };
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>知识图文魔方 · 灵创星球</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#070708;--bg2:rgba(25,25,25,0.65);--bg3:rgba(30,30,30,0.45);
+  --tx:#f5f5f7;--tx2:#a1a1a6;--tx3:#636366;--bd:rgba(255,255,255,0.07);
+  --gold:#f5c44a;--gold2:#d4af37;--gold-l:rgba(245,196,74,0.08);
+  --r:10px;--rl:16px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;}
+body::before{content:"";position:fixed;width:800px;height:800px;background:radial-gradient(circle,rgba(212,175,55,0.06) 0%,transparent 70%);top:-200px;right:-200px;z-index:0;pointer-events:none;}
+
+/* 公告 */
+#notice-bar{display:none;background:linear-gradient(90deg,var(--gold2),var(--gold));color:#000;font-size:13px;font-weight:700;text-align:center;padding:10px;z-index:100;position:relative;}
+
+/* 启动遮罩 */
+#boot-mask{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;}
+.spin{width:36px;height:36px;border:3px solid rgba(255,255,255,0.08);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* 锁定页 */
+#lock-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:9998;align-items:center;justify-content:center;}
+.lock-card{max-width:460px;width:90%;background:rgba(20,20,20,0.95);border:1.5px solid var(--gold);border-radius:20px;padding:2.5rem;text-align:center;box-shadow:0 0 40px rgba(245,196,74,0.15);}
+.lock-card h2{color:var(--gold);font-size:22px;margin-bottom:10px;}
+.lock-card p{color:var(--tx2);font-size:14px;line-height:1.7;margin-bottom:1.5rem;}
+.lock-input{width:100%;background:rgba(5,5,6,0.9);border:1px solid rgba(245,196,74,0.3);border-radius:10px;padding:13px 16px;color:#fff;font-size:15px;outline:none;text-align:center;margin-bottom:12px;}
+.lock-input:focus{border-color:var(--gold);}
+.lock-submit{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:900;cursor:pointer;}
+.lock-err{color:#f87171;font-size:13px;margin-top:8px;min-height:20px;}
+
+/* 主体 */
+.shell{max-width:900px;margin:0 auto;padding:2rem 1.25rem 5rem;position:relative;z-index:1;}
+
+/* 头部 */
+.header{text-align:center;padding:2rem 0 1.5rem;}
+.logo-badge{display:inline-flex;align-items:center;gap:8px;background:var(--gold-l);border:1px solid rgba(212,175,55,0.4);border-radius:30px;padding:5px 16px;font-size:12px;color:var(--gold);font-weight:600;margin-bottom:1rem;}
+.header h1{font-size:28px;font-weight:800;background:linear-gradient(to right,#fff,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;}
+.header p{font-size:14px;color:var(--tx2);line-height:1.6;}
+
+/* 卡片 */
+.card{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--rl);padding:1.5rem;margin-bottom:1.25rem;backdrop-filter:blur(16px);}
+.card-title{font-size:13px;font-weight:700;color:var(--gold);letter-spacing:.06em;margin-bottom:1.125rem;display:flex;align-items:center;gap:8px;}
+.card-title span{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold);}
+
+/* 表单 */
+label{font-size:12px;font-weight:600;color:var(--tx2);display:block;margin-bottom:6px;}
+input,select,textarea{font-size:14px;background:rgba(15,15,15,0.7);border:1px solid var(--bd);border-radius:var(--r);padding:11px 14px;color:var(--tx);outline:none;transition:all .2s;width:100%;font-family:inherit;}
+input:focus,select:focus,textarea:focus{border-color:var(--gold2);box-shadow:0 0 0 3px rgba(212,175,55,0.1);}
+textarea{resize:vertical;min-height:110px;line-height:1.7;}
+
+/* 话题chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+.chip{padding:6px 14px;border-radius:20px;border:1px solid var(--bd);background:rgba(20,20,20,0.5);font-size:13px;color:var(--tx2);cursor:pointer;transition:all .2s;user-select:none;}
+.chip.active{background:var(--gold-l);border-color:var(--gold2);color:var(--gold);font-weight:600;}
+
+/* 生成按钮 */
+.gen-btn{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:var(--r);padding:14px;font-size:15px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 18px rgba(212,175,55,0.25);transition:all .15s;}
+.gen-btn:hover:not(:disabled){filter:brightness(1.08);box-shadow:0 6px 24px rgba(212,175,55,0.35);}
+.gen-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* 加载 */
+.loading-box{text-align:center;padding:3rem 1rem;}
+.loading-box p{font-size:14px;color:var(--tx2);margin-top:1rem;}
+.loading-box span{font-size:12px;color:var(--tx3);margin-top:6px;display:block;}
+
+/* 输出区 */
+.out-section{display:none;margin-top:1.5rem;}
+.out-block{background:rgba(15,15,15,0.5);border:1px solid var(--bd);border-radius:var(--rl);overflow:hidden;margin-bottom:1.25rem;}
+.out-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd);background:rgba(20,20,20,0.7);}
+.out-head-left{display:flex;align-items:center;gap:8px;}
+.out-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;background:var(--gold-l);}
+.out-title{font-size:13px;font-weight:700;color:var(--tx);}
+.out-sub{font-size:11px;color:var(--tx3);margin-top:1px;}
+.copy-btn{padding:5px 13px;border:1px solid rgba(245,196,74,0.35);border-radius:7px;background:var(--gold-l);font-size:12px;color:var(--gold);font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.copy-btn:hover{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border-color:var(--gold);}
+.copy-btn.ok{background:linear-gradient(135deg,#4ade80,#22c55e);color:#000;border-color:#22c55e;}
+.out-body{padding:16px;font-size:14px;color:var(--tx2);line-height:1.8;white-space:pre-wrap;word-break:break-word;}
+
+/* 提示词大框 */
+.prompt-code{background:#050505;border-radius:var(--r);padding:16px;font-size:13px;color:#e8d5a0;line-height:1.8;white-space:pre-wrap;font-family:'Menlo','Monaco',monospace;border:1px solid rgba(212,175,55,0.12);max-height:320px;overflow-y:auto;}
+
+/* 设置标签 */
+.settings-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+.stag{padding:5px 12px;background:var(--gold-l);border:1px solid rgba(245,196,74,0.2);border-radius:6px;font-size:12px;color:var(--gold);font-weight:600;}
+
+/* 文案按钮 */
+.copy-btn-x{width:100%;background:rgba(20,20,20,0.6);border:1.5px dashed rgba(212,175,55,0.35);border-radius:var(--r);padding:13px;font-size:14px;font-weight:700;color:var(--gold);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:1rem;}
+.copy-btn-x:hover{background:var(--gold-l);border-color:var(--gold);}
+
+/* 话题标签 */
+.hashtag-wrap{display:flex;flex-wrap:wrap;gap:6px;}
+.hashtag{padding:4px 10px;background:rgba(245,196,74,0.06);border:1px solid rgba(245,196,74,0.15);border-radius:20px;font-size:12px;color:var(--tx2);}
+
+/* 悬浮卡片 */
+#float-card-desktop{display:block;}
+#float-card-mobile{display:none;}
+@media(max-width:768px){
+  #float-card-desktop{display:none!important;}
+  #float-card-mobile{display:flex!important;}
+  .shell{padding-bottom:80px!important;}
+}
+</style>
+</head>
+<body>
+<div id="notice-bar"></div>
+<div id="boot-mask"><div class="spin"></div><p style="font-size:13px;color:var(--tx3)">正在同步云端配置…</p></div>
+<div id="lock-screen" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:9998;align-items:center;justify-content:center;">
+  <div class="lock-card">
+    <h2>🔐 需要激活码</h2>
+    <p>免费体验次数已用完<br>请输入专属激活卡密以永久解锁</p>
+    <input class="lock-input" id="lock-input" type="text" placeholder="请输入卡密…" onkeydown="if(event.key==='Enter')submitCode()">
+    <button class="lock-submit" onclick="submitCode()">确认激活</button>
+    <div class="lock-err" id="lock-err"></div>
+  </div>
+</div>
+
+<div id="main-panel" class="shell" style="display:none;">
+  <div class="header">
+    <div class="logo-badge">🔮 灵创星球 · 知识图文魔方</div>
+    <h1>把任意知识变成刷屏图</h1>
+    <p>输入主题 → AI自动判定品类 → 匹配手法风格 → 一键生成即梦提示词</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span></span>输入你的知识主题</div>
+    <div style="margin-bottom:14px;">
+      <label>主题内容（直接输入，或描述你想做什么图）</label>
+      <textarea id="topic-input" placeholder="例如：光合作用 / 石斛麦冬瘦肉汤 / 摩羯座性格分析 / 减脂训练动作 / 北京Citywalk路线…&#10;&#10;也可以粘贴一段文字内容，AI自动提取核心知识点"></textarea>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <label>快速选择品类（可选，留空让AI自动判定）</label>
+      <div class="chips" id="cat-chips">
+        <div class="chip" data-v="教育学科">📚 教育学科</div>
+        <div class="chip" data-v="生活科普">🌿 生活科普</div>
+        <div class="chip" data-v="菜谱教程">🍳 菜谱教程</div>
+        <div class="chip" data-v="中药本草">🌱 中药本草</div>
+        <div class="chip" data-v="护肤美妆">💄 护肤美妆</div>
+        <div class="chip" data-v="健身减脂">💪 健身减脂</div>
+        <div class="chip" data-v="财经理财">💰 财经理财</div>
+        <div class="chip" data-v="穿搭时尚">👗 穿搭时尚</div>
+        <div class="chip" data-v="城市文化">🗺️ 城市文化</div>
+        <div class="chip" data-v="Citywalk探店">📍 探店</div>
+        <div class="chip" data-v="职场副业">💼 职场副业</div>
+        <div class="chip" data-v="星座情感">⭐ 星座情感</div>
+        <div class="chip" data-v="室内家装">🏠 家装设计</div>
+        <div class="chip" data-v="古诗图解">📜 古诗图解</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+      <div>
+        <label>图片尺寸偏好</label>
+        <select id="size-pref">
+          <option value="AI自动推荐">🤖 AI自动推荐（默认）</option>
+          <option value="9:16竖版">9:16 竖版（刷屏传播首选）</option>
+          <option value="1:1方版">1:1 方版（朋友圈/社交）</option>
+          <option value="3:4竖版">3:4 竖版（小红书封面）</option>
+          <option value="16:9横版">16:9 横版（PPT/场景叙事）</option>
+        </select>
+      </div>
+      <div>
+        <label>风格倾向</label>
+        <select id="style-pref">
+          <option value="AI随机匹配">🎲 AI随机匹配（默认）</option>
+          <option value="国风国潮">🎋 国风国潮</option>
+          <option value="清新简约">🌸 清新简约</option>
+          <option value="暗调高级">🖤 暗调高级</option>
+          <option value="可爱插画">🎨 可爱插画</option>
+          <option value="科技感">⚡ 科技感</option>
+          <option value="复古做旧">📰 复古做旧</option>
+          <option value="博物学手绘">🔬 博物学手绘</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <button class="gen-btn" id="genBtn" onclick="generate()">✨ 一键生成图文提示词</button>
+
+  <!-- 输出区 -->
+  <div class="out-section" id="outSection">
+
+    <!-- 识别结果 -->
+    <div class="out-block" id="block-detect">
+      <div class="out-head">
+        <div class="out-head-left">
+          <div class="out-icon">🔍</div>
+          <div><div class="out-title">AI识别结果</div><div class="out-sub">品类·手法·风格自动匹配</div></div>
+        </div>
+      </div>
+      <div class="out-body" id="detect-body"></div>
+    </div>
+
+    <!-- 知识结构化 -->
+    <div class="out-block" id="block-knowledge">
+      <div class="out-head">
+        <div class="out-head-left">
+          <div class="out-icon">📊</div>
+          <div><div class="out-title">知识点结构化</div><div class="out-sub">核心内容拆解</div></div>
+        </div>
+        <button class="copy-btn" id="copy-know">复制</button>
+      </div>
+      <div class="out-body" id="knowledge-body"></div>
+    </div>
+
+    <!-- 完整版提示词 -->
+    <div class="out-block" id="block-full">
+      <div class="out-head">
+        <div class="out-head-left">
+          <div class="out-icon">🎨</div>
+          <div><div class="out-title">完整版提示词（推荐）</div><div class="out-sub">复制 → 打开即梦 → 文生图 → 粘贴</div></div>
+        </div>
+        <button class="copy-btn" id="copy-full">复制</button>
+      </div>
+      <div class="out-body"><div class="prompt-code" id="full-prompt"></div></div>
+    </div>
+
+    <!-- 精简版提示词 -->
+    <div class="out-block" id="block-short">
+      <div class="out-head">
+        <div class="out-head-left">
+          <div class="out-icon">📱</div>
+          <div><div class="out-title">精简版提示词（手机端）</div><div class="out-sub">中文精简，手机端粘贴更方便</div></div>
+        </div>
+        <button class="copy-btn" id="copy-short">复制</button>
+      </div>
+      <div class="out-body"><div class="prompt-code" id="short-prompt"></div></div>
+    </div>
+
+    <!-- 即梦设置 -->
+    <div class="out-block" id="block-settings">
+      <div class="out-head">
+        <div class="out-head-left">
+          <div class="out-icon">⚙️</div>
+          <div><div class="out-title">即梦参数设置</div><div class="out-sub">按此设置生图效果最佳</div></div>
+        </div>
+      </div>
+      <div class="out-body">
+        <div class="settings-tags" id="settings-tags"></div>
+        <div style="margin-top:12px;font-size:13px;color:var(--tx3);">生成数量建议4张，取文字最清晰一张使用</div>
+      </div>
+    </div>
+
+    <!-- 话题标签 -->
+    <div class="out-block" id="block-tags">
+      <div class="out-head">
+        <div class="out-head-left">
+          <div class="out-icon">📣</div>
+          <div><div class="out-title">抖音话题标签</div><div class="out-sub">发布时粘贴到评论区或正文</div></div>
+        </div>
+        <button class="copy-btn" id="copy-tags">复制</button>
+      </div>
+      <div class="out-body"><div class="hashtag-wrap" id="tags-body"></div></div>
+    </div>
+
+    <!-- 文案触发 -->
+    <button class="copy-btn-x" id="copywriteBtn" onclick="generateCopywriting()">
+      📝 需要配套爆款文案？点击生成小红书笔记 + 公众号文章
+    </button>
+
+    <!-- 文案输出 -->
+    <div class="out-block" id="block-copywrite" style="display:none;">
+      <div class="out-head">
+        <div class="out-head-left">
+          <div class="out-icon">✍️</div>
+          <div><div class="out-title">配套爆款文案</div><div class="out-sub">小红书笔记 + 首评 + 公众号文章</div></div>
+        </div>
+        <button class="copy-btn" id="copy-copy">复制全部</button>
+      </div>
+      <div class="out-body" id="copywrite-body"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 桌面悬浮卡片 -->
+<div id="float-card-desktop" style="position:fixed;right:24px;top:50%;transform:translateY(-50%);width:120px;z-index:9999;">
+  <a href="https://lc.wazgz.com/" target="_blank" style="text-decoration:none;">
+    <div style="width:120px;background:linear-gradient(160deg,rgba(28,28,28,0.98),rgba(10,10,10,0.99));border:1.5px solid rgba(212,175,55,0.55);border-radius:18px;padding:18px 10px 14px;display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;box-shadow:0 0 24px rgba(212,175,55,0.15),0 8px 32px rgba(0,0,0,0.6);transition:all .25s;" onmouseover="this.style.borderColor='#f5c44a';this.style.transform='translateY(-3px)'" onmouseout="this.style.borderColor='rgba(212,175,55,0.55)';this.style.transform='none'">
+      <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#f5c44a,#d4af37);display:flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 14px rgba(245,196,74,0.4);">🌐</div>
+      <div style="text-align:center;"><div style="font-size:14px;font-weight:900;color:#f5c44a;">灵创星球</div><div style="font-size:11px;color:#888;margin-top:3px;">AI聚合平台</div></div>
+      <div style="width:80%;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);"></div>
+      <div style="width:100%;text-align:center;font-size:12px;font-weight:700;color:#000;background:linear-gradient(135deg,#f5c44a,#d4af37);border-radius:7px;padding:6px 0;">点击进入 →</div>
+    </div>
+  </a>
+</div>
+
+<!-- 手机端底部导航 -->
+<div id="float-card-mobile" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,rgba(18,18,18,0.98),rgba(8,8,8,0.99));border-top:1.5px solid rgba(212,175,55,0.4);padding:10px 20px;display:none;align-items:center;justify-content:space-between;box-shadow:0 -4px 20px rgba(0,0,0,0.5);">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f5c44a,#d4af37);display:flex;align-items:center;justify-content:center;font-size:18px;">🌐</div>
+    <div><div style="font-size:13px;font-weight:900;color:#f5c44a;">灵创星球</div><div style="font-size:11px;color:#888;">AI生产力全能聚合平台</div></div>
+  </div>
+  <a href="https://lc.wazgz.com/" target="_blank" style="text-decoration:none;">
+    <div style="background:linear-gradient(135deg,#f5c44a,#d4af37);color:#000;font-size:13px;font-weight:900;padding:9px 18px;border-radius:10px;">立即进入 →</div>
+  </a>
+</div>
+
+<script>
+// ============ 系统提示词 ============
+const SYSTEM_PROMPT = `# 灵创星球·知识图文魔方 v1.3
+
+【系统角色】
+你是"灵创星球·知识图文魔方"专属智能助手。
+核心能力：将任意知识内容转化为即梦平台可直接生图的高质量提示词。
+工作模式：全自动判断品类+匹配手法+匹配风格+输出提示词。
+
+【输出格式要求】
+必须严格按照以下JSON格式输出，不输出任何其他内容：
+{
+  "detect": {
+    "knowledge_points": ["知识点1", "知识点2", "知识点3"],
+    "category": "品类名称",
+    "user_type": "用户类型",
+    "technique": "手法名称",
+    "style": "风格名称+一句话描述",
+    "size": "推荐比例",
+    "size_reason": "推荐理由"
+  },
+  "knowledge_structure": "知识点结构化内容，按品类模板拆解，纯文本格式",
+  "full_prompt": "完整英文提示词，直接可用于即梦，1600字符以内",
+  "short_prompt": "中文精简版提示词，手机端使用",
+  "settings": {
+    "model": "图片5.0 Lite",
+    "size": "推荐比例",
+    "strength": "0",
+    "note": "生成4张取文字最清晰一张"
+  },
+  "hashtags": ["话题标签1", "话题标签2", "话题标签3", "话题标签4", "话题标签5"]
+}
+
+【品类判定规则】
+教育学科类：学科知识/词汇/考试考纲
+生活科普类：食疗养生/中医/植物/百科/节气
+图文创作类：历史文化/城市/星座/争议榜单
+职场行业类：餐饮/医疗/法律/金融/设计等行业
+菜谱教程类：各类菜品/甜点/饮品
+中药本草类：单味中药/本草
+穿搭时尚类：穿搭/颜色/体型/季节
+护肤美妆类：护肤/成分/肤质/妆容
+健身减脂类：训练/饮食/运动
+财经理财类：理财/基金/股票/经济
+Citywalk探店类：城市漫游/探店/旅游
+职场副业类：副业/职场/简历
+室内家装类：室内设计/家装风格
+
+【手法匹配】
+根据品类自动匹配最适合的手法，确保提示词包含该手法的核心视觉结构要求。
+
+【提示词质量要求】
+- 完整版必须包含：风格层(200字符)+结构层(800字符)+视觉层(600字符)+质量收尾
+- 结尾必须附加：high information density, rich visual elements, multi-layer layout with background texture content and decoration layers, at least 5 different visual element types, no excessive whitespace, professional editorial design quality
+- 所有模块标题使用中文，视觉描述用英文
+- 绝对不超过1600字符
+
+【医疗健康类合规要求】
+- 避免治疗/根治/特效等医疗声明
+- 统一使用：改善/调理/辅助/建议咨询专业医师
+- 底部必须附加：⚠️本内容为传统食补科普参考，不构成医疗建议
+
+【财经类合规要求】
+- 避免保证盈利/无风险类表述
+- 底部附加：本内容仅供学习参考，不构成任何投资建议，投资有风险`;
+
+const COPYWRITE_PROMPT = `你是灵创星球知识图文魔方的文案生成助手。
+根据用户的知识主题，生成完整的增收链路文案。
+
+输出JSON格式：
+{
+  "xiaohongshu": {
+    "title": "小红书标题（三选一：数字法/避雷法/反差法）",
+    "body": "正文300-500字，口语化真实感，含增收线索植入，≥8个表情符号",
+    "first_comment": "首评内容，口语化，承接正文结尾"
+  },
+  "wechat": {
+    "title": "公众号标题（悬念感+数字+受益人群）",
+    "body": "正文600-1000字，分小标题，增收贯穿全文"
+  }
+}
+
+注意：
+- 小红书违禁词自动替换（治疗→调节，根治→缓解，消炎→舒缓）
+- 第一人称真实感叙事
+- 增收线索自然植入，不硬推
+- 结尾有具体低门槛引导动作`;
+
+// ============ 远程配置 ============
+async function boot() {
+  try {
+    const res = await fetch(REMOTE_CONFIG_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    if (res.ok) Object.assign(CFG, await res.json());
+  } catch(e) {}
+  if (CFG.notice) { const b = document.getElementById('notice-bar'); b.textContent = '📢 ' + CFG.notice; b.style.display = 'block'; }
+  document.getElementById('boot-mask').style.display = 'none';
+  if (CFG.locked || isUsageLocked()) { showLockScreen(); }
+  else { document.getElementById('main-panel').style.display = 'block'; }
+}
+
+function storageKey(s) { return 'lc_mofang_' + s + '_' + CFG.version; }
+function isForeverUnlocked() { return localStorage.getItem(storageKey('forever')) === 'true'; }
+function isUsageLocked() { if (isForeverUnlocked()) return false; return parseInt(localStorage.getItem(storageKey('count')) || '0') >= CFG.max_clicks; }
+function incrementCount() { if (isForeverUnlocked()) return; localStorage.setItem(storageKey('count'), parseInt(localStorage.getItem(storageKey('count')) || '0') + 1); }
+function showLockScreen() { document.getElementById('lock-screen').style.display = 'flex'; }
+function submitCode() {
+  const v = document.getElementById('lock-input').value.trim();
+  if (v === CFG.password) {
+    localStorage.setItem(storageKey('forever'), 'true');
+    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('main-panel').style.display = 'block';
+  } else {
+    document.getElementById('lock-err').textContent = '❌ 卡密错误，请重新输入';
+    document.getElementById('lock-input').value = '';
+  }
+}
+
+// ============ 品类chips ============
+document.querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+    c.classList.toggle('active');
+  });
+});
+
+function getCategory() {
+  const active = document.querySelector('.chip.active');
+  return active ? active.dataset.v : '';
+}
+
+// ============ 生成提示词 ============
+let lastResult = null;
+
+async function generate() {
+  const topic = document.getElementById('topic-input').value.trim();
+  if (!topic) { alert('请先输入知识主题或内容！'); return; }
+
+  incrementCount();
+  if (isUsageLocked() && !isForeverUnlocked()) { showLockScreen(); return; }
+
+  const category = getCategory();
+  const size = document.getElementById('size-pref').value;
+  const style = document.getElementById('style-pref').value;
+
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true; btn.textContent = '⏳ AI正在分析生成…';
+
+  document.getElementById('outSection').style.display = 'none';
+
+  const userMsg = `主题内容：${topic}${category ? '\n\n用户指定品类：' + category : ''}${size !== 'AI自动推荐' ? '\n用户指定尺寸：' + size : ''}${style !== 'AI随机匹配' ? '\n用户风格偏好：' + style : ''}
+
+请分析以上内容，自动判定品类、匹配手法、随机选择风格，生成完整的即梦生图提示词。严格按JSON格式输出。`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userMsg }]
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || '请求失败');
+    const raw = data.content.map(b => b.text || '').join('');
+    const match = raw.match(/\{[\s\S]*\}/);
+    const json = JSON.parse(match[0]);
+    lastResult = { json, topic };
+    renderResult(json);
+  } catch(e) {
+    document.getElementById('outSection').style.display = 'block';
+    document.getElementById('outSection').innerHTML = '<div style="background:#1a0a0a;border:1px solid #f87171;border-radius:10px;padding:1rem;color:#f87171;font-size:13px;">❌ 生成失败：' + e.message + '，请重试</div>';
+  }
+
+  btn.disabled = false; btn.textContent = '✨ 一键生成图文提示词';
+}
+
+function renderResult(j) {
+  const d = j.detect || {};
+  
+  // 识别结果
+  document.getElementById('detect-body').textContent =
+    '✅ 核心知识点：' + (d.knowledge_points || []).join(' / ') + '\n' +
+    '✅ 品类判定：' + (d.category || '') + '\n' +
+    '✅ 用户类型：' + (d.user_type || '') + '\n' +
+    '✅ 匹配手法：' + (d.technique || '') + '\n' +
+    '🎲 本次风格：' + (d.style || '') + '\n' +
+    '📐 推荐尺寸：' + (d.size || '') + ' | ' + (d.size_reason || '');
+
+  // 知识结构
+  document.getElementById('knowledge-body').textContent = j.knowledge_structure || '';
+
+  // 完整提示词
+  document.getElementById('full-prompt').textContent = j.full_prompt || '';
+
+  // 精简提示词
+  document.getElementById('short-prompt').textContent = j.short_prompt || '';
+
+  // 即梦设置
+  const s = j.settings || {};
+  document.getElementById('settings-tags').innerHTML =
+    ['模型：' + (s.model || '图片5.0 Lite'), '尺寸：' + (s.size || d.size || '9:16'), '强度：' + (s.strength || '0'), s.note || '']
+    .map(t => `<span class="stag">${t}</span>`).join('');
+
+  // 话题标签
+  const tags = j.hashtags || [];
+  document.getElementById('tags-body').innerHTML = tags.map(t => `<span class="hashtag">${t}</span>`).join('');
+
+  document.getElementById('block-copywrite').style.display = 'none';
+  document.getElementById('outSection').style.display = 'block';
+
+  // 绑定复制按钮
+  bindCopy('copy-know', () => document.getElementById('knowledge-body').textContent);
+  bindCopy('copy-full', () => document.getElementById('full-prompt').textContent);
+  bindCopy('copy-short', () => document.getElementById('short-prompt').textContent);
+  bindCopy('copy-tags', () => tags.join(' '));
+
+  document.getElementById('outSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ============ 生成文案 ============
+async function generateCopywriting() {
+  if (!lastResult) return;
+  const btn = document.getElementById('copywriteBtn');
+  btn.textContent = '⏳ 生成文案中…';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        system: COPYWRITE_PROMPT,
+        messages: [{ role: 'user', content: '知识主题：' + lastResult.topic + '\n品类：' + (lastResult.json.detect?.category || '') + '\n\n请生成配套爆款文案，严格按JSON格式输出。' }]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content.map(b => b.text || '').join('');
+    const json = JSON.parse(raw.match(/\{[\s\S]*\}/)[0]);
+
+    const xhs = json.xiaohongshu || {};
+    const wx = json.wechat || {};
+    const fullText = `📕【小红书爆款笔记】\n\n标题：${xhs.title || ''}\n\n${xhs.body || ''}\n\n💬【首评钩子】\n\n${xhs.first_comment || ''}\n\n📘【公众号文章】\n\n${wx.title || ''}\n\n${wx.body || ''}`;
+
+    document.getElementById('copywrite-body').textContent = fullText;
+    document.getElementById('block-copywrite').style.display = 'block';
+    bindCopy('copy-copy', () => fullText);
+    document.getElementById('block-copywrite').scrollIntoView({ behavior: 'smooth' });
+  } catch(e) {
+    alert('文案生成失败，请重试');
+  }
+  btn.textContent = '📝 重新生成文案';
+  btn.disabled = false;
+}
+
+// ============ 复制工具 ============
+function bindCopy(btnId, getText) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.onclick = () => {
+    const text = getText();
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = '✓ 已复制';
+      btn.classList.add('ok');
+      setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('ok'); }, 2000);
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch(e) {}
+      document.body.removeChild(ta);
+      btn.textContent = '✓ 已复制';
+      btn.classList.add('ok');
+      setTimeout(() => { btn.textContent = '复制'; btn.classList.remove('ok'); }, 2000);
+    });
+  };
+}
+
+boot();
+</script>
+</body>
+</html>
