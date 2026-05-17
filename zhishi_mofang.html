@@ -188,17 +188,6 @@ textarea{resize:vertical;min-height:110px;line-height:1.7;}
           </div>
           <div class="showcase-card">
             <div class="showcase-img-wrap">
-              <img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/3D%E8%8E%B2%E8%8A%B1%E7%99%BE%E7%A7%91.png" alt="植物百科" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'">
-              <div class="showcase-overlay">
-                <span class="showcase-style">3D悬浮立体风</span>
-              </div>
-            </div>
-            <div class="showcase-info">
-              <span class="showcase-cat">植物百科</span>
-            </div>
-          </div>
-          <div class="showcase-card">
-            <div class="showcase-img-wrap">
               <img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E6%A1%82%E8%8A%B1.png" alt="植物科普" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'">
               <div class="showcase-overlay">
                 <span class="showcase-style">国风水彩</span>
@@ -374,19 +363,7 @@ textarea{resize:vertical;min-height:110px;line-height:1.7;}
       <div class="out-body"><div class="prompt-code" id="short-prompt"></div></div>
     </div>
 
-    <!-- 即梦设置 -->
-    <div class="out-block" id="block-settings">
-      <div class="out-head">
-        <div class="out-head-left">
-          <div class="out-icon">⚙️</div>
-          <div><div class="out-title">即梦参数设置</div><div class="out-sub">按此设置生图效果最佳</div></div>
-        </div>
-      </div>
-      <div class="out-body">
-        <div class="settings-tags" id="settings-tags"></div>
-        <div style="margin-top:12px;font-size:13px;color:var(--tx3);">生成数量建议4张，取文字最清晰一张使用</div>
-      </div>
-    </div>
+
 
     <!-- 生图平台跳转 -->
     <div class="out-block" id="block-platforms">
@@ -460,17 +437,7 @@ textarea{resize:vertical;min-height:110px;line-height:1.7;}
       </div>
     </div>
 
-    <!-- 话题标签 -->
-    <div class="out-block" id="block-tags">
-      <div class="out-head">
-        <div class="out-head-left">
-          <div class="out-icon">📣</div>
-          <div><div class="out-title">抖音话题标签</div><div class="out-sub">发布时粘贴到评论区或正文</div></div>
-        </div>
-        <button class="copy-btn" id="copy-tags">复制</button>
-      </div>
-      <div class="out-body"><div class="hashtag-wrap" id="tags-body"></div></div>
-    </div>
+
 
     <!-- 文案触发（暂时隐藏）-->
     <!--<button class="copy-btn-x" id="copywriteBtn" onclick="generateCopywriting()">
@@ -790,7 +757,30 @@ function localGenerate(topic, category, size, style) {
 
 // ============ 风格预览说明 ============
 const STYLE_PREVIEWS = {
-  'AI随机匹配': '系统根据你选择的品类，自动匹配最适合的风格，每次都有惊喜 🎲',
+  'AI随机匹配': '系统根据主题内容自动判定品类，匹配最适合的风格，每次都有惊喜 🎲',
+  '镭射全息风': '彩虹镭射光效+金属质感，超强视觉冲击力，护肤/美妆/时尚类爆款首选',
+  '奶油肌理风': '米白奶油色底+细腻质感纹理，高级温柔感，生活/美食/种草类必备',
+  '新中式轻奢风': '国风元素+现代金属线条+高级感配色，高端品牌感，护肤/家装/职场类',
+  '数据可视化风': '图表+信息图+数字突出，专业可信，财经/健康数据/职场类最佳',
+  '教材插画风': '清晰图解+色块分区+标注系统，适合教育/科普/步骤教程类',
+  '暗调奢华风': '深色背景+金色元素+奢华质感，高端大气，电商高端品/财经类',
+  '清新产品展示风': '白底+产品实物+极简排版，干净专业，电商产品图/护肤类',
+  '促销撞色爆款风': '高饱和撞色+大字标题+红黄配色，视觉冲击强，促销/活动类',
+  '日系小清新风': '淡粉+细线条+温柔感，少女心满满，美妆/护肤/生活类',
+  'ins风产品图': '白底+柔和阴影+高级感，适合小红书/ins种草，电商/美妆类',
+  '复古美食杂志风': '深色背景+金色标题+杂志质感，适合高端餐饮/美食探店类',
+  '高级杂志封面风': '深色+金色+奢华感，时尚大片质感，美妆/时尚/品牌类',
+  '赛博霓虹风': '深紫背景+荧光色+未来感，适合美妆/科技/游戏类',
+  '奶油ins风': '米白底+精致阴影+温柔感，适合护肤/生活/种草类',
+  '医美科技风': '白底+蓝色+专业医疗感，适合护肤成分/健康科普类',
+  '敦煌壁画风': '朱砂+石青+飞天纹样，文化厚重感，适合历史/文化/节日类',
+  '青花瓷风': '白底+靛蓝+瓷器纹样，雅致东方感，适合中药/茶道/文化类',
+  'PPT简约风': '白底+色块+清晰排版，商务大气，适合职场/培训/知识类',
+  '国家地理杂志风': '深色背景+高清实拍+金色标题，震撼大气，适合自然/旅游/科普类',
+  '民国报纸风': '繁体字+活字印刷+做旧纸色，历史感强，适合历史/文化类',
+  '老式电台风': '复古棕色+黑胶唱片+做旧质感，怀旧温暖，适合音乐/生活/情感类',
+  '商务深色风': '深蓝+金色线条+数据图表，专业权威感，适合财经/职场/商务类',
+  '手账便签风': '牛皮纸底+胶带装饰+手写体，温馨随性，适合生活/学习/计划类',
   '3D悬浮立体风': '当下抖音/小红书最火风格 🔥 玻璃质感卡片+元素3D漂浮+镭射渐变背景，视觉冲击力极强',
   '国潮赛博风': '国风元素与赛博朋克碰撞，霓虹光效+暗调背景+中文大字，适合年轻用户群体',
   '莫兰迪高级感': '低饱和度高级灰调，视觉舒适不刺眼，精致排版，适合品质感内容',
@@ -1082,6 +1072,23 @@ function renderResult(j) {
   bindCopy('copy-full', () => document.getElementById('full-prompt').textContent);
   bindCopy('copy-short', () => document.getElementById('short-prompt').textContent);
   bindCopy('copy-tags', () => tags.join(' '));
+
+  // 加联系区
+  const existContact = document.getElementById('result-contact');
+  if (!existContact) {
+    const contactDiv = document.createElement('div');
+    contactDiv.id = 'result-contact';
+    contactDiv.innerHTML = `<!-- 生成结果后联系区 -->
+    <div style="background:linear-gradient(135deg,rgba(245,196,74,0.06),rgba(212,175,55,0.03));border:1px solid rgba(245,196,74,0.25);border-radius:16px;padding:1.5rem;margin-top:1rem;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+      <img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87%E4%BA%8C%E7%BB%B4%E7%A0%81_20260515141550_400_2.jpg" style="width:80px;height:80px;border-radius:10px;border:1.5px solid rgba(245,196,74,0.3);object-fit:cover;flex-shrink:0;">
+      <div style="flex:1;min-width:160px;">
+        <div style="font-size:14px;font-weight:800;color:var(--gold);margin-bottom:4px;">💬 觉得好用？扫码加微信</div>
+        <div style="font-size:12px;color:var(--tx2);line-height:1.7;margin-bottom:8px;">获取更多AI创作技巧、爆款案例和专属玩法，一起用AI搞钱</div>
+        <div style="font-size:12px;color:var(--tx3);">微信号：<span style="color:var(--gold);font-weight:700;">palinyu</span></div>
+      </div>
+    </div>`;
+    document.getElementById('outSection').appendChild(contactDiv);
+  }
 
   document.getElementById('outSection').scrollIntoView({ behavior: 'smooth' });
 }
