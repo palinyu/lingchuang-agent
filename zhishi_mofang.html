@@ -296,16 +296,8 @@ textarea{resize:vertical;min-height:110px;line-height:1.7;}
       </div>
       <div>
         <label>风格倾向</label>
-        <select id="style-pref">
-          <option value="AI随机匹配">🎲 AI随机匹配（默认）</option>
-          <option value="3D悬浮立体风">🧊 3D悬浮立体风（当下最火·玻璃质感+立体漂浮）</option>
-          <option value="国风国潮">🎋 国风国潮</option>
-          <option value="清新简约">🌸 清新简约</option>
-          <option value="暗调高级">🖤 暗调高级</option>
-          <option value="可爱插画">🎨 可爱插画</option>
-          <option value="科技感">⚡ 科技感</option>
-          <option value="复古做旧">📰 复古做旧</option>
-          <option value="博物学手绘">🔬 博物学手绘</option>
+        <select id="style-pref" onchange="showStylePreview(this.value)">
+          <option value="AI随机匹配">🎲 AI自动适配（推荐·系统匹配最佳风格）</option>
         </select>
       </div>
     </div>
@@ -999,6 +991,14 @@ async function generate() {
   btn.disabled = true; btn.textContent = '⏳ AI正在分析生成…';
 
   document.getElementById('outSection').style.display = 'none';
+  
+  // 超时保护：5秒后自动降级
+  const timeoutId = setTimeout(() => {
+    const fallback = localGenerate(topic, category, size, style);
+    lastResult = { json: fallback, topic };
+    renderResult(fallback);
+    btn.disabled = false; btn.textContent = '✨ 一键生成图文提示词';
+  }, 5000);
 
   const userMsg = `主题内容：${topic}${category ? '\n\n用户指定品类：' + category : ''}${size !== 'AI自动推荐' ? '\n用户指定尺寸：' + size : ''}${style !== 'AI随机匹配' ? '\n用户风格偏好：' + style : ''}
 
@@ -1021,9 +1021,11 @@ async function generate() {
     const raw = data.content.map(b => b.text || '').join('');
     const match = raw.match(/\{[\s\S]*\}/);
     const json = JSON.parse(match[0]);
+    clearTimeout(timeoutId);
     lastResult = { json, topic };
     renderResult(json);
   } catch(e) {
+    clearTimeout(timeoutId);
     // 降级：本地规则生成
     const fallback = localGenerate(topic, category, size, style);
     lastResult = { json: fallback, topic };
@@ -1172,7 +1174,104 @@ function copyAndGo() {
   });
 }
 
+// 初始化风格select
+function initStyleSelect() {
+  const sel = document.getElementById('style-pref');
+  if (!sel) return;
+  sel.innerHTML = '';
+  
+  const groups = [
+    { label: '🔥 当下最火爆款', styles: [
+      {v:'AI随机匹配', l:'🎲 AI自动适配（推荐·系统匹配最佳风格）'},
+      {v:'3D悬浮立体风', l:'🧊 3D悬浮立体风（玻璃质感+立体漂浮）'},
+      {v:'莫兰迪高级感', l:'🎨 莫兰迪高级感（低饱和高级灰）'},
+      {v:'国潮赛博风', l:'🌆 国潮赛博风（霓虹+国风+暗调）'},
+      {v:'镭射全息风', l:'💎 镭射全息风（彩虹光效+金属质感）'},
+      {v:'奶油肌理风', l:'🍦 奶油肌理风（米白奶油+细腻质感）'},
+      {v:'新中式轻奢风', l:'✨ 新中式轻奢风（国风+金属线条）'},
+    ]},
+    { label: '📚 知识图解', styles: [
+      {v:'极简白卡风', l:'⬜ 极简白卡风（纯白+黑字+留白美学）'},
+      {v:'扁平插画风', l:'📐 扁平插画风（几何色块+简洁图形）'},
+      {v:'实验室科技风', l:'🔬 实验室科技风（白底+分子+数据）'},
+      {v:'数据可视化风', l:'📊 数据可视化风（图表+信息图+数字）'},
+      {v:'杂志封面风', l:'📰 杂志封面风（大字+高对比+视觉冲击）'},
+      {v:'教材插画风', l:'📖 教材插画风（清晰图解+色块分区）'},
+    ]},
+    { label: '🛒 电商海报', styles: [
+      {v:'暗调奢华风', l:'🖤 暗调奢华风（深色+金色+高端感）'},
+      {v:'清新产品展示风', l:'🌿 清新产品展示风（白底+实物+极简）'},
+      {v:'促销撞色爆款风', l:'🔴 促销撞色爆款风（高饱和+大字+红黄）'},
+      {v:'日系小清新风', l:'🌸 日系小清新风（淡粉+细线+温柔感）'},
+      {v:'ins风产品图', l:'📸 ins风产品图（白底+阴影+高级感）'},
+    ]},
+    { label: '🌸 生活美食', styles: [
+      {v:'暖色插画风', l:'🍊 暖色插画风（橙红+奶白+卡通食材）'},
+      {v:'日式手账风', l:'📓 日式手账风（牛皮纸底+手写体）'},
+      {v:'手绘水彩风', l:'🖌️ 手绘水彩风（透明感+柔和晕染）'},
+      {v:'日系治愈风', l:'🍃 日系治愈风（奶油色+手绘+温柔）'},
+      {v:'复古美食杂志风', l:'🍷 复古美食杂志风（深色背景+金色标题）'},
+    ]},
+    { label: '💄 美妆时尚', styles: [
+      {v:'马卡龙少女风', l:'🎀 马卡龙少女风（粉紫奶白+爱心）'},
+      {v:'高级杂志封面风', l:'💎 高级杂志封面风（深色+金色+奢华）'},
+      {v:'赛博霓虹风', l:'⚡ 赛博霓虹风（深紫+荧光+未来感）'},
+      {v:'奶油ins风', l:'🤍 奶油ins风（米白+阴影+精致感）'},
+      {v:'医美科技风', l:'🔬 医美科技风（白底+蓝色+专业感）'},
+    ]},
+    { label: '🎋 中式国风', styles: [
+      {v:'国风国潮', l:'🎋 国风国潮（朱红+金色+中式纹样）'},
+      {v:'水墨古典风', l:'🖋️ 水墨古典风（宣纸+墨色+印章）'},
+      {v:'四季浮雕纸雕风', l:'🌿 四季浮雕纸雕风（米白3D微缩场景）'},
+      {v:'民国复古风', l:'🏮 民国复古风（做旧米黄+水墨插画）'},
+      {v:'敦煌壁画风', l:'🏔️ 敦煌壁画风（朱砂+石青+飞天纹样）'},
+      {v:'青花瓷风', l:'🫖 青花瓷风（白底+靛蓝+瓷器纹样）'},
+    ]},
+    { label: '💼 职场商务', styles: [
+      {v:'商务深色风', l:'💼 商务深色风（深蓝+金色+数据图表）'},
+      {v:'科技感', l:'⚡ 赛博科技风（深蓝+霓虹+数据感）'},
+      {v:'手账便签风', l:'📒 手账便签风（牛皮纸+胶带+手写体）'},
+      {v:'PPT简约风', l:'📊 PPT简约风（白底+色块+清晰排版）'},
+    ]},
+    { label: '🌿 自然博物', styles: [
+      {v:'博物学手绘', l:'🔬 博物学手绘（精细线稿+科学标注）'},
+      {v:'国家地理杂志风', l:'🌍 国家地理杂志风（深色+实拍+金色标题）'},
+      {v:'清新简约', l:'🌸 清新简约（白底+细线+淡彩）'},
+      {v:'可爱插画', l:'🎨 可爱Q版插画（马卡龙+圆润卡通）'},
+    ]},
+    { label: '📰 复古系', styles: [
+      {v:'复古做旧', l:'📰 复古报纸风（做旧纸色+黑体字）'},
+      {v:'民国报纸风', l:'🗞️ 民国报纸风（繁体+活字印刷感）'},
+      {v:'老式电台风', l:'📻 老式电台风（复古棕+黑胶+做旧感）'},
+    ]},
+  ];
+
+  groups.forEach((g, gi) => {
+    if (gi === 0) {
+      // 第一组直接加选项（AI自动适配放最前面）
+      g.styles.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.v; opt.textContent = s.l;
+        sel.appendChild(opt);
+      });
+    } else {
+      const grp = document.createElement('optgroup');
+      grp.label = g.label;
+      g.styles.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.v; opt.textContent = s.l;
+        grp.appendChild(opt);
+      });
+      sel.appendChild(grp);
+    }
+  });
+}
+
+// 修复生成中卡住问题：降级方案超时保护
+const _origGenerate = generate;
+
 boot();
+document.addEventListener('DOMContentLoaded', initStyleSelect);
 </script>
 </body>
 </html>
