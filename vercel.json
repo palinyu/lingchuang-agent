@@ -1,6 +1,7 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/lingchuang_agent_final.html" },
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/pet", "destination": "/lingchuang_agent_final.html" },
     { "source": "/mofang", "destination": "/zhishi_mofang.html" }
   ]
 }
