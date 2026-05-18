@@ -2,263 +2,270 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>灵创星球 · AI出图引擎</title>
 <script>
 const CONFIG_URL = '/api/config';
 let CFG = null;
 let selectedCard = null;
 let currentPassword = null;
 </script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>灵创星球 · AI出图引擎</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#07080a;--bg2:rgba(20,20,25,0.8);--bg3:rgba(25,25,32,0.6);
-  --tx:#f0f0f5;--tx2:#9090a0;--tx3:#505060;--bd:rgba(255,255,255,0.06);
-  --gold:#f5c44a;--gold2:#d4af37;--gold-l:rgba(245,196,74,0.08);
-  --green:#07c160;--blue:#4f8ef7;--r:10px;--rl:16px;
+:root {
+  --bg-dark:#09090d;
+  --card-bg:linear-gradient(145deg,#2d2f39 0%,#14151b 60%,#22242d 100%);
+  --gold:#f3af42;
+  --gold-glow:rgba(243,175,66,0.35);
+  --gold-dim:rgba(243,175,66,0.08);
+  --tx:#f1f5f9;
+  --tx2:#94a3b8;
+  --tx3:#475569;
+  --bd:rgba(255,255,255,0.06);
+  --bd-gold:rgba(243,175,66,0.3);
+  --panel:#111218;
+  --input-bg:#0b0c10;
+  --r:12px;
 }
-body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;}
-body::before{content:"";position:fixed;width:900px;height:900px;background:radial-gradient(circle,rgba(79,142,247,0.04) 0%,transparent 60%);top:-300px;left:-200px;z-index:0;pointer-events:none;}
-body::after{content:"";position:fixed;width:700px;height:700px;background:radial-gradient(circle,rgba(212,175,55,0.05) 0%,transparent 60%);bottom:-200px;right:-100px;z-index:0;pointer-events:none;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-system,'PingFang SC',sans-serif;min-height:100vh;overflow-x:hidden;background-image:radial-gradient(circle at 50% 0%,#1c1d26 0%,#09090d 70%);}
 
-/* 公告栏 */
-#notice-bar{display:none;background:linear-gradient(90deg,#1a1a2e,#16213e,#0f3460);color:var(--gold);font-size:13px;font-weight:600;text-align:center;padding:10px;z-index:100;position:relative;border-bottom:1px solid rgba(245,196,74,0.2);}
+/* 公告 */
+#notice-bar{display:none;background:linear-gradient(90deg,#1a1228,#231520,#1a1228);color:var(--gold);font-size:13px;font-weight:700;text-align:center;padding:10px;border-bottom:1px solid var(--bd-gold);letter-spacing:.5px;}
 
 /* 启动遮罩 */
-#boot-mask{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:20px;}
-.spin{width:40px;height:40px;border:3px solid rgba(255,255,255,0.06);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+#boot-mask{position:fixed;inset:0;background:var(--bg-dark);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:20px;}
 @keyframes spin{to{transform:rotate(360deg)}}
-.boot-logo{font-size:28px;font-weight:900;background:linear-gradient(135deg,#fff,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.spin{width:36px;height:36px;border:3px solid rgba(243,175,66,0.1);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+.boot-logo{font-size:26px;font-weight:900;color:#fff;}
+.boot-logo span{color:var(--gold);}
 
-/* 锁定页 */
-#lock-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:9998;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 0 60px;}
-.lock-wrap{max-width:480px;width:90%;margin:0 auto;padding-top:24px;}
-#step-select,#step-pay,#step-verify,#step-password,#step-input{display:none;}
-.lock-title{text-align:center;margin-bottom:24px;}
-.lock-title h2{font-size:22px;font-weight:800;background:linear-gradient(to right,#fff,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;}
-.lock-title p{color:var(--tx2);font-size:13px;line-height:1.7;}
-.free-tip{background:rgba(7,193,96,0.08);border:1px solid rgba(7,193,96,0.2);border-radius:10px;padding:10px 16px;text-align:center;font-size:13px;color:var(--green);margin-bottom:20px;}
-.card-list{display:flex;flex-direction:column;gap:12px;margin-bottom:24px;}
-.card-item{background:rgba(20,20,28,0.95);border:1.5px solid var(--bd);border-radius:14px;padding:16px 20px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between;}
-.card-item:hover,.card-item.selected{border-color:var(--gold);background:var(--gold-l);box-shadow:0 0 20px rgba(245,196,74,0.1);}
-.card-info h3{font-size:15px;font-weight:700;color:var(--tx);margin-bottom:4px;}
-.card-info p{font-size:12px;color:var(--tx2);}
-.card-price{font-size:22px;font-weight:900;color:var(--gold);}
-.btn-next{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:var(--r);padding:15px;font-size:16px;font-weight:900;cursor:pointer;}
-.btn-next:disabled{opacity:0.4;cursor:not-allowed;}
-.pay-card{background:rgba(15,15,22,0.98);border:1.5px solid rgba(7,193,96,0.3);border-radius:20px;padding:24px;text-align:center;}
-.pay-card h3{color:var(--green);font-size:18px;margin-bottom:6px;}
-.pay-amount{font-size:36px;font-weight:900;color:var(--gold);margin-bottom:16px;}
-.qr-box{background:#fff;border-radius:12px;padding:10px;width:180px;height:180px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+/* ===== 锁定页 ===== */
+#lock-screen{display:none;position:fixed;inset:0;background:rgba(9,9,13,0.97);z-index:9998;align-items:flex-start;justify-content:center;overflow-y:auto;padding:32px 16px 60px;backdrop-filter:blur(8px);}
+.lock-wrap{max-width:460px;width:100%;margin:0 auto;}
+#step-select,#step-pay,#step-verify,#step-password,#step-input,#step-gzhguide{display:none;}
+.lock-card{background:#0f1015;border:1px solid var(--bd-gold);border-radius:20px;padding:28px;text-align:center;box-shadow:0 0 60px rgba(243,175,66,0.08);}
+.lock-card h2{font-size:20px;font-weight:900;color:var(--gold);margin-bottom:10px;}
+.lock-card p{color:var(--tx2);font-size:13px;line-height:1.8;margin-bottom:20px;}
+.free-tip-bar{background:rgba(243,175,66,0.04);border:1px solid var(--bd-gold);border-radius:8px;padding:10px 14px;text-align:center;font-size:13px;color:var(--tx2);margin-bottom:16px;}
+.free-tip-bar button{background:none;border:none;color:var(--gold);font-weight:700;cursor:pointer;font-size:13px;}
+.card-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.card-item{background:#13141a;border:1px solid var(--bd);border-radius:12px;padding:14px 18px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between;}
+.card-item:hover,.card-item.selected{border-color:var(--gold);background:var(--gold-dim);box-shadow:0 0 15px rgba(243,175,66,0.08);}
+.card-info h3{font-size:14px;font-weight:700;color:var(--tx);margin-bottom:3px;}
+.card-info p{font-size:11px;color:var(--tx2);}
+.card-price{font-size:20px;font-weight:900;color:var(--gold);}
+.btn-next{width:100%;background:linear-gradient(135deg,#f3af42,#b87b14);color:#000;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.5px;}
+.btn-next:disabled{background:#1a1b22;color:var(--tx3);cursor:not-allowed;}
+.qr-box{background:#fff;border-radius:10px;padding:10px;width:160px;height:160px;margin:0 auto 14px;overflow:hidden;}
 .qr-box img{width:100%;height:100%;object-fit:contain;}
-.pay-hint{font-size:12px;color:var(--tx3);margin-bottom:20px;}
-.btn-paid{width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--r);padding:15px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:12px;}
-.btn-back{background:transparent;border:none;color:var(--tx3);font-size:13px;cursor:pointer;width:100%;}
-#step-verify{text-align:center;padding:40px 20px;}
-#step-verify .spin{margin:0 auto 16px;}
-#step-verify p{color:var(--tx2);font-size:14px;}
-.pwd-card{background:rgba(15,15,22,0.98);border:1.5px solid var(--gold);border-radius:20px;padding:24px;text-align:center;box-shadow:0 0 40px rgba(245,196,74,0.08);}
-.pwd-card h3{color:var(--gold);font-size:18px;margin-bottom:8px;}
-.pwd-box{background:rgba(245,196,74,0.06);border:1.5px solid var(--gold);border-radius:10px;padding:14px;font-size:20px;font-weight:900;color:var(--gold);letter-spacing:3px;margin-bottom:12px;}
-.btn-copy-pwd{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:var(--r);padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:16px;}
-.input-card-lock{background:rgba(15,15,22,0.98);border:1.5px solid var(--bd);border-radius:20px;padding:24px;text-align:center;}
-.input-card-lock h3{color:var(--tx);font-size:18px;margin-bottom:8px;}
-.pwd-input{width:100%;background:rgba(10,10,15,0.8);border:1.5px solid var(--bd);border-radius:var(--r);padding:14px;font-size:16px;color:var(--tx);text-align:center;letter-spacing:2px;outline:none;margin-bottom:12px;font-family:inherit;}
-.pwd-input:focus{border-color:var(--gold);}
-.btn-unlock{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:var(--r);padding:15px;font-size:16px;font-weight:900;cursor:pointer;margin-bottom:10px;}
-.err-msg{color:#ff4d4f;font-size:13px;min-height:20px;margin-bottom:10px;}
-.btn-already{background:transparent;border:1px solid var(--bd);color:var(--tx2);border-radius:var(--r);padding:10px;font-size:13px;cursor:pointer;width:100%;}
+.btn-paid{width:100%;background:#07c160;color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;}
+.btn-back-link{background:transparent;border:none;color:var(--tx3);font-size:12px;cursor:pointer;width:100%;}
+.pwd-box-display{background:rgba(243,175,66,0.06);border:1.5px solid var(--gold);border-radius:8px;padding:14px;font-size:18px;font-weight:900;color:var(--gold);letter-spacing:4px;margin-bottom:14px;}
+.pwd-input-field{width:100%;background:#07080b;border:1px solid var(--bd);border-radius:10px;padding:13px;font-size:15px;color:var(--tx);text-align:center;outline:none;font-family:inherit;margin-bottom:10px;}
+.pwd-input-field:focus{border-color:var(--gold);}
+.err-txt{color:#ef4444;font-size:12px;min-height:18px;margin-bottom:8px;}
+.gzh-steps{background:#111218;border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:16px;text-align:left;}
+.gzh-steps div{font-size:13px;color:var(--tx);line-height:2.2;}
 
-/* 主体 */
-.shell{max-width:860px;margin:0 auto;padding:2rem 1.25rem 6rem;position:relative;z-index:1;}
+/* ===== 礼包弹窗 ===== */
+#gift-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:99999;align-items:center;justify-content:center;}
+.gift-card{background:#0f1015;border:1.5px solid var(--gold);border-radius:20px;padding:2.5rem;text-align:center;max-width:380px;width:90%;box-shadow:0 0 60px rgba(243,175,66,0.15);}
+.gift-card h2{color:var(--gold);font-size:20px;margin-bottom:10px;}
+.gift-card p{color:var(--tx2);font-size:13px;line-height:1.8;margin-bottom:20px;}
+.gift-btn{display:block;background:linear-gradient(135deg,#f3af42,#b87b14);color:#000;font-weight:900;font-size:14px;padding:12px;border-radius:10px;text-decoration:none;margin-bottom:8px;}
+.gift-close{background:transparent;border:none;color:var(--tx3);font-size:12px;cursor:pointer;margin-top:6px;}
 
-/* 头部 */
-.header{text-align:center;padding:2.5rem 0 1.5rem;}
-.brand-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);border-radius:30px;padding:5px 16px;font-size:12px;color:var(--blue);font-weight:600;margin-bottom:1rem;}
-.header h1{font-size:32px;font-weight:900;background:linear-gradient(135deg,#fff 30%,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;letter-spacing:-0.5px;}
-.header p{font-size:14px;color:var(--tx2);line-height:1.7;max-width:500px;margin:0 auto;}
-.usage-bar{display:inline-flex;align-items:center;gap:6px;background:rgba(245,196,74,0.06);border:1px solid rgba(245,196,74,0.15);border-radius:20px;padding:4px 14px;font-size:12px;color:var(--gold);margin-top:12px;}
+/* ===== 主体 ===== */
+.shell{max-width:1040px;margin:0 auto;padding:40px 20px 80px;}
+
+/* Hero */
+.hero{text-align:center;margin-bottom:32px;}
+.hero h1{font-size:34px;font-weight:900;letter-spacing:3px;color:#fff;margin-bottom:10px;text-shadow:0 4px 20px rgba(0,0,0,0.6);}
+.hero h1 span{color:var(--gold);text-shadow:0 0 20px var(--gold-glow);}
+.hero-sub{color:#cbd5e1;font-size:14px;font-weight:500;margin-bottom:6px;letter-spacing:.5px;}
+.hero-features{color:var(--tx3);font-size:12px;margin-bottom:16px;}
+.hero-features span{color:#fff;margin:0 6px;}
+.usage-badge{display:inline-block;background:linear-gradient(135deg,#43331a,#14151b);border:1px solid var(--bd-gold);color:var(--gold);font-size:11px;font-weight:800;padding:5px 18px;border-radius:20px;letter-spacing:.5px;box-shadow:0 4px 15px rgba(243,175,66,0.08);}
 
 /* 展示墙 */
-.showcase-section{margin-bottom:2rem;}
-.showcase-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px;}
-.showcase-title{font-size:14px;font-weight:700;color:var(--tx);}
-.showcase-sub{font-size:11px;color:var(--tx3);}
-.showcase-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:8px;}
-.showcase-scroll::-webkit-scrollbar{display:none;}
-.showcase-track{display:flex;gap:10px;width:max-content;}
-.showcase-card{width:140px;flex-shrink:0;cursor:pointer;transition:transform .2s;user-select:none;}
-.showcase-card:hover{transform:translateY(-4px);}
-.showcase-img-wrap{width:140px;height:196px;border-radius:10px;overflow:hidden;position:relative;background:rgba(255,255,255,0.03);border:1px solid var(--bd);flex-shrink:0;}
-.showcase-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
-.showcase-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.75));padding:16px 8px 8px;opacity:0;transition:opacity .2s;}
-.showcase-card:hover .showcase-overlay{opacity:1;}
-.showcase-style{font-size:10px;font-weight:600;color:var(--gold);background:rgba(0,0,0,0.6);padding:2px 7px;border-radius:8px;}
-.showcase-info{text-align:center;padding:5px 0 0;font-size:10px;color:var(--tx3);}
+.gallery-wall{background:var(--panel);border:1px solid var(--bd);border-radius:18px;padding:24px;margin-bottom:32px;}
+.gallery-header{border-left:3px solid var(--gold);padding-left:12px;margin-bottom:18px;}
+.gallery-header-title{font-size:14px;font-weight:800;color:#fff;letter-spacing:.5px;}
+.gallery-header-sub{font-size:11px;color:var(--tx3);margin-top:4px;}
+.gallery-track{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;cursor:grab;}
+.gallery-track::-webkit-scrollbar{display:none;}
+.gallery-card{flex-shrink:0;width:140px;background:#171922;border-radius:10px;padding:6px;border:1px solid rgba(255,255,255,0.02);}
+.gallery-img{width:128px;height:180px;border-radius:8px;overflow:hidden;border:1px solid var(--bd);cursor:zoom-in;}
+.gallery-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s;}
+.gallery-img:hover img{transform:scale(1.05);}
+.gallery-label{font-size:11px;color:var(--tx2);margin-top:7px;display:block;text-align:center;font-weight:600;}
 
-/* 品类快速入口 */
-.category-section{margin-bottom:1.25rem;}
-.category-label{font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-.category-label::after{content:"";flex:1;height:1px;background:var(--bd);}
-.category-grid{display:flex;flex-wrap:wrap;gap:8px;}
-.cat-chip{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:rgba(20,20,28,0.8);border:1px solid var(--bd);border-radius:20px;font-size:12px;color:var(--tx2);cursor:pointer;transition:all .2s;white-space:nowrap;}
-.cat-chip:hover,.cat-chip.active{background:var(--gold-l);border-color:rgba(245,196,74,0.4);color:var(--gold);}
-.cat-chip span{font-size:14px;}
+/* 行业药丸 */
+.section-title{font-size:12px;font-weight:800;color:var(--tx2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:"";flex:1;height:1px;background:var(--bd);}
+.industry-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:24px;}
+.industry-pill{position:relative;background:#13141a;border:1px solid var(--bd);border-radius:24px;padding:11px 8px;text-align:center;color:#cbd5e1;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.industry-pill:hover{border-color:var(--bd-gold);background:#1a1b25;}
+.industry-pill.active{background:rgba(243,175,66,0.1);border-color:var(--gold);color:var(--gold);box-shadow:0 0 15px rgba(243,175,66,0.08);}
+@keyframes pill-pulse{0%,100%{box-shadow:0 0 5px rgba(243,175,66,0.02);}50%{box-shadow:0 0 14px rgba(243,175,66,0.14);border-color:rgba(243,175,66,0.45);}}
+.industry-pill.hot{border-color:rgba(243,175,66,0.2);animation:pill-pulse 3s infinite ease-in-out;}
+.pill-badge{position:absolute;top:-8px;right:-2px;background:linear-gradient(135deg,#f3af42,#b87b14);color:#000;font-size:9px;font-weight:900;padding:1px 6px;border-radius:10px 10px 10px 0;letter-spacing:.2px;z-index:10;box-shadow:0 2px 6px rgba(0,0,0,0.5);}
 
-/* 卡片通用 */
-.card{background:var(--bg3);border:1px solid var(--bd);border-radius:var(--rl);padding:1.5rem;margin-bottom:1.25rem;backdrop-filter:blur(20px);}
-.card-title{font-size:12px;font-weight:700;color:var(--tx2);letter-spacing:.08em;margin-bottom:1rem;display:flex;align-items:center;gap:8px;text-transform:uppercase;}
-.card-title span{width:5px;height:5px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold);}
+/* 选题面板 */
+.topics-panel{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:24px;}
+.topics-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.topics-label{font-size:13px;font-weight:700;color:#fff;}
+.btn-shuffle{background:transparent;border:none;color:var(--gold);font-size:12px;cursor:pointer;font-weight:700;}
+.chips-dock{display:flex;flex-wrap:wrap;gap:8px;}
+.topic-chip{background:#191b24;border:1px solid rgba(255,255,255,0.03);border-radius:16px;padding:6px 13px;font-size:12px;color:var(--tx2);cursor:pointer;transition:all .2s;}
+.topic-chip:hover{background:#222533;color:#fff;border-color:rgba(243,175,66,0.2);}
 
-/* 上传区 */
-#upload-zone{border:1.5px dashed rgba(79,142,247,0.25);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all .25s;background:rgba(79,142,247,0.02);}
-#upload-zone:hover,#upload-zone.dragover{border-color:rgba(79,142,247,0.5);background:rgba(79,142,247,0.05);}
-#upload-preview{display:none;flex-wrap:wrap;gap:8px;justify-content:center;}
+/* 输入区 */
+.quota-bar{text-align:right;font-size:12px;color:var(--tx3);margin-bottom:10px;}
+.quota-bar span{color:var(--gold);font-weight:800;}
+.input-container{background:var(--input-bg);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:20px;transition:all .3s;}
+.input-container:focus-within{border-color:var(--gold);box-shadow:0 0 20px rgba(243,175,66,0.08);}
+.input-container textarea{width:100%;height:88px;background:transparent;border:none;color:var(--tx);font-size:15px;resize:none;outline:none;line-height:1.7;font-family:inherit;}
+.input-toolbar{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,0.03);padding-top:10px;margin-top:6px;}
+.btn-attach{background:rgba(243,175,66,0.03);border:1px dashed rgba(243,175,66,0.2);color:var(--gold);font-size:12px;font-weight:700;padding:6px 13px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s;}
+.btn-attach:hover{background:rgba(243,175,66,0.1);border-color:var(--gold);}
+.file-preview-badge{display:none;align-items:center;gap:8px;background:#151720;border:1px solid rgba(243,175,66,0.2);padding:4px 10px;border-radius:6px;font-size:11px;color:#cbd5e1;}
+.file-preview-badge img{width:18px;height:18px;object-fit:cover;border-radius:3px;}
+.btn-remove-file{color:#ef4444;cursor:pointer;font-weight:900;margin-left:4px;font-size:12px;background:none;border:none;}
 
-/* 输入 */
-label{font-size:12px;font-weight:600;color:var(--tx2);display:block;margin-bottom:6px;}
-input,select,textarea{font-size:14px;background:rgba(10,10,15,0.7);border:1px solid var(--bd);border-radius:var(--r);padding:11px 14px;color:var(--tx);outline:none;transition:all .2s;width:100%;font-family:inherit;}
-input:focus,select:focus,textarea:focus{border-color:rgba(245,196,74,0.4);box-shadow:0 0 0 3px rgba(212,175,55,0.06);}
-textarea{resize:vertical;min-height:100px;line-height:1.7;}
+/* 控制选择器 */
+.selectors-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px;}
+.select-wrap label{font-size:11px;font-weight:700;color:var(--tx3);letter-spacing:.5px;display:block;margin-bottom:8px;text-transform:uppercase;}
+.bgs{background:#111217;border:1px solid var(--bd);border-radius:12px;padding:13px 14px;color:var(--tx);font-size:14px;width:100%;outline:none;cursor:pointer;transition:border-color .3s;-webkit-appearance:none;appearance:none;}
+.bgs:focus{border-color:var(--gold);box-shadow:0 0 15px rgba(243,175,66,0.06);}
+.bgs optgroup{background:#0e0f14;color:var(--gold);font-weight:700;}
+.bgs option{background:#111217;color:#cbd5e1;}
+.custom-style-dock{display:none;grid-column:1/-1;margin-top:-8px;margin-bottom:12px;animation:slide-open .3s ease;}
+@keyframes slide-open{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+.custom-style-input{width:100%;padding:13px 16px;background:var(--input-bg);border:1px solid var(--bd-gold);border-radius:12px;color:#fff;font-size:14px;outline:none;box-shadow:inset 0 2px 4px rgba(0,0,0,0.6);}
+.custom-style-input:focus{border-color:#f7c36d;box-shadow:0 0 20px rgba(243,175,66,0.1);}
 
 /* 生成按钮 */
-.gen-btn{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:var(--r);padding:16px;font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 24px rgba(212,175,55,0.3);transition:all .15s;letter-spacing:.5px;}
-.gen-btn:hover:not(:disabled){filter:brightness(1.1);box-shadow:0 6px 32px rgba(212,175,55,0.4);transform:translateY(-1px);}
-.gen-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-generate{width:100%;padding:16px;background:linear-gradient(135deg,#f3af42,#b87b14);border:none;border-radius:12px;color:#000;font-weight:800;font-size:16px;cursor:pointer;letter-spacing:1.5px;box-shadow:0 6px 25px rgba(243,175,66,0.25);transition:all .3s;margin-bottom:24px;}
+.btn-generate:hover:not(:disabled){background:linear-gradient(135deg,#f7c36d,#d49324);transform:translateY(-1px);box-shadow:0 8px 30px rgba(243,175,66,0.38);}
+.btn-generate:disabled{background:#1f2029;color:var(--tx3);cursor:not-allowed;box-shadow:none;transform:none;}
 
-/* 终端日志 */
-#terminal-wrap{display:none;margin-top:1.25rem;}
-.terminal-box{background:#03040a;border:1px solid rgba(79,142,247,0.15);border-radius:12px;padding:16px;font-family:'Menlo','Monaco',monospace;font-size:12px;min-height:90px;position:relative;overflow:hidden;}
-.terminal-box::before{content:"● ● ●";position:absolute;top:10px;left:14px;font-size:10px;color:rgba(255,255,255,0.15);letter-spacing:4px;}
-#terminalConsole{margin-top:20px;color:#4ade80;line-height:1.9;}
-.terminal-line{animation:fadeIn .3s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:translateX(0)}}
+/* ===== 风格卡片区 ===== */
+#style-cards-section{display:none;margin-bottom:24px;}
+.style-cards-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.style-cards-header-left h3{font-size:16px;font-weight:800;color:#fff;margin-bottom:3px;}
+.style-cards-header-left p{font-size:12px;color:var(--tx3);}
+.btn-change-batch{background:rgba(243,175,66,0.06);border:1px solid rgba(243,175,66,0.2);color:var(--gold);padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.btn-change-batch:hover{background:rgba(243,175,66,0.14);}
+.style-cards-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.style-card{background:linear-gradient(145deg,#2d2f39,#14151b,#22242d);border:1px solid var(--bd);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .25s;position:relative;}
+.style-card:hover{border-color:rgba(243,175,66,0.4);transform:translateY(-2px);box-shadow:0 12px 35px rgba(0,0,0,0.5);}
+.style-card-rec{border-color:var(--gold)!important;box-shadow:0 0 25px rgba(243,175,66,0.12)!important;}
+.style-card-badge{position:absolute;top:0;right:0;background:linear-gradient(135deg,#f3af42,#b87b14);color:#000;font-size:10px;font-weight:800;padding:3px 10px;border-radius:0 0 0 10px;z-index:3;}
+.style-card-visual{height:90px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;position:relative;overflow:hidden;}
+.style-card-visual::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(0,0,0,0.5));pointer-events:none;}
+.scv-emoji{font-size:26px;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.6));position:relative;z-index:1;}
+.scv-name{font-size:10px;color:rgba(255,255,255,0.7);font-weight:600;letter-spacing:.05em;text-shadow:0 1px 4px rgba(0,0,0,0.9);position:relative;z-index:1;}
+/* 视觉背景 */
+.sv-3d{background:radial-gradient(ellipse at 30% 50%,rgba(80,130,255,0.35),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(150,80,255,0.25),transparent 60%),linear-gradient(135deg,#050520,#0d0d35,#1a1a50);}
+.sv-guochao{background:radial-gradient(ellipse at 50% 50%,rgba(220,60,30,0.35),transparent 65%),linear-gradient(135deg,#1a0505,#380e05,#550f0f);}
+.sv-shuimo{background:radial-gradient(ellipse at 50% 50%,rgba(100,80,60,0.3),transparent 70%),linear-gradient(135deg,#f0ebe0,#e5e0d5,#ddd8c8);}
+.sv-jianyi{background:radial-gradient(ellipse at 50% 30%,rgba(200,200,200,0.3),transparent 70%),linear-gradient(135deg,#f8f8f6,#f0f0ee,#e8e8e6);}
+.sv-bowu{background:radial-gradient(ellipse at 50% 50%,rgba(150,120,70,0.3),transparent 70%),linear-gradient(135deg,#15100a,#22180d,#302314);}
+.sv-saibo{background:radial-gradient(ellipse at 30% 50%,rgba(0,220,180,0.2),transparent 50%),radial-gradient(ellipse at 70% 50%,rgba(255,0,180,0.2),transparent 50%),linear-gradient(135deg,#020210,#080820,#101030);}
+.sv-makalong{background:radial-gradient(ellipse at 40% 50%,rgba(255,140,200,0.3),transparent 50%),radial-gradient(ellipse at 60% 50%,rgba(180,130,255,0.25),transparent 50%),linear-gradient(135deg,#1a0f20,#28153a,#201030);}
+.sv-zaji{background:radial-gradient(ellipse at 50% 30%,rgba(220,60,60,0.35),transparent 60%),linear-gradient(135deg,#0a0205,#18040a,#250508);}
+.sv-luxury{background:radial-gradient(ellipse at 50% 50%,rgba(180,140,50,0.25),transparent 65%),linear-gradient(145deg,#100d05,#1c1708,#14100a);}
+.sv-sport{background:radial-gradient(ellipse at 30% 50%,rgba(0,200,100,0.25),transparent 50%),linear-gradient(135deg,#030d20,#051830,#082040);}
+.sv-morandi{background:radial-gradient(ellipse at 50% 50%,rgba(180,170,160,0.3),transparent 70%),linear-gradient(135deg,#d8d0c8,#ccc4bc,#c0b8b0);}
+.sv-bohao{background:radial-gradient(ellipse at 50% 30%,rgba(100,160,220,0.3),transparent 60%),linear-gradient(135deg,#e8f0f8,#dce8f4,#d0e0ee);}
+.style-card-body{padding:12px 13px 13px;}
+.style-card-title{font-size:12px;font-weight:700;color:#fff;margin-bottom:3px;}
+.style-card-rec .style-card-title{color:var(--gold);}
+.style-card-desc{font-size:11px;color:var(--tx2);line-height:1.5;margin-bottom:10px;}
+.style-card-btn{width:100%;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
+.scb-primary{background:linear-gradient(135deg,#f3af42,#b87b14);color:#000;}
+.scb-secondary{background:rgba(243,175,66,0.06);color:var(--gold);border:1px solid rgba(243,175,66,0.2)!important;}
+.scb-secondary:hover{background:rgba(243,175,66,0.14);}
 
-/* 风格卡片 */
-#style-cards-wrap{display:none;margin-top:1.25rem;}
-.style-cards-header{text-align:center;margin-bottom:20px;}
-.style-cards-header h3{font-size:16px;font-weight:800;color:var(--tx);margin-bottom:6px;}
-.style-cards-header p{font-size:12px;color:var(--tx3);}
-#style-cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.style-card{background:rgba(15,15,22,0.95);border:1px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden;cursor:pointer;transition:all .25s;position:relative;}
-.style-card:hover{border-color:rgba(245,196,74,0.5);transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,0.5);}
-.style-card-recommended{border-color:var(--gold)!important;box-shadow:0 0 30px rgba(245,196,74,0.15)!important;}
-.style-card-badge{position:absolute;top:0;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:10px;font-weight:900;padding:3px 12px;border-radius:0 0 8px 8px;white-space:nowrap;z-index:2;}
-.style-card-visual{height:90px;position:relative;overflow:hidden;border:none;}
-.sv-3d{background:linear-gradient(135deg,#0a0a2e,#1a1a4e,#2d2d7e);background-image:radial-gradient(circle at 30% 50%,rgba(100,150,255,0.3),transparent 60%),radial-gradient(circle at 70% 50%,rgba(150,100,255,0.2),transparent 60%);}
-.sv-guochao{background:linear-gradient(135deg,#2a0a0a,#4a1a0a,#6a2a0a);background-image:radial-gradient(circle at 50% 50%,rgba(245,100,50,0.3),transparent 60%);}
-.sv-jianyi{background:linear-gradient(135deg,#f8f8f0,#f0f0e8,#e8e8e0);background-image:radial-gradient(circle at 50% 50%,rgba(200,200,180,0.5),transparent 60%);}
-.sv-bowu{background:linear-gradient(135deg,#1a1508,#2a2010,#3a3018);background-image:radial-gradient(circle at 50% 50%,rgba(180,150,80,0.3),transparent 60%);}
-.sv-saibo{background:linear-gradient(135deg,#050520,#0a0a35,#15154a);background-image:radial-gradient(circle at 30% 50%,rgba(0,255,200,0.15),transparent 50%),radial-gradient(circle at 70% 50%,rgba(255,0,200,0.15),transparent 50%);}
-.sv-shuimo{background:linear-gradient(135deg,#f5f0e8,#ede8e0,#e5e0d8);background-image:radial-gradient(circle at 50% 50%,rgba(100,80,60,0.2),transparent 60%);}
-.sv-makalong{background:linear-gradient(135deg,#2a1a2a,#3a1a3a,#4a2a4a);background-image:radial-gradient(circle at 40% 50%,rgba(255,150,200,0.25),transparent 50%),radial-gradient(circle at 60% 50%,rgba(200,150,255,0.2),transparent 50%);}
-.sv-zaji{background:linear-gradient(135deg,#1a0505,#2a0a0a,#3a1515);background-image:radial-gradient(circle at 50% 30%,rgba(255,80,80,0.3),transparent 50%);}
-.style-card-body{padding:12px 14px 14px;}
-.style-card-title{font-size:13px;font-weight:700;color:var(--tx);margin-bottom:4px;margin-top:4px;}
-.style-card-recommended .style-card-title{color:var(--gold);}
-.style-card-desc{font-size:11px;color:var(--tx2);line-height:1.6;margin-bottom:10px;}
-.style-card-btn{width:100%;border:none;border-radius:8px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
-.style-card-btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;}
-.style-card-btn-secondary{background:rgba(245,196,74,0.08);color:var(--gold);border:1px solid rgba(245,196,74,0.2)!important;}
-.style-card-btn-secondary:hover{background:var(--gold-l);}
+/* 思考单卡 */
+#thinking-section{display:none;justify-content:center;margin-bottom:24px;}
+.thinking-wrapper{position:relative;width:340px;height:400px;display:flex;justify-content:center;align-items:center;}
+.thinking-wing{position:absolute;width:260px;height:320px;border-radius:20px;opacity:0.55;filter:blur(14px);z-index:1;}
+.wing-l{background:linear-gradient(135deg,#2b5876,#4e4376);left:-20px;transform:scale(0.9) rotate(-6deg);}
+.wing-r{background:linear-gradient(135deg,#f3af42,#8a4c00);right:-20px;transform:scale(0.9) rotate(6deg);}
+.thinking-core{position:relative;width:100%;height:100%;background:#0f1015;border:1px solid var(--bd);border-radius:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;box-shadow:0 15px 45px rgba(0,0,0,0.8),0 0 40px rgba(243,175,66,0.12);padding:28px;text-align:center;}
+.thinking-badge{position:absolute;top:16px;background:linear-gradient(135deg,#f3af42,#b87b14);color:#000;font-size:10px;font-weight:800;padding:3px 14px;border-radius:20px;}
+.thinking-label{color:var(--tx3);font-size:12px;font-weight:700;margin-bottom:4px;letter-spacing:.5px;}
+.thinking-value{color:#fff;font-size:15px;font-weight:900;margin-bottom:20px;}
+.thinking-value span{color:var(--gold);}
+@keyframes spin-ring{to{transform:rotate(360deg)}}
+.atom-ring{width:44px;height:44px;border:3px solid rgba(243,175,66,0.08);border-top-color:var(--gold);border-right-color:var(--gold);border-radius:50%;box-shadow:0 0 20px var(--gold-glow);animation:spin-ring .9s linear infinite;}
+.thinking-status{color:#cbd5e1;font-size:12px;line-height:1.7;margin-top:28px;}
 
-/* 输出区 */
-.out-section{display:none;margin-top:1.25rem;}
-.out-block{background:rgba(12,12,18,0.8);border:1px solid var(--bd);border-radius:var(--rl);overflow:hidden;margin-bottom:1.25rem;}
-.out-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd);background:rgba(15,15,22,0.9);}
-.out-head-left{display:flex;align-items:center;gap:8px;}
-.out-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;background:var(--gold-l);}
-.out-title{font-size:13px;font-weight:700;color:var(--tx);}
-.out-sub{font-size:11px;color:var(--tx3);margin-top:1px;}
-.copy-btn{padding:5px 13px;border:1px solid rgba(245,196,74,0.3);border-radius:7px;background:var(--gold-l);font-size:12px;color:var(--gold);font-weight:700;cursor:pointer;transition:all .2s;}
-.copy-btn:hover{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border-color:var(--gold);}
-.copy-btn.ok{background:linear-gradient(135deg,#4ade80,#22c55e);color:#000;border-color:#22c55e;}
-.out-body{padding:16px;font-size:14px;color:var(--tx2);line-height:1.8;white-space:pre-wrap;word-break:break-word;}
-.prompt-code{background:#020204;border-radius:var(--r);padding:16px;font-size:13px;color:#c8a95a;line-height:1.9;white-space:pre-wrap;font-family:'Menlo','Monaco',monospace;border:1px solid rgba(212,175,55,0.08);max-height:280px;overflow-y:auto;}
+/* ===== 双栏输出 ===== */
+#output-section{display:none;margin-bottom:24px;}
+.dual-board{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;}
+.engine-wing{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:16px;}
+.wing-title{font-size:12px;font-weight:800;color:var(--tx2);letter-spacing:.5px;border-left:3px solid var(--gold);padding-left:8px;margin-bottom:2px;}
+.prompt-box{width:100%;height:120px;background:#07080b;border-radius:8px;padding:12px;color:#cbd5e1;font-family:'Menlo','Monaco',monospace;font-size:12px;overflow-y:auto;white-space:pre-wrap;line-height:1.6;border:1px solid rgba(255,255,255,0.02);}
+.text-box{width:100%;height:120px;background:#07080b;border-radius:8px;padding:12px;color:#f1f5f9;font-size:12px;overflow-y:auto;white-space:pre-wrap;line-height:1.6;border:1px solid rgba(255,255,255,0.02);}
+.video-box{width:100%;height:260px;background:#07080b;border-radius:8px;padding:12px;color:var(--gold);font-size:12px;overflow-y:auto;white-space:pre-wrap;line-height:1.7;border:1px solid rgba(243,175,66,0.03);}
+.btn-copy-action{width:100%;padding:9px;background:rgba(243,175,66,0.04);border:1px solid rgba(243,175,66,0.14);color:var(--gold);border-radius:6px;font-weight:800;font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:-6px;}
+.btn-copy-action:hover{background:rgba(243,175,66,0.14);border-color:var(--gold);}
+.legal-note{font-size:11px;color:#475569;line-height:1.5;border-top:1px dashed rgba(255,255,255,0.04);padding-top:10px;}
+.radar-area{display:flex;flex-direction:column;gap:10px;}
+.radar-item{background:#171922;border:1px solid rgba(255,255,255,0.02);border-radius:8px;padding:11px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;text-decoration:none;transition:all .2s;}
+.radar-item:hover{background:#1f2230;border-color:rgba(243,175,66,0.2);}
+.radar-tag{font-size:9px;font-weight:800;color:#000;background:var(--gold);padding:1px 5px;border-radius:3px;width:fit-content;}
+.radar-text{font-size:11px;color:#e2e8f0;font-weight:600;line-height:1.4;margin-top:3px;}
+.radar-go{font-size:11px;color:var(--gold);font-weight:700;white-space:nowrap;}
 
 /* 平台区 */
-.platform-btn{background:rgba(15,15,22,0.8);border:1px solid var(--bd);border-radius:12px;padding:14px 12px;text-align:center;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;}
-.platform-btn:hover{border-color:rgba(245,196,74,0.3);background:var(--gold-l);transform:translateY(-2px);}
-.featured-platform{border-color:rgba(245,196,74,0.4)!important;background:linear-gradient(135deg,rgba(245,196,74,0.08),rgba(212,175,55,0.04))!important;}
-.platform-icon{font-size:24px;}
-.platform-name{font-size:12px;font-weight:700;color:var(--tx);}
-.platform-tag{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:600;}
-.free-tag{background:rgba(52,199,89,0.1);color:#34c759;border:1px solid rgba(52,199,89,0.15);}
-.paid-tag{background:rgba(255,159,10,0.1);color:#ff9f0a;border:1px solid rgba(255,159,10,0.15);}
-.featured-platform .platform-name{color:var(--gold);}
+.platform-section{grid-column:1/-1;display:grid;grid-template-columns:2.2fr 1fr;gap:20px;margin-top:6px;}
+.platform-wing{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:20px;}
+.platform-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px;}
+.platform-card{background:#17181e;border:1px solid rgba(255,255,255,0.03);border-radius:12px;padding:18px 12px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+.platform-card:hover{border-color:rgba(243,175,66,0.2);background:#1e202a;transform:translateY(-2px);}
+.platform-card.rec-brand{border-color:rgba(243,175,66,0.3);background:linear-gradient(145deg,#1f2029,#131419);}
+.platform-card.rec-brand::after{content:'推荐';position:absolute;top:0;right:0;background:var(--gold);color:#000;font-size:9px;font-weight:800;padding:2px 7px;border-radius:0 12px 0 7px;}
+.platform-icon{font-size:22px;margin-bottom:8px;display:block;}
+.platform-name{font-size:12px;font-weight:800;color:#fff;display:block;margin-bottom:4px;}
+.platform-tag{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;display:inline-block;}
+.tag-gold{background:rgba(243,175,66,0.1);color:var(--gold);}
+.tag-green{background:rgba(34,197,94,0.1);color:#22c55e;}
+.hub-card{background:linear-gradient(145deg,#20222e,#0e0f14);border:1px solid var(--bd-gold);border-radius:14px;padding:24px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(243,175,66,0.06);}
+.hub-logo{width:42px;height:42px;background:var(--gold);border-radius:50%;font-size:22px;color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;box-shadow:0 0 15px var(--gold-glow);margin-bottom:12px;}
+.hub-title{font-size:15px;font-weight:900;color:#fff;margin-bottom:4px;}
+.hub-sub{font-size:11px;color:var(--tx3);margin-bottom:16px;}
+.btn-hub{width:100%;padding:11px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;text-decoration:none;display:block;}
 
-/* 礼包弹窗 */
-#gift-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:99999;align-items:center;justify-content:center;}
-.gift-card{background:#0f0f18;border:1.5px solid var(--gold);border-radius:20px;padding:2.5rem;text-align:center;max-width:380px;width:90%;box-shadow:0 0 60px rgba(245,196,74,0.15);}
-.gift-icon{font-size:48px;margin-bottom:16px;}
-.gift-card h2{color:var(--gold);font-size:22px;margin-bottom:12px;}
-.gift-card p{color:var(--tx2);font-size:14px;line-height:1.8;margin-bottom:24px;}
-.gift-btn{display:block;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-weight:900;font-size:14px;padding:13px;border-radius:10px;text-decoration:none;margin-bottom:10px;}
-.gift-close{background:transparent;border:none;color:var(--tx3);font-size:13px;cursor:pointer;margin-top:4px;}
+/* 微信Banner */
+.wechat-banner{grid-column:1/-1;background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:20px;display:flex;align-items:center;gap:20px;margin-top:6px;}
+.wechat-qr{width:72px;height:72px;background:#fff;border-radius:8px;padding:4px;flex-shrink:0;}
+.wechat-qr img{width:100%;height:100%;object-fit:contain;}
+.wechat-meta h3{font-size:14px;font-weight:800;color:#fff;margin-bottom:5px;}
+.wechat-meta p{font-size:12px;color:var(--tx3);}
+.wechat-id{color:var(--gold);font-family:monospace;font-weight:700;}
+
+/* 复制Toast */
+#clip-toast{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(25,26,32,0.96);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:22px 32px;text-align:center;z-index:100000;box-shadow:0 20px 50px rgba(0,0,0,0.8);}
+#clip-toast span{font-size:30px;color:#22c55e;display:block;margin-bottom:10px;}
+#clip-toast p{font-size:14px;font-weight:800;color:#fff;}
+
+/* 图片放大 */
+#img-zoom{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.93);z-index:99999;align-items:center;justify-content:center;cursor:zoom-out;}
+#img-zoom img{max-width:90vw;max-height:90vh;border-radius:12px;box-shadow:0 0 60px rgba(0,0,0,0.9);}
 
 /* 响应式 */
-#float-card-desktop{display:block;}
-#float-card-mobile{display:none;}
-@media(max-width:1200px){#float-card-desktop{display:none!important;}}
-@media(max-width:768px){
-  #float-card-mobile{display:flex!important;}
-  .shell{padding-bottom:90px!important;}
-  #style-cards-grid{grid-template-columns:1fr 1fr;}
-  .header h1{font-size:24px;}
-}
-@media(max-width:480px){
-  #style-cards-grid{grid-template-columns:1fr;}
-}
+@media(max-width:900px){.industry-grid{grid-template-columns:repeat(4,1fr);}.dual-board,.platform-section{grid-template-columns:1fr;}.style-cards-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.industry-grid{grid-template-columns:repeat(3,1fr);}.selectors-grid{grid-template-columns:1fr;}.shell{padding:20px 14px 80px;}.hero h1{font-size:26px;letter-spacing:1px;}}
 
-/* 光圈动画 */
-@keyframes ring-rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-@keyframes card-fadeout {
-  0% { opacity:1; transform:scale(1); }
-  100% { opacity:0; transform:scale(0.95); }
-}
-@keyframes card-fadein {
-  0% { opacity:0; transform:scale(0.95); }
-  100% { opacity:1; transform:scale(1); }
-}
-.style-card-waiting {
-  position:relative;
-  overflow:visible !important;
-}
-.style-card-waiting::before {
-  content:'';
-  position:absolute;
-  inset:-3px;
-  border-radius:19px;
-  background:conic-gradient(from 0deg, transparent 0deg, var(--gold) 60deg, #fff 120deg, var(--blue) 180deg, transparent 240deg);
-  animation:ring-rotate 1.2s linear infinite;
-  z-index:-1;
-}
-.style-card-waiting::after {
-  content:'';
-  position:absolute;
-  inset:0;
-  border-radius:16px;
-  background:rgba(15,15,22,0.95);
-  z-index:0;
-}
-.style-card-waiting .style-card-wait-text {
-  position:relative;
-  z-index:1;
-  text-align:center;
-  padding:30px 20px;
-}
-.style-card-other-fade {
-  animation: card-fadeout 0.4s ease forwards;
-}
-.style-card-single {
-  max-width:320px;
-  margin:0 auto;
-  animation: card-fadein 0.3s ease;
-}
+/* 光圈等待 */
+@keyframes ring-glow{0%,100%{box-shadow:0 0 20px rgba(243,175,66,0.3);}50%{box-shadow:0 0 40px rgba(243,175,66,0.6);}}
+.card-waiting-overlay{position:absolute;inset:0;border-radius:14px;border:2px solid var(--gold);animation:ring-glow 1.2s ease-in-out infinite;background:rgba(9,9,13,0.92);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;z-index:10;}
+.card-waiting-overlay .atom-ring{width:36px;height:36px;}
+.card-waiting-overlay p{font-size:12px;color:var(--tx2);text-align:center;}
 </style>
 </head>
 <body>
@@ -266,106 +273,82 @@ textarea{resize:vertical;min-height:100px;line-height:1.7;}
 <div id="notice-bar"></div>
 <div id="boot-mask">
   <div class="spin"></div>
-  <div class="boot-logo">灵创星球</div>
-  <p style="font-size:12px;color:var(--tx3)">正在初始化 AI 出图引擎…</p>
+  <div class="boot-logo">灵创星球 · <span>AI出图引擎</span></div>
+  <p style="font-size:12px;color:var(--tx3)">正在初始化系统…</p>
 </div>
 
 <!-- 锁定页 -->
 <div id="lock-screen">
   <div class="lock-wrap">
     <div id="step-select">
-      <div class="lock-title">
-        <h2>🚀 解锁 AI 出图引擎</h2>
-        <p>免费体验次数已用完<br>选择套餐继续使用</p>
+      <div class="lock-card">
+        <h2>🔐 解锁 AI 出图引擎</h2>
+        <p>免费体验次数已用完<br>选择套餐继续无限使用</p>
+        <div class="free-tip-bar">已有密码？<button onclick="showStep('input')">直接输入密码解锁 →</button></div>
+        <div class="card-list">
+          <div class="card-item" onclick="selectCard('次卡')" id="card-次卡"><div class="card-info"><h3>⚡ 次卡</h3><p id="label-次卡">50次体验卡</p></div><div class="card-price">¥<span id="price-次卡">9.9</span></div></div>
+          <div class="card-item" onclick="selectCard('月卡')" id="card-月卡"><div class="card-info"><h3>🌙 月卡</h3><p id="label-月卡">30天无限卡</p></div><div class="card-price">¥<span id="price-月卡">19.9</span></div></div>
+          <div class="card-item" onclick="selectCard('永久卡')" id="card-永久卡"><div class="card-info"><h3>♾️ 永久卡</h3><p id="label-永久卡">永久畅享卡</p></div><div class="card-price">¥<span id="price-永久卡">49.9</span></div></div>
+        </div>
+        <button class="btn-next" id="btn-next" onclick="goToPay()" disabled>选择套餐后继续 →</button>
       </div>
-      <div class="free-tip">✅ 已有密码？<button onclick="showInputStep()" style="background:none;border:none;color:var(--green);font-weight:700;cursor:pointer;font-size:13px;">直接输入密码解锁 →</button></div>
-      <div class="card-list">
-        <div class="card-item" onclick="selectCard('次卡')" id="card-次卡">
-          <div class="card-info"><h3>⚡ 次卡</h3><p id="label-次卡">50次体验卡</p></div>
-          <div class="card-price">¥<span id="price-次卡">9.9</span></div>
-        </div>
-        <div class="card-item" onclick="selectCard('月卡')" id="card-月卡">
-          <div class="card-info"><h3>🌙 月卡</h3><p id="label-月卡">30天无限卡</p></div>
-          <div class="card-price">¥<span id="price-月卡">19.9</span></div>
-        </div>
-        <div class="card-item" onclick="selectCard('永久卡')" id="card-永久卡">
-          <div class="card-info"><h3>♾️ 永久卡</h3><p id="label-永久卡">永久畅享卡</p></div>
-          <div class="card-price">¥<span id="price-永久卡">49.9</span></div>
-        </div>
-      </div>
-      <button class="btn-next" id="btn-next" onclick="goToPay()" disabled>选择套餐后继续 →</button>
     </div>
     <div id="step-pay">
-      <div class="pay-card">
-        <h3>💳 扫码付款</h3>
-        <p style="color:var(--tx2);font-size:13px;margin-bottom:12px;" id="pay-desc">请使用微信扫描下方二维码</p>
-        <div class="pay-amount">¥<span id="pay-price">9.9</span></div>
+      <div class="lock-card">
+        <h2>💳 扫码付款</h2>
+        <p id="pay-desc">请使用微信扫描下方二维码</p>
+        <div style="font-size:30px;font-weight:900;color:var(--gold);margin-bottom:14px;">¥<span id="pay-price">9.9</span></div>
         <div class="qr-box"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%BE%AE%E4%BF%A1%E6%94%B6%E6%AC%BE%E7%A0%81/%E6%94%B6%E6%AC%BE%E7%A0%81.jpg" alt="收款码"/></div>
-        <p class="pay-hint">💡 付款时备注套餐名称，付完截图发给我确认</p>
-        <button class="btn-paid" onclick="onPaid()">✅ 已付款，去领取今日暗号</button>
-        <button class="btn-back" onclick="backToSelect()">← 重新选择套餐</button>
+        <p style="font-size:11px;color:var(--tx3);margin-bottom:16px;">💡 付款时备注套餐名称，付完截图发给我确认</p>
+        <button class="btn-paid" onclick="onPaid()">✅ 已付款，去获取今日暗号</button>
+        <button class="btn-back-link" onclick="showStep('select')">← 重新选择套餐</button>
       </div>
     </div>
-
-    <!-- 步骤二点五：引导关注服务号领暗号 -->
-    <div id="step-gzhguide" style="display:none;">
-      <div class="pay-card" style="border-color:rgba(245,196,74,0.4);">
-        <h3 style="color:var(--gold);">📮 关注服务号领取暗号</h3>
-        <p style="color:var(--tx2);font-size:13px;margin-bottom:16px;line-height:1.8;">
-          付款截图发给我确认后<br>我会私发给你<span style="color:var(--gold);font-weight:700;">今日专属暗号</span><br>然后按以下步骤领取密码：
-        </p>
-        <div style="background:rgba(245,196,74,0.06);border:1px solid rgba(245,196,74,0.15);border-radius:12px;padding:16px;margin-bottom:16px;text-align:left;">
-          <div style="font-size:13px;color:var(--tx);line-height:2;">
-            <div>① 扫码关注 <span style="color:var(--gold);font-weight:700;">灵创星球</span> 服务号</div>
-            <div>② 在对话框发送我给你的<span style="color:var(--gold);font-weight:700;">今日暗号</span></div>
-            <div>③ 服务号自动回复你的<span style="color:var(--gold);font-weight:700;">专属密码</span></div>
-            <div>④ 回到这里输入密码解锁 🎉</div>
-          </div>
+    <div id="step-gzhguide">
+      <div class="lock-card">
+        <h2>📮 关注服务号领取密码</h2>
+        <p>付款截图确认后，我会私发今日专属暗号</p>
+        <div class="gzh-steps">
+          <div>① 扫码关注 <span style="color:var(--gold);font-weight:700;">灵创星球</span> 服务号</div>
+          <div>② 发送我给你的<span style="color:var(--gold);font-weight:700;">今日暗号</span></div>
+          <div>③ 服务号自动回复<span style="color:var(--gold);font-weight:700;">专属密码</span></div>
+          <div>④ 回到这里输入密码解锁 🎉</div>
         </div>
-        <div style="background:#fff;border-radius:12px;padding:10px;width:160px;height:160px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
-          <img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%BE%AE%E4%BF%A1%E6%94%B6%E6%AC%BE%E7%A0%81/%E5%85%AC%E4%BC%97%E5%8F%B7.jpg" style="width:100%;height:100%;object-fit:contain;">
-        </div>
-        <p style="font-size:11px;color:var(--tx3);margin-bottom:16px;">扫码关注后发送暗号即可获取密码</p>
+        <div class="qr-box"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%BE%AE%E4%BF%A1%E6%94%B6%E6%AC%BE%E7%A0%81/%E5%85%AC%E4%BC%97%E5%8F%B7.jpg" alt="服务号"/></div>
         <button class="btn-next" onclick="showStep('input')" style="margin-bottom:10px;">已拿到密码，去输入解锁 →</button>
-        <button class="btn-back" onclick="showStep('pay')">← 返回付款页</button>
+        <button class="btn-back-link" onclick="showStep('pay')">← 返回付款页</button>
       </div>
     </div>
-    <div id="step-verify" style="text-align:center;padding:40px 20px;">
+    <div id="step-verify" style="text-align:center;padding:40px 0;">
       <div class="spin" style="margin:0 auto 16px;"></div>
-      <p style="color:var(--tx2);font-size:14px;">正在为你生成专属密码…</p>
+      <p style="color:var(--tx2);font-size:14px;">正在生成专属密码…</p>
     </div>
     <div id="step-password">
-      <div class="pwd-card">
-        <h3>🎉 专属密码已生成！</h3>
-        <p style="color:var(--tx2);font-size:13px;margin-bottom:20px;">请复制以下密码，然后输入到解锁框中</p>
-        <div class="pwd-box" id="pwd-display">——</div>
-        <button class="btn-copy-pwd" onclick="copyPassword()">📋 一键复制密码</button>
-        <button class="btn-next" onclick="goToInputStep()">粘贴密码，立即解锁 →</button>
+      <div class="lock-card">
+        <h2>🎉 专属密码已生成！</h2>
+        <p>复制以下密码，然后输入到解锁框中</p>
+        <div class="pwd-box-display" id="pwd-display">——</div>
+        <button class="btn-next" onclick="copyPwd()" style="margin-bottom:10px;">📋 一键复制密码</button>
+        <button class="btn-next" onclick="goToInput()" style="background:rgba(243,175,66,0.1);color:var(--gold);box-shadow:none;">粘贴密码，立即解锁 →</button>
       </div>
     </div>
     <div id="step-input">
-      <div class="input-card-lock">
-        <h3 style="color:var(--tx);font-size:18px;margin-bottom:8px;">🔓 输入密码解锁</h3>
-        <p style="color:var(--tx2);font-size:13px;margin-bottom:20px;">将复制的密码粘贴到下方输入框</p>
-        <input type="text" class="pwd-input" id="pwd-input" placeholder="粘贴密码到这里" onkeydown="if(event.key==='Enter')doUnlock()"/>
-        <div class="err-msg" id="err-msg"></div>
-        <button class="btn-unlock" onclick="doUnlock()">🚀 立即解锁</button>
-        <button class="btn-already" onclick="backToSelect()">← 重新选择套餐</button>
+      <div class="lock-card">
+        <h2>🔓 输入密码解锁</h2>
+        <p>将密码粘贴到下方输入框</p>
+        <input type="text" class="pwd-input-field" id="pwd-input" placeholder="粘贴密码到这里" onkeydown="if(event.key==='Enter')doUnlock()"/>
+        <div class="err-txt" id="err-msg"></div>
+        <button class="btn-next" onclick="doUnlock()" style="margin-bottom:10px;">🚀 立即解锁</button>
+        <button class="btn-back-link" onclick="showStep('select')">← 重新选择套餐</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- 图片放大查看 -->
-<div id="img-zoom-modal" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99999;align-items:center;justify-content:center;cursor:zoom-out;">
-  <img id="img-zoom-src" style="max-width:90vw;max-height:90vh;border-radius:12px;box-shadow:0 0 60px rgba(0,0,0,0.8);">
-  <div style="position:absolute;top:20px;right:20px;color:rgba(255,255,255,0.5);font-size:24px;">✕</div>
-</div>
-
 <!-- 礼包弹窗 -->
 <div id="gift-modal">
   <div class="gift-card">
-    <div class="gift-icon">🎁</div>
+    <div style="font-size:44px;margin-bottom:14px;">🎁</div>
     <h2 id="gift-title">专属大礼包已解锁！</h2>
     <p id="gift-desc">感谢支持灵创星球<br>以下资源包免费赠送给你</p>
     <div id="gift-btn-area"></div>
@@ -373,1002 +356,745 @@ textarea{resize:vertical;min-height:100px;line-height:1.7;}
   </div>
 </div>
 
-<!-- 主面板 -->
-<div id="main-panel" class="shell" style="display:none;">
+<!-- 图片放大 -->
+<div id="img-zoom" onclick="this.style.display='none'">
+  <img id="img-zoom-src" src="">
+</div>
 
-  <!-- 头部 -->
-  <div class="header">
-    <div class="brand-badge">⚡ 灵创星球 · AI出图引擎</div>
-    <h1>心有所想，一键出图</h1>
-    <p>大白话描述你的想法 → AI自动匹配风格 → 复制提示词去即梦生图<br>全品类覆盖 · 联网搜爆款 · 傻瓜式操作</p>
-    <div class="usage-bar" id="usage-bar">⚡ 免费剩余：<span id="usage-count">5</span> 次</div>
+<!-- 复制Toast -->
+<div id="clip-toast"><span>✓</span><p>已复制到剪贴板</p></div>
+
+<!-- 主面板 -->
+<div id="main-panel" style="display:none;">
+<div class="shell">
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1>心有所想，<span>一键出图</span></h1>
+    <p class="hero-sub">大白话描述你的想法 ➔ AI自动匹配风格 ➔ 复制提示词去即梦生图</p>
+    <p class="hero-features">全品类覆盖<span>•</span>联网搜爆款<span>•</span>傻瓜式操作</p>
+    <div class="usage-badge" id="usage-badge">⚡ 免费剩余：<span id="usage-num">5</span> 次</div>
   </div>
 
   <!-- 展示墙 -->
-  <div class="showcase-section">
-    <div class="showcase-header">
-      <div><div class="showcase-title">✨ 真实出图效果</div><div class="showcase-sub">复制提示词 → 即梦粘贴 → 直接出图</div></div>
+  <div class="gallery-wall">
+    <div class="gallery-header">
+      <div class="gallery-header-title">✨ 真实出图效果（复制提示词 ➔ 即梦粘贴 ➔ 直接出图）</div>
+      <div class="gallery-header-sub">底层内置工业级高精光影参数，摒弃复杂咒语，完美锁死高溢价商业级调性</div>
     </div>
-    <div class="showcase-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:8px;cursor:grab;">
-      <div class="showcase-track" style="display:flex;gap:10px;width:max-content;padding:0 4px;">
-        <div class="showcase-card"><div class="showcase-img-wrap"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/3D%E8%8D%B7%E8%8A%B1.png" loading="lazy" onclick="zoomImg(this.src)" style="cursor:zoom-in;" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">3D悬浮立体风</span></div></div><div class="showcase-info">植物科普</div></div>
-        <div class="showcase-card"><div class="showcase-img-wrap"><img onclick="zoomImg(this.src)" style="cursor:zoom-in;" src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E6%A1%82%E8%8A%B1.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">国风水彩</span></div></div><div class="showcase-info">植物科普</div></div>
-        <div class="showcase-card"><div class="showcase-img-wrap"><img onclick="zoomImg(this.src)" style="cursor:zoom-in;" src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E8%8B%8F%E5%B7%9E3D.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">3D城市浮雕</span></div></div><div class="showcase-info">城市文化</div></div>
-        <div class="showcase-card"><div class="showcase-img-wrap"><img onclick="zoomImg(this.src)" style="cursor:zoom-in;" src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E9%95%BF%E6%B2%99.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">手绘地图风</span></div></div><div class="showcase-info">城市文化</div></div>
-        <div class="showcase-card"><div class="showcase-img-wrap"><img onclick="zoomImg(this.src)" style="cursor:zoom-in;" src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E7%81%AB%E9%94%85.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">暖色插画风</span></div></div><div class="showcase-info">美食菜谱</div></div>
-        <div class="showcase-card"><div class="showcase-img-wrap"><img onclick="zoomImg(this.src)" style="cursor:zoom-in;" src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/ChatGPT%20Image%202026%E5%B9%B45%E6%9C%8815%E6%97%A5%2012_30_04.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">精美插画风</span></div></div><div class="showcase-info">知识图文</div></div>
-        <div class="showcase-card"><div class="showcase-img-wrap"><img onclick="zoomImg(this.src)" style="cursor:zoom-in;" src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E9%BB%84%E5%B1%B1.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">山水国风</span></div></div><div class="showcase-info">旅游攻略</div></div>
+    <div class="gallery-track" id="gallery-track"></div>
+  </div>
+
+  <!-- 行业大类 -->
+  <div class="section-title">选择图像类型大类</div>
+  <div class="industry-grid">
+    <div class="industry-pill active" onclick="selectIndustry(this,'营销海报')">📢 营销海报</div>
+    <div class="industry-pill hot" onclick="selectIndustry(this,'知识图文')"><span class="pill-badge">👑 变现之王</span>📚 知识图文</div>
+    <div class="industry-pill hot" onclick="selectIndustry(this,'菜谱美食')"><span class="pill-badge">🔥 强力吸粉</span>🍳 菜谱美食</div>
+    <div class="industry-pill" onclick="selectIndustry(this,'社交封面')">📱 社交封面</div>
+    <div class="industry-pill" onclick="selectIndustry(this,'穿搭时尚')">👗 穿搭时尚</div>
+    <div class="industry-pill" onclick="selectIndustry(this,'护肤美妆')">💄 护肤美妆</div>
+    <div class="industry-pill" onclick="selectIndustry(this,'城市探店')">🌆 城市探店</div>
+    <div class="industry-pill hot" onclick="selectIndustry(this,'儿童教育')"><span class="pill-badge">🚀 流量密码</span>👶 儿童教育</div>
+    <div class="industry-pill" onclick="selectIndustry(this,'健身减脂')">🏃 健身减脂</div>
+    <div class="industry-pill hot" onclick="selectIndustry(this,'电商产品')"><span class="pill-badge">💎 商业接单</span>🛍️ 电商产品</div>
+    <div class="industry-pill" onclick="selectIndustry(this,'财经理财')">💰 财经理财</div>
+    <div class="industry-pill" onclick="selectIndustry(this,'室内家装')">🏠 室内家装</div>
+  </div>
+
+  <!-- 选题面板 -->
+  <div class="topics-panel">
+    <div class="topics-header">
+      <div class="topics-label" id="topics-label">🔥 [营销海报] 当季爆款选题（点击直接套用）</div>
+      <button class="btn-shuffle" onclick="shuffleTopics()">换一批 ➔</button>
+    </div>
+    <div class="chips-dock" id="chips-dock"></div>
+  </div>
+
+  <!-- 配额 -->
+  <div class="quota-bar">💡 今日算力余量：<span id="quota-num">∞</span></div>
+
+  <!-- 输入框 -->
+  <div class="input-container">
+    <textarea id="topic-input" placeholder="请在这里用大白话描述你的画面内容，或点击上方爆款选题直接套用…&#10;&#10;💡 无需专业词汇，说清楚意思就行&#10;💡 可上传参考图/文档/手写稿，AI自动识别内容"></textarea>
+    <div class="input-toolbar">
+      <input type="file" id="file-input" style="display:none;" accept="image/*,.pdf,.doc,.docx" onchange="handleFileSelect(this)">
+      <button class="btn-attach" onclick="document.getElementById('file-input').click()">📎 上传参考图 / 文档 / 手写稿</button>
+      <div id="file-preview-badge" class="file-preview-badge">
+        <img id="badge-img" src="" alt="">
+        <span id="badge-name">参考图已锁定</span>
+        <button class="btn-remove-file" onclick="removeFile()">✕</button>
       </div>
     </div>
   </div>
 
-  <!-- 品类入口 -->
-  <div class="category-section">
-    <div class="category-label">选择你要做的图类型（可跳过，直接输入描述）</div>
-    <div class="category-grid">
-      <div class="cat-chip" onclick="setCat(this,'营销海报','帮我做一张产品营销海报，主题是')"><span>🎯</span>营销海报</div>
-      <div class="cat-chip" onclick="setCat(this,'知识图文','帮我做一张知识科普图，主题是')"><span>📚</span>知识图文</div>
-      <div class="cat-chip" onclick="setCat(this,'菜谱美食','帮我做一张菜谱教程图，菜品是')"><span>🍜</span>菜谱美食</div>
-      <div class="cat-chip" onclick="setCat(this,'社交封面','帮我做一张小红书/抖音封面图，主题是')"><span>📱</span>社交封面</div>
-      <div class="cat-chip" onclick="setCat(this,'穿搭时尚','帮我做一张穿搭搭配图，风格是')"><span>👗</span>穿搭时尚</div>
-      <div class="cat-chip" onclick="setCat(this,'护肤美妆','帮我做一张护肤成分科普图，主题是')"><span>💄</span>护肤美妆</div>
-      <div class="cat-chip" onclick="setCat(this,'城市探店','帮我做一张城市探店攻略图，城市是')"><span>🗺️</span>城市探店</div>
-      <div class="cat-chip" onclick="setCat(this,'儿童教育','帮我做一张儿童知识图解，主题是')"><span>👶</span>儿童教育</div>
-      <div class="cat-chip" onclick="setCat(this,'健身减脂','帮我做一张健身训练动作图，主题是')"><span>🏃</span>健身减脂</div>
-      <div class="cat-chip" onclick="setCat(this,'电商产品','帮我做一张产品海报/详情页图，产品是')"><span>🛒</span>电商产品</div>
-      <div class="cat-chip" onclick="setCat(this,'财经理财','帮我做一张财经知识科普图，主题是')"><span>💰</span>财经理财</div>
-      <div class="cat-chip" onclick="setCat(this,'室内家装','帮我做一张室内设计效果图，风格是')"><span>🏠</span>室内家装</div>
-    </div>
-  </div>
-
-  <!-- 输入区（含上传） -->
-  <div class="card">
-    <div class="card-title"><span></span>告诉 AI 你想做什么图</div>
-    <div style="margin-bottom:16px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <label>🔥 爆款选题（点击直接用）</label>
-        <button onclick="switchTopicBatch()" style="font-size:11px;color:var(--gold);background:none;border:none;cursor:pointer;padding:0;">换一批 →</button>
-      </div>
-      <div id="hot-topics" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;"></div>
-      <div id="topic-hint" style="font-size:11px;color:var(--tx3);margin-top:2px;">👆 先选择上方品类，选题库自动切换为对应内容</div>
-    </div>
-    <div style="margin-bottom:14px;">
-      <label id="input-label">用大白话描述你想做的图（越详细越好）</label>
-      <textarea id="topic-input" placeholder="例如：光合作用原理图 / 红烧肉的做法 / 摩羯座性格分析 / 秋冬通勤穿搭公式 / 成都美食地图…&#10;&#10;💡 不需要专业词汇，说清楚意思就行"></textarea>
-    </div>
-    <!-- 上传区（紧贴输入框下方） -->
-    <div style="margin-bottom:14px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <label>📎 上传参考内容（可选）图片/文档/手写稿</label>
-        <span style="font-size:11px;color:var(--tx3);">AI自动识别内容</span>
-      </div>
-      <div id="upload-zone"
-        ondragover="event.preventDefault();this.classList.add('dragover')"
-        ondragleave="this.classList.remove('dragover')"
-        ondrop="handleDrop(event)"
-        onclick="document.getElementById('file-input').click()"
-        style="border:1.5px dashed rgba(79,142,247,0.2);border-radius:10px;padding:12px 16px;cursor:pointer;transition:all .2s;background:rgba(79,142,247,0.02);display:flex;align-items:center;gap:12px;min-height:52px;">
-        <input type="file" id="file-input" accept="image/*,.pdf,.doc,.docx" multiple style="display:none" onchange="handleFileSelect(this.files)">
-        <div id="upload-hint" style="display:flex;align-items:center;gap:10px;width:100%;">
-          <span style="font-size:20px;opacity:0.5;">📎</span>
-          <span style="font-size:13px;color:var(--tx3);">点击或拖拽上传 · 支持 JPG / PNG / PDF / Word · 最大10MB</span>
-        </div>
-        <div id="upload-preview" style="display:none;gap:8px;flex-wrap:wrap;width:100%;"></div>
-      </div>
-      <div id="upload-status" style="font-size:11px;color:var(--tx3);margin-top:6px;min-height:14px;"></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-      <div>
-        <label>输出尺寸</label>
-        <select id="size-pref">
-          <option value="AI自动推荐">🤖 AI自动推荐（默认）</option>
-          <optgroup label="📱 竖版">
+  <!-- 选择器 -->
+  <div class="selectors-grid">
+    <div class="select-wrap">
+      <label>📐 指定画面输出尺寸</label>
+      <select id="size-sel" class="bgs">
+        <option value="AI自动推荐">🤖 AI自动推荐（默认）</option>
+        <optgroup label="📱 竖版形态">
           <option value="9:16竖版">9:16 竖版（刷屏传播首选）</option>
           <option value="3:4竖版">3:4 竖版（小红书封面首选）</option>
           <option value="2:3竖版">2:3 竖版（小红书多图）</option>
           <option value="4:5竖版">4:5 竖版（Instagram竖版）</option>
-          </optgroup>
-          <optgroup label="⬛ 方版">
+        </optgroup>
+        <optgroup label="⬛ 方版形态">
           <option value="1:1方版">1:1 方版（朋友圈/社交首选）</option>
-          </optgroup>
-          <optgroup label="🖥️ 横版">
+        </optgroup>
+        <optgroup label="🖥️ 横版形态">
           <option value="16:9横版">16:9 横版（PPT/场景叙事）</option>
-          <option value="4:3横版">4:3 横版（公众号头图/banner）</option>
+          <option value="4:3横版">4:3 横版（公众号头图）</option>
           <option value="3:2横版">3:2 横版（横版海报）</option>
-          </optgroup>
-        </select>
-      </div>
-      <div>
-        <label>风格倾向（可选，留空让AI决定）</label>
-        <select id="style-pref">
-          <option value="AI自动匹配">🎲 AI联网匹配最火风格（推荐）</option>
-          <optgroup label="🔥 当下最火">
-          <option value="3D悬浮立体风">🧊 3D悬浮立体风（玻璃质感+漂浮）</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="select-wrap">
+      <label>🎭 限定全局视觉调性风格</label>
+      <select id="style-sel" class="bgs" onchange="handleStyleChange()">
+        <option value="auto">🎲 AI联网匹配最火风格（推荐）</option>
+        <optgroup label="🔥 当下最火">
+          <option value="当下最火">🔥 当下最火（3D悬浮/莫兰迪/全息镭射/意境裂变）</option>
+          <option value="3D悬浮立体风">🧊 3D悬浮立体风（玻璃质感+立体漂浮）</option>
           <option value="莫兰迪高级感">🎨 莫兰迪高级感（低饱和高级灰）</option>
-          <option value="国潮赛博风">🌆 国潮赛博风（霓虹+国风）</option>
-          <option value="镭射全息风">💎 镭射全息风（彩虹光效）</option>
+          <option value="镭射全息风">💎 镭射全息风（彩虹光效+金属质感）</option>
           <option value="奶油肌理风">🍦 奶油肌理风（米白细腻质感）</option>
-          </optgroup>
-          <optgroup label="🎋 中式国风">
-          <option value="国风国潮">🎋 国风国潮（朱红+金色）</option>
-          <option value="水墨古典风">🖋️ 水墨古典风（宣纸+墨色）</option>
-          <option value="四季浮雕纸雕风">🌿 四季浮雕纸雕风（3D微缩）</option>
-          <option value="民国复古风">🏮 民国复古风（做旧米黄）</option>
-          </optgroup>
-          <optgroup label="📚 知识图解">
-          <option value="极简白卡风">⬜ 极简白卡风（白底+黑字）</option>
-          <option value="扁平插画风">📐 扁平插画风（几何色块）</option>
-          <option value="数据可视化风">📊 数据可视化风（图表+数字）</option>
-          <option value="教材插画风">📖 教材插画风（清晰图解）</option>
-          </optgroup>
-          <optgroup label="🌸 生活美食">
-          <option value="暖色插画风">🍊 暖色插画风（橙红+奶白）</option>
-          <option value="日系治愈风">🍃 日系治愈风（奶油色+手绘）</option>
-          <option value="手绘水彩风">🖌️ 手绘水彩风（透明感晕染）</option>
-          <option value="博物学手绘风">🔬 博物学手绘风（精细线稿）</option>
-          </optgroup>
-          <optgroup label="💄 美妆时尚">
-          <option value="马卡龙少女风">🎀 马卡龙少女风（粉紫奶白）</option>
-          <option value="高级杂志风">💎 高级杂志风（深色+金色）</option>
-          <option value="赛博霓虹风">⚡ 赛博霓虹风（深紫+荧光）</option>
-          </optgroup>
-          <optgroup label="💼 职场商务">
-          <option value="商务深色风">💼 商务深色风（深蓝+金色）</option>
-          <option value="PPT简约风">📊 PPT简约风（白底+色块）</option>
-          <option value="杂志封面风">📰 杂志封面风（大字+高对比）</option>
-          </optgroup>
-        </select>
+          <option value="玻璃态透明风">🔮 玻璃态透明风（毛玻璃+高级透明感）</option>
+        </optgroup>
+        <optgroup label="🎏 中式国风">
+          <option value="中式国风">🎏 中式国风（朱红国潮/古典水墨/微缩纸雕）</option>
+          <option value="国风国潮">🎋 国风国潮（朱红+金色+中式纹样）</option>
+          <option value="水墨古典风">🖋️ 水墨古典风（宣纸+墨色+印章）</option>
+          <option value="四季浮雕纸雕风">🌿 四季浮雕纸雕风（3D微缩场景）</option>
+          <option value="民国复古风">🏮 民国复古风（做旧米黄+水墨插画）</option>
+          <option value="敦煌壁画风">🏔️ 敦煌壁画风（朱砂+石青+飞天纹样）</option>
+          <option value="青花瓷风">🫖 青花瓷风（白底+靛蓝+瓷器纹样）</option>
+        </optgroup>
+        <optgroup label="📚 知识图解">
+          <option value="知识图解">📚 知识图解（极简白卡/几何色块/数据可视化）</option>
+          <option value="极简白卡风">⬜ 极简白卡风（白底+黑字+留白美学）</option>
+          <option value="扁平插画风">📐 扁平插画风（几何色块+简洁图形）</option>
+          <option value="数据可视化风">📊 数据可视化风（图表+信息图+数字）</option>
+          <option value="教材插画风">📖 教材插画风（清晰图解+色块分区）</option>
+          <option value="博物学手绘风">🔬 博物学手绘风（精细线稿+科学标注）</option>
+          <option value="思维导图风">🗺️ 思维导图风（发散结构+色彩分区）</option>
+        </optgroup>
+        <optgroup label="🌸 生活美食">
+          <option value="生活美食">🌸 生活美食（暖色插画/日系治愈/奶油手绘）</option>
+          <option value="暖色插画风">🍊 暖色插画风（橙红+奶白+卡通食材）</option>
+          <option value="日系治愈风">🍃 日系治愈风（奶油色+手绘+温柔）</option>
+          <option value="日式手账风">📓 日式手账风（牛皮纸底+手写体）</option>
+          <option value="手绘水彩风">🖌️ 手绘水彩风（透明感水彩晕染）</option>
+          <option value="复古美食杂志风">🍷 复古美食杂志风（深色背景+金色标题）</option>
+        </optgroup>
+        <optgroup label="🎮 游戏动漫">
+          <option value="游戏动漫">🎮 游戏动漫（美式科幻/像素复古/日系高燃）</option>
+          <option value="赛博朋克风">⚡ 赛博朋克风（霓虹+暗调+未来感）</option>
+          <option value="二次元插画风">🌸 二次元插画风（日系动漫+清新色调）</option>
+          <option value="像素复古风">👾 像素复古风（8bit+复古游戏感）</option>
+          <option value="美式漫画风">💥 美式漫画风（粗线描边+强烈对比）</option>
+        </optgroup>
+        <optgroup label="💎 奢华商业">
+          <option value="奢华商业">💎 奢华商业（黑金奢华/高级冷感/杂志封面）</option>
+          <option value="黑金奢华风">🖤 黑金奢华风（深色+金色+质感）</option>
+          <option value="高级冷感风">❄️ 高级冷感风（冷色调+极简+奢华）</option>
+          <option value="杂志封面风">📰 杂志封面风（大字+高对比+视觉冲击）</option>
+          <option value="商务深色风">💼 商务深色风（深蓝+金色+数据感）</option>
+        </optgroup>
+        <optgroup label="🌌 奇幻魔幻">
+          <option value="奇幻魔幻">🌌 奇幻魔幻（赛博朋克/超现实/废土蒸汽）</option>
+          <option value="超现实主义风">🌀 超现实主义风（梦境+扭曲+奇异感）</option>
+          <option value="废土蒸汽朋克风">⚙️ 废土蒸汽朋克风（铁锈+齿轮+蒸汽）</option>
+          <option value="奇幻森林风">🌲 奇幻森林风（魔幻+光效+自然）</option>
+          <option value="星际宇宙风">🌌 星际宇宙风（深空+星云+科幻感）</option>
+        </optgroup>
+        <optgroup label="🎀 可爱治愈">
+          <option value="马卡龙少女风">🎀 马卡龙少女风（粉紫奶白+甜美）</option>
+          <option value="卡通绘本风">📚 卡通绘本风（柔和色+大卡通插图）</option>
+          <option value="萌系Q版风">🐱 萌系Q版风（圆润卡通+马卡龙色）</option>
+          <option value="奶油ins风">🤍 奶油ins风（米白+精致阴影）</option>
+        </optgroup>
+        <optgroup label="✍️ 自定义">
+          <option value="custom">✍️ 自定义专属风格（手打输入）➔</option>
+        </optgroup>
+      </select>
+    </div>
+    <div id="custom-style-dock" class="custom-style-dock">
+      <input type="text" id="custom-style-input" class="custom-style-input" placeholder="请输入你专属的风格词组（如：法式复古香奈儿白、重工业暗黑废土、莫奈花园印象水彩…）">
+    </div>
+  </div>
+
+  <button id="gen-btn" class="btn-generate" onclick="runEngine()">🔮 启动大脑 · 开始全行业智能生图充能</button>
+
+  <!-- 风格卡片 -->
+  <div id="style-cards-section">
+    <div class="style-cards-header">
+      <div class="style-cards-header-left">
+        <h3>🎲 AI推荐风格方案</h3>
+        <p>选择一套风格，AI立即生成完整提示词与配套文案</p>
+      </div>
+      <button class="btn-change-batch" onclick="switchStyleBatch()">🔀 换一批风格</button>
+    </div>
+    <div class="style-cards-grid" id="style-cards-grid"></div>
+  </div>
+
+  <!-- 思考单卡 -->
+  <div id="thinking-section">
+    <div class="thinking-wrapper">
+      <div class="thinking-wing wing-l"></div>
+      <div class="thinking-wing wing-r"></div>
+      <div class="thinking-core">
+        <div class="thinking-badge">🏅 算力锁死发射中</div>
+        <div style="height:36px;"></div>
+        <div class="thinking-label">📐 设定尺寸比例</div>
+        <div class="thinking-value" id="thinking-size">--</div>
+        <div class="thinking-label">🎭 锁定具体风格</div>
+        <div class="thinking-value" id="thinking-style">--</div>
+        <div class="atom-ring" id="thinking-ring"></div>
+        <p class="thinking-status" id="thinking-status">AI大脑正在联网搜索爆款参数<br>生图提示词与配套文案生成中…</p>
       </div>
     </div>
   </div>
 
-  <button class="gen-btn" id="genBtn" onclick="generate()">
-    ⚡ 启动 AI 出图引擎
-  </button>
-
-  <!-- 终端日志 -->
-  <div id="terminal-wrap">
-    <div class="terminal-box">
-      <div id="terminalConsole"></div>
-    </div>
-  </div>
-
-  <!-- 风格选择区（inline展示）-->
-  <div id="style-cards-wrap" style="display:none;margin-top:1.25rem;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
-      <div>
-        <div style="font-size:11px;color:var(--blue);font-weight:700;letter-spacing:.1em;margin-bottom:4px;">⚡ AI STYLE ENGINE</div>
-        <div style="font-size:16px;font-weight:800;color:var(--tx);margin-bottom:2px;">选择风格，立即出图</div>
-        <div style="font-size:12px;color:var(--tx3);">点击任意风格卡片确认，AI立即开始生成</div>
-      </div>
-      <button onclick="switchStyleBatch()" style="background:rgba(245,196,74,0.08);border:1px solid rgba(245,196,74,0.25);color:var(--gold);padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;" onmouseover="this.style.background='rgba(245,196,74,0.15)'" onmouseout="this.style.background='rgba(245,196,74,0.08)'">
-        🔀 换一批风格
-      </button>
-    </div>
-    <div id="style-cards-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;"></div>
-    <div style="text-align:center;margin-top:14px;">
-      <button onclick="cancelStyleSelect()" style="background:transparent;border:1px solid var(--bd);color:var(--tx3);padding:7px 20px;border-radius:20px;font-size:12px;cursor:pointer;">取消重新输入</button>
-    </div>
-  </div>
-
-  <!-- 输出区（第二轮） -->
-  <div class="out-section" id="outSection">
-
-    <div class="out-block" id="block-detect">
-      <div class="out-head">
-        <div class="out-head-left"><div class="out-icon">🔍</div><div><div class="out-title">AI分析结果</div><div class="out-sub">品类·手法·风格·尺寸自动匹配</div></div></div>
-      </div>
-      <div class="out-body" id="detect-body"></div>
-    </div>
-
-    <div class="out-block" id="block-knowledge">
-      <div class="out-head">
-        <div class="out-head-left"><div class="out-icon">📊</div><div><div class="out-title">内容结构化</div><div class="out-sub">核心内容拆解</div></div></div>
-        <button class="copy-btn" id="copy-know">复制</button>
-      </div>
-      <div class="out-body" id="knowledge-body"></div>
-    </div>
-
-    <div class="out-block" id="block-full">
-      <div class="out-head">
-        <div class="out-head-left"><div class="out-icon">🎨</div><div><div class="out-title">完整版提示词（推荐）</div><div class="out-sub">复制 → 打开即梦 → 文生图 → 粘贴</div></div></div>
-        <button class="copy-btn" id="copy-full">复制</button>
-      </div>
-      <div class="out-body"><div class="prompt-code" id="full-prompt"></div></div>
-    </div>
-
-    <div class="out-block" id="block-short">
-      <div class="out-head">
-        <div class="out-head-left"><div class="out-icon">📱</div><div><div class="out-title">精简版提示词（手机端）</div><div class="out-sub">中文精简，手机粘贴更方便</div></div></div>
-        <button class="copy-btn" id="copy-short">复制</button>
-      </div>
-      <div class="out-body"><div class="prompt-code" id="short-prompt"></div></div>
-    </div>
-
-    <div class="out-block" id="block-platforms">
-      <div class="out-head">
-        <div class="out-head-left"><div class="out-icon">🚀</div><div><div class="out-title">选择生图平台</div><div class="out-sub">复制提示词后点击跳转，粘贴生图</div></div></div>
-        <button class="copy-btn" onclick="copyAndGo(event)">一键复制提示词</button>
-      </div>
-      <div class="out-body" style="padding:16px;">
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;">
-          <a href="https://lc.wazgz.com/" target="_blank" style="text-decoration:none;"><div class="platform-btn featured-platform"><div class="platform-icon">🌐</div><div class="platform-name">灵创星球</div><div class="platform-tag" style="background:var(--gold-l);color:var(--gold);border:1px solid rgba(245,196,74,0.3);">推荐·全模型</div></div></a>
-          <a href="https://jimeng.jianying.com/" target="_blank" style="text-decoration:none;"><div class="platform-btn"><div class="platform-icon">✨</div><div class="platform-name">即梦 AI</div><div class="platform-tag free-tag">免费可用</div></div></a>
-          <a href="https://www.doubao.com/" target="_blank" style="text-decoration:none;"><div class="platform-btn"><div class="platform-icon">🤖</div><div class="platform-name">豆包</div><div class="platform-tag free-tag">免费可用</div></div></a>
-          <a href="https://tongyi.aliyun.com/wanxiang" target="_blank" style="text-decoration:none;"><div class="platform-btn"><div class="platform-icon">🍊</div><div class="platform-name">通义万相</div><div class="platform-tag free-tag">免费可用</div></div></a>
-          <a href="https://www.midjourney.com/" target="_blank" style="text-decoration:none;"><div class="platform-btn"><div class="platform-icon">🎨</div><div class="platform-name">Midjourney</div><div class="platform-tag paid-tag">付费·顶级</div></div></a>
-          <a href="https://klingai.com/" target="_blank" style="text-decoration:none;"><div class="platform-btn"><div class="platform-icon">⚡</div><div class="platform-name">可灵 AI</div><div class="platform-tag paid-tag">付费·国产</div></div></a>
+  <!-- 双栏输出 -->
+  <div id="output-section">
+    <div class="dual-board">
+      <div class="engine-wing">
+        <div>
+          <div class="wing-title">🔮 1号框：工业级生图提示词矩阵（直接去即梦/MJ生图）</div>
+          <div class="prompt-box" id="out-prompt"></div>
+          <button class="btn-copy-action" onclick="copyById('out-prompt','生图提示词')">📋 一键复制工业提示词</button>
         </div>
-        <div style="margin-top:12px;font-size:11px;color:var(--tx3);text-align:center;">💡 建议复制完整版英文提示词，效果最好</div>
+        <div>
+          <div class="wing-title">📕 3号框-A：某书独家垂直高赞引流笔记</div>
+          <div class="text-box" id="out-xhs"></div>
+          <button class="btn-copy-action" onclick="copyById('out-xhs','小红书笔记')">📝 一键复制某书爆款笔记</button>
+        </div>
+        <div>
+          <div class="wing-title">🟢 3号框-B：微信公众号深度商业文章骨架</div>
+          <div class="text-box" id="out-mp"></div>
+          <button class="btn-copy-action" onclick="copyById('out-mp','公众号文章')">📰 一键复制公众号文章</button>
+        </div>
+        <div class="legal-note">⚠️ <b>法律合规声明</b>：本工具生成的生图提示词、爆款文案及配套素材均由AI联网公开语料检索后自动生成，内容纯属创作参考。用户在进行商业化投流、企业宣发或接单变现时，请务必人工核实内容合规性，遵守相关法律法规，自主规避法律和侵权风险。本内容不构成任何法律、医疗、投资建议。</div>
       </div>
-    </div>
-
-    <div class="out-block" id="block-copywrite" style="display:none;">
-      <div class="out-head">
-        <div class="out-head-left"><div class="out-icon">✍️</div><div><div class="out-title">配套爆款文案</div><div class="out-sub">小红书笔记 + 首评钩子 + 公众号文章</div></div></div>
-        <button class="copy-btn" id="copy-copy">复制全部</button>
+      <div class="engine-wing">
+        <div>
+          <div class="wing-title">🎬 4号框：短视频爆款标题、话题标签 & 评论区截流话术</div>
+          <div class="video-box" id="out-video"></div>
+          <button class="btn-copy-action" onclick="copyById('out-video','短视频截流秘籍')">⚡ 一键复制短视频截流秘籍</button>
+        </div>
+        <div>
+          <div class="wing-title">🎁 2号框：灵创星球专属会员变现福利雷达</div>
+          <div class="radar-area" id="radar-area"></div>
+        </div>
       </div>
-      <div class="out-body" id="copywrite-body"></div>
-    </div>
-
-  </div>
-
-  <!-- 文案生成提示 -->
-  <div id="copywrite-prompt" style="display:none;margin-top:1.25rem;">
-    <div style="background:linear-gradient(135deg,rgba(79,142,247,0.08),rgba(245,196,74,0.05));border:1px solid rgba(79,142,247,0.2);border-radius:16px;padding:20px;text-align:center;">
-      <div style="font-size:18px;margin-bottom:8px;">✍️</div>
-      <div style="font-size:15px;font-weight:800;color:var(--tx);margin-bottom:6px;">需要配套爆款文案吗？</div>
-      <div style="font-size:12px;color:var(--tx2);margin-bottom:16px;">一键生成小红书爆款笔记 + 首评钩子 + 公众号完整文章</div>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-        <button onclick="generateCopywrite()" style="background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:10px;padding:11px 24px;font-size:14px;font-weight:900;cursor:pointer;">✍️ 一键生成配套文案</button>
-        <button onclick="document.getElementById('copywrite-prompt').style.display='none'" style="background:transparent;border:1px solid var(--bd);color:var(--tx3);border-radius:10px;padding:11px 20px;font-size:13px;cursor:pointer;">不需要，跳过</button>
+      <div class="platform-section">
+        <div class="platform-wing">
+          <div class="wing-title">🚀 选择生图平台 <span style="font-size:11px;color:var(--tx3);font-weight:normal;margin-left:6px;">点击自动复制提示词并跳转</span></div>
+          <div class="platform-grid">
+            <div class="platform-card rec-brand" onclick="copyAndGo('https://lc.wazgz.com/')"><span class="platform-icon">🌐</span><span class="platform-name">灵创星球</span><span class="platform-tag tag-gold">推荐·全模型</span></div>
+            <div class="platform-card" onclick="copyAndGo('https://jimeng.jianying.com/')"><span class="platform-icon">✨</span><span class="platform-name">即梦 AI</span><span class="platform-tag tag-green">免费可用</span></div>
+            <div class="platform-card" onclick="copyAndGo('https://www.doubao.com/')"><span class="platform-icon">🤖</span><span class="platform-name">豆包</span><span class="platform-tag tag-green">免费可用</span></div>
+            <div class="platform-card" onclick="copyAndGo('https://tongyi.aliyun.com/wanxiang')"><span class="platform-icon">🍊</span><span class="platform-name">通义万相</span><span class="platform-tag tag-green">免费可用</span></div>
+            <div class="platform-card" onclick="copyAndGo('https://klingai.com/')"><span class="platform-icon">⚡</span><span class="platform-name">可灵 AI</span><span class="platform-tag tag-gold">付费·国产</span></div>
+            <div class="platform-card" onclick="copyAndGo('https://www.midjourney.com/')"><span class="platform-icon">🎨</span><span class="platform-name">Midjourney</span><span class="platform-tag tag-gold">付费·顶级</span></div>
+          </div>
+        </div>
+        <div class="hub-card">
+          <div class="hub-logo">🌐</div>
+          <div class="hub-title">灵创星球</div>
+          <div class="hub-sub">AI独立高精生图/生视频聚合平台</div>
+          <a href="https://lc.wazgz.com/" target="_blank" class="btn-hub">点击进入 ➔</a>
+        </div>
+      </div>
+      <div class="wechat-banner">
+        <div class="wechat-qr"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87%E4%BA%8C%E7%BB%B4%E7%A0%81_20260515141550_400_2.jpg" alt="微信"></div>
+        <div class="wechat-meta">
+          <h3>💬 觉得好用？扫码加微信</h3>
+          <p>获取更多AI出图技巧、爆款案例和合伙人专属变现玩法。微信号：<span class="wechat-id">palinyu</span></p>
+        </div>
       </div>
     </div>
   </div>
 
 </div>
-
-<!-- 桌面悬浮 -->
-<div id="float-card-desktop" style="position:fixed;right:20px;top:50%;transform:translateY(-50%);width:120px;z-index:999;">
-  <a href="https://lc.wazgz.com/" target="_blank" style="text-decoration:none;">
-    <div style="width:120px;background:linear-gradient(160deg,rgba(20,20,30,0.98),rgba(8,8,15,0.99));border:1.5px solid rgba(212,175,55,0.5);border-radius:18px;padding:18px 10px 14px;display:flex;flex-direction:column;align-items:center;gap:9px;cursor:pointer;box-shadow:0 0 24px rgba(212,175,55,0.12),0 8px 32px rgba(0,0,0,0.6);transition:all .25s;" onmouseover="this.style.borderColor='#f5c44a'" onmouseout="this.style.borderColor='rgba(212,175,55,0.5)'">
-      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#f5c44a,#d4af37);display:flex;align-items:center;justify-content:center;font-size:24px;">🌐</div>
-      <div style="text-align:center;"><div style="font-size:13px;font-weight:900;color:#f5c44a;">灵创星球</div><div style="font-size:10px;color:#666;margin-top:2px;">AI聚合平台</div></div>
-      <div style="width:100%;text-align:center;font-size:11px;font-weight:700;color:#000;background:linear-gradient(135deg,#f5c44a,#d4af37);border-radius:7px;padding:6px 0;">点击进入 →</div>
-    </div>
-  </a>
-</div>
-
-<!-- 手机底部导航 -->
-<div id="float-card-mobile" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,rgba(12,12,20,0.98),rgba(6,6,12,0.99));border-top:1px solid rgba(212,175,55,0.3);padding:10px 20px;display:none;align-items:center;justify-content:space-between;">
-  <div style="display:flex;align-items:center;gap:10px;">
-    <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#f5c44a,#d4af37);display:flex;align-items:center;justify-content:center;font-size:16px;">🌐</div>
-    <div><div style="font-size:12px;font-weight:900;color:#f5c44a;">灵创星球</div><div style="font-size:10px;color:#666;">AI生产力全能聚合平台</div></div>
-  </div>
-  <a href="https://lc.wazgz.com/" target="_blank" style="text-decoration:none;"><div style="background:linear-gradient(135deg,#f5c44a,#d4af37);color:#000;font-size:12px;font-weight:900;padding:8px 16px;border-radius:10px;">立即进入 →</div></a>
 </div>
 
 <script>
-// ============ 图片放大 ============
-function zoomImg(src) {
-  document.getElementById('img-zoom-src').src = src;
-  document.getElementById('img-zoom-modal').style.display = 'flex';
-}
-
-// ============ 全局变量 ============
-let globalConversationId = null;
+// ===== 全局状态 =====
+let currentIndustry = '营销海报';
 let uploadedFileIds = [];
-let currentCatPrefix = '';
-let topicBatch = 0;
+let isFileAttached = false;
+let styleBatch = {};
+let cachedPrompt = '';
+let lastStyleName = '';
 
-// 品类对应的选题库
-const CAT_TOPICS = {
-  '默认': ['光合作用原理','石斛麦冬功效','摩羯座性格分析','红烧肉做法','成都美食地图','烟酰胺护肤','深蹲标准姿势','基金定投入门'],
-  '营销海报': ['新品上市海报','促销活动海报','品牌宣传图','节日营销海报','产品发布海报','双十一活动图','开业宣传海报','限时优惠海报'],
-  '知识图文': ['光合作用原理','人体血液循环','宇宙大爆炸理论','DNA双螺旋结构','量子力学入门','黑洞形成原理','地震是怎么发生的','火山喷发原理'],
-  '菜谱美食': ['红烧肉做法','糖醋排骨步骤','麻婆豆腐正宗','酸菜鱼家常版','蒜蓉虾的秘诀','番茄炒蛋升级','可乐鸡翅入味','土豆丝清脆技巧'],
-  '社交封面': ['减脂打卡封面','旅行vlog封面','美食探店封面','知识分享封面','穿搭日记封面','读书笔记封面','健身日记封面','生活记录封面'],
-  '穿搭时尚': ['秋冬通勤穿搭','梨形身材显瘦','小个子显高穿搭','黑白灰搭配法','法式穿搭公式','韩系清新穿搭','商务正装搭配','周末休闲穿搭'],
-  '护肤美妆': ['烟酰胺功效解析','视黄醇抗衰指南','玻尿酸补水原理','敏感肌护肤步骤','油皮控油方案','防晒成分对比','早C晚A使用法','干皮护肤攻略'],
-  '城市探店': ['成都太古里打卡','上海安福路探店','北京798艺术区','广州北京路漫游','重庆洪崖洞攻略','杭州西湖周边','深圳海岸城探店','南京夫子庙攻略'],
-  '儿童教育': ['儿童数字认知','字母ABC学习','加减法趣味图解','恐龙科普图鉴','植物生长过程','动物百科图解','四季认知卡片','交通工具认识'],
-  '健身减脂': ['平板支撑标准','深蹲正确姿势','臀部训练动作','腹肌撕裂计划','减脂饮食搭配','跑步入门指南','瑜伽基础体式','徒手胸肌训练'],
-  '电商产品': ['护肤品主图设计','食品详情页图','服装展示海报','电子产品海报','家居产品主图','母婴产品海报','运动器材展示','零食包装设计'],
-  '财经理财': ['基金定投入门','复利原理图解','信用卡使用技巧','理财入门知识','股票K线图解','保险配置指南','消费降级攻略','副业收入规划'],
-  '室内家装': ['北欧风客厅设计','新中式卧室效果','轻奢餐厅设计','工业风书房改造','小户型空间利用','儿童房布置方案','卫生间改造设计','阳台花园设计'],
+// ===== 品类数据 =====
+const INDUSTRY_DATA = {
+  '营销海报':{formula:'帮我做一张高档商用营销海报图，主题是：[选题]，画面要有强烈视觉冲击力和大厂设计感，核心画面是：',topics:['感恩节促销海报','新店开业重工业海报','极简科技风招商海报','国潮大促盛典壁报','豪车品鉴高端海报','春季美妆上新宣传图']},
+  '知识图文':{formula:'帮我做一张适合知识图文解析的背景配图，主题是：[选题]，要求画面结构工整有科技感，核心内容是：',topics:['光合作用原理','商业大亨搞钱认知图解','高分子材料科技原理','极简风历史人物卡','DNA双螺旋结构','量子力学入门']},
+  '菜谱美食':{formula:'帮我做一张让人极度有食欲的高精美食宣传图，主题是：[选题]，采用高档商业棚拍光影，核心画面是：',topics:['麻辣小龙虾','顶奢黑金法式甜点','深夜食堂日系居酒屋','传统佛跳墙','红烧肉家常版','酸菜鱼家常版']},
+  '社交封面':{formula:'帮我做一张高点赞率的小红书/抖音图文封面图，主题是：[选题]，视觉风格要抓人眼球，核心画面是：',topics:['美食探店网红封面','穿搭博主每日OOTD','小说推文高燃封面','自律搞钱博主黑金封面','健身打卡封面','旅行vlog封面']},
+  '穿搭时尚':{formula:'帮我做一张高质感穿搭时尚图，主题是：[选题]，核心画面是：',topics:['秋冬通勤穿搭公式','梨形身材显瘦穿搭','小个子显高穿搭','黑白灰搭配法则','法式穿搭公式','韩系清新穿搭']},
+  '护肤美妆':{formula:'帮我做一张护肤美妆科普图，主题是：[选题]，核心内容是：',topics:['烟酰胺功效解析','视黄醇抗衰指南','敏感肌护肤步骤','油皮控油方案','防晒成分对比','早C晚A使用法']},
+  '城市探店':{formula:'帮我做一张城市探店/Citywalk攻略图，主题是：[选题]，核心内容是：',topics:['成都太古里打卡','上海安福路探店','北京798艺术区','广州北京路漫游','重庆洪崖洞攻略','杭州西湖周边']},
+  '儿童教育':{formula:'帮我做一张儿童教育知识图解，主题是：[选题]，要求画面生动有趣，核心内容是：',topics:['儿童数字认知','字母ABC学习','加减法趣味图解','恐龙科普图鉴','植物生长过程','动物百科图解']},
+  '健身减脂':{formula:'帮我做一张健身减脂科普图，主题是：[选题]，核心内容是：',topics:['平板支撑标准动作','深蹲正确姿势','臀部训练动作','腹肌撕裂计划','减脂饮食搭配','跑步入门指南']},
+  '电商产品':{formula:'帮我做一张极具质感的电商商用主图/海报，主题是：[选题]，要求突出品级和核心材质，画面是：',topics:['北欧极简不锈钢保温杯','未来科技感智能手表','极轻钛合金高端眼镜','复古原木香薰底座','护肤品主图设计','食品详情页图']},
+  '财经理财':{formula:'帮我做一张财经理财知识科普图，主题是：[选题]，核心内容是：',topics:['基金定投入门','复利原理图解','信用卡使用技巧','理财入门知识','股票K线图解','消费降级攻略']},
+  '室内家装':{formula:'帮我做一张室内家装效果/设计图，主题是：[选题]，核心内容是：',topics:['北欧风客厅设计','新中式卧室效果','轻奢餐厅设计','工业风书房改造','小户型空间利用','儿童房布置方案']},
 };
 
-let currentCatKey = '默认';
-let catTopicBatch = 0;
-
-// 风格卡背景映射
-const STYLE_VISUALS = {
-  '3D': 'sv-3d', '立体': 'sv-3d', '玻璃': 'sv-3d',
-  '国潮': 'sv-guochao', '国风': 'sv-shuimo', '水墨': 'sv-shuimo',
-  '极简': 'sv-jianyi', '白卡': 'sv-jianyi', '简约': 'sv-jianyi',
-  '博物': 'sv-bowu', '手绘': 'sv-bowu', '古典': 'sv-bowu',
-  '赛博': 'sv-saibo', '朋克': 'sv-saibo', '霓虹': 'sv-saibo',
-  '马卡龙': 'sv-makalong', '少女': 'sv-makalong', '粉': 'sv-makalong',
-  '杂志': 'sv-zaji', '封面': 'sv-zaji', '撞色': 'sv-zaji',
+// ===== 风格组池 =====
+const STYLE_POOLS = {
+  'auto':[
+    {n:'3D悬浮立体风',d:'玻璃质感+立体漂浮，当下最火',cls:'sv-3d',e:'🧊'},
+    {n:'国风国潮',d:'朱红+金色+中式纹样，国潮质感',cls:'sv-guochao',e:'🎋'},
+    {n:'极简白卡风',d:'纯白底+黑字+留白，清爽高级',cls:'sv-jianyi',e:'⬜'},
+    {n:'莫兰迪高级感',d:'低饱和高级灰，精致优雅',cls:'sv-morandi',e:'🎨'},
+    {n:'赛博霓虹风',d:'深色+荧光+未来感强',cls:'sv-saibo',e:'⚡'},
+    {n:'马卡龙少女风',d:'粉紫奶白+甜美装饰',cls:'sv-makalong',e:'🎀'},
+    {n:'四季浮雕纸雕风',d:'米白3D微缩立体场景',cls:'sv-bowu',e:'🌿'},
+    {n:'杂志封面风',d:'大字+高对比，视觉冲击强',cls:'sv-zaji',e:'📰'},
+  ],
+  '当下最火':[
+    {n:'3D悬浮立体风',d:'玻璃质感卡片+元素3D漂浮+镭射渐变',cls:'sv-3d',e:'🧊'},
+    {n:'莫兰迪高级感',d:'低饱和高级灰+精致排版，优雅感',cls:'sv-morandi',e:'🎨'},
+    {n:'镭射全息风',d:'彩虹光效+金属质感+科技感强',cls:'sv-saibo',e:'💎'},
+    {n:'奶油肌理风',d:'米白细腻质感+温柔色调',cls:'sv-makalong',e:'🍦'},
+    {n:'玻璃态透明风',d:'毛玻璃叠加+高级透明感',cls:'sv-3d',e:'🔮'},
+    {n:'国潮赛博风',d:'霓虹+国风+暗调背景',cls:'sv-saibo',e:'🌆'},
+    {n:'新中式轻奢风',d:'国风元素+金属线条+高端感',cls:'sv-guochao',e:'✨'},
+    {n:'意境裂变风',d:'前沿激光幻彩炫丽流体，强效吸睛',cls:'sv-saibo',e:'🌈'},
+  ],
+  '中式国风':[
+    {n:'国风国潮',d:'朱红+金色+中式纹样+国潮氛围',cls:'sv-guochao',e:'🎋'},
+    {n:'水墨古典风',d:'宣纸质感+墨色晕染+古典印章',cls:'sv-shuimo',e:'🖋️'},
+    {n:'四季浮雕纸雕风',d:'米白3D微缩立体+中英双语标注',cls:'sv-bowu',e:'🌿'},
+    {n:'民国复古风',d:'做旧米黄+水墨插画+民国排版',cls:'sv-bowu',e:'🏮'},
+    {n:'敦煌壁画风',d:'朱砂+石青+飞天纹样+文化厚重感',cls:'sv-guochao',e:'🏔️'},
+    {n:'青花瓷风',d:'白底+靛蓝+瓷器纹样+雅致感',cls:'sv-shuimo',e:'🫖'},
+    {n:'中式宫廷金色风',d:'暖金+米白+宫廷纹饰+奢华感',cls:'sv-luxury',e:'👑'},
+    {n:'汉服古典风',d:'流云纹+宫廷色+古风质感',cls:'sv-guochao',e:'👘'},
+  ],
+  '知识图解':[
+    {n:'极简白卡风',d:'纯白底+黑字+留白美学，信息清晰',cls:'sv-jianyi',e:'⬜'},
+    {n:'扁平插画风',d:'几何色块+简洁图形+现代感',cls:'sv-saibo',e:'📐'},
+    {n:'数据可视化风',d:'图表+信息图+数字突出',cls:'sv-saibo',e:'📊'},
+    {n:'教材插画风',d:'清晰图解+色块分区+易读性强',cls:'sv-bohao',e:'📖'},
+    {n:'博物学手绘风',d:'精细线稿+科学标注+专业质感',cls:'sv-bowu',e:'🔬'},
+    {n:'3D知识立体风',d:'知识元素3D漂浮+透明质感背景',cls:'sv-3d',e:'🧊'},
+    {n:'杂志封面风',d:'大字标题+高对比色块+视觉冲击',cls:'sv-zaji',e:'📰'},
+    {n:'思维导图风',d:'发散结构+色彩分区+逻辑清晰',cls:'sv-saibo',e:'🗺️'},
+  ],
+  '生活美食':[
+    {n:'暖色插画风',d:'橙红+奶白+卡通食材+温馨暖心',cls:'sv-guochao',e:'🍊'},
+    {n:'日系治愈风',d:'奶油色+手绘线条+温柔感',cls:'sv-makalong',e:'🍃'},
+    {n:'日式手账风',d:'牛皮纸底+手写体+胶带装饰',cls:'sv-bowu',e:'📓'},
+    {n:'手绘水彩风',d:'透明感水彩晕染+柔和配色',cls:'sv-makalong',e:'🖌️'},
+    {n:'复古美食杂志风',d:'深色背景+金色标题+高端感',cls:'sv-luxury',e:'🍷'},
+    {n:'博物学手绘风',d:'精细食材绘图+科学标注',cls:'sv-bowu',e:'🔬'},
+    {n:'潮流扁平风',d:'高饱和色块+粗线条+年轻活力',cls:'sv-saibo',e:'🎨'},
+    {n:'极简白卡风',d:'白底+黑色线稿+清爽高级',cls:'sv-jianyi',e:'⬜'},
+  ],
+  '游戏动漫':[
+    {n:'赛博朋克风',d:'霓虹+暗调+未来感，震撼视觉',cls:'sv-saibo',e:'⚡'},
+    {n:'二次元插画风',d:'日系动漫+清新色调+精致感',cls:'sv-makalong',e:'🌸'},
+    {n:'像素复古风',d:'8bit+复古游戏感+像素质感',cls:'sv-saibo',e:'👾'},
+    {n:'美式漫画风',d:'粗线描边+强烈对比色+力量感',cls:'sv-zaji',e:'💥'},
+    {n:'国潮赛博风',d:'国风元素+霓虹+暗调',cls:'sv-guochao',e:'🐉'},
+    {n:'星际宇宙风',d:'深空+星云+科幻感+震撼感',cls:'sv-3d',e:'🌌'},
+    {n:'奇幻森林风',d:'魔幻+光效+自然+神秘',cls:'sv-bowu',e:'🌲'},
+    {n:'废土蒸汽朋克风',d:'铁锈+齿轮+蒸汽+复古科技',cls:'sv-bowu',e:'⚙️'},
+  ],
+  '奢华商业':[
+    {n:'黑金奢华风',d:'深色背景+金色元素+高端品牌质感',cls:'sv-luxury',e:'🖤'},
+    {n:'高级冷感风',d:'冷色调+极简+奢华感',cls:'sv-jianyi',e:'❄️'},
+    {n:'杂志封面风',d:'大字标题+高对比色块+时髦感',cls:'sv-zaji',e:'📰'},
+    {n:'商务深色风',d:'深蓝+金色+数据图表+专业感',cls:'sv-saibo',e:'💼'},
+    {n:'3D产品漂浮风',d:'产品3D漂浮+镭射光效+炫酷',cls:'sv-3d',e:'🧊'},
+    {n:'莫兰迪高级感',d:'低饱和灰调，品质感强',cls:'sv-morandi',e:'🎨'},
+    {n:'ins高端风',d:'白底+柔和阴影+精致感',cls:'sv-jianyi',e:'📸'},
+    {n:'暗调奢华风',d:'深色+金属光泽+高端质感',cls:'sv-luxury',e:'💎'},
+  ],
+  '奇幻魔幻':[
+    {n:'赛博朋克风',d:'霓虹+暗调+未来感',cls:'sv-saibo',e:'⚡'},
+    {n:'超现实主义风',d:'梦境+扭曲+奇异感强',cls:'sv-3d',e:'🌀'},
+    {n:'废土蒸汽朋克风',d:'铁锈+齿轮+蒸汽+工业感',cls:'sv-bowu',e:'⚙️'},
+    {n:'星际宇宙风',d:'深空+星云+科幻感',cls:'sv-saibo',e:'🌌'},
+    {n:'奇幻森林风',d:'魔幻+光效+自然+神秘',cls:'sv-bowu',e:'🌲'},
+    {n:'暗黑哥特风',d:'暗色调+复古+神秘感',cls:'sv-luxury',e:'🦇'},
+    {n:'水晶魔幻风',d:'晶莹剔透+魔法光效',cls:'sv-3d',e:'💎'},
+    {n:'国风奇幻风',d:'东方元素+魔幻场景',cls:'sv-guochao',e:'🐉'},
+  ],
+  '可爱治愈':[
+    {n:'马卡龙少女风',d:'粉紫奶白+爱心装饰+甜美感',cls:'sv-makalong',e:'🎀'},
+    {n:'卡通绘本风',d:'柔和色调+大卡通插图+童趣',cls:'sv-makalong',e:'📚'},
+    {n:'萌系Q版风',d:'圆润卡通+马卡龙色+可爱',cls:'sv-makalong',e:'🐱'},
+    {n:'奶油ins风',d:'米白+精致阴影+温柔种草感',cls:'sv-jianyi',e:'🤍'},
+    {n:'日系治愈风',d:'奶油色+手绘+温柔感',cls:'sv-makalong',e:'🍃'},
+    {n:'彩虹活力风',d:'七彩渐变+圆形图标+儿童插画',cls:'sv-makalong',e:'🌈'},
+    {n:'手绘涂鸦风',d:'彩虹色+手写字+贴纸感',cls:'sv-guochao',e:'✏️'},
+    {n:'故事绘本风',d:'暖色调+场景插画+温馨感',cls:'sv-guochao',e:'📖'},
+  ],
 };
 
-function getStyleVisual(name) {
-  for (const [key, cls] of Object.entries(STYLE_VISUALS)) {
-    if (name.includes(key)) return cls;
-  }
-  return 'sv-3d';
+// ===== 展示图片 =====
+const GALLERY_IMGS = [
+  {url:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/3D%E8%8D%B7%E8%8A%B1.png',label:'🌿 植物科普'},
+  {url:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E6%A1%82%E8%8A%B1.png',label:'🌸 国风水彩'},
+  {url:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E8%8B%8F%E5%B7%9E3D.png',label:'🏙️ 城市浮雕'},
+  {url:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E9%95%BF%E6%B2%99.png',label:'🗺️ 手绘地图'},
+  {url:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E7%81%AB%E9%94%85.png',label:'🦞 美食菜谱'},
+  {url:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/ChatGPT%20Image%202026%E5%B9%B45%E6%9C%8815%E6%97%A5%2012_30_04.png',label:'📚 知识图文'},
+  {url:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E9%BB%84%E5%B1%B1.png',label:'🏔️ 山水旅游'},
+];
+
+// ===== 初始化 =====
+function initGallery(){
+  const track=document.getElementById('gallery-track');
+  GALLERY_IMGS.forEach(item=>{
+    const card=document.createElement('div');card.className='gallery-card';
+    card.innerHTML=`<div class="gallery-img" onclick="zoomImg('${item.url}')"><img src="${item.url}" loading="lazy" onerror="this.parentElement.style.background='#1a1b22'"></div><span class="gallery-label">${item.label}</span>`;
+    track.appendChild(card);
+  });
+  // 拖拽滚动
+  let isDown=false,startX,scrollLeft;
+  track.addEventListener('mousedown',e=>{isDown=true;track.style.cursor='grabbing';startX=e.pageX-track.offsetLeft;scrollLeft=track.scrollLeft;});
+  track.addEventListener('mouseleave',()=>{isDown=false;track.style.cursor='grab';});
+  track.addEventListener('mouseup',()=>{isDown=false;track.style.cursor='grab';});
+  track.addEventListener('mousemove',e=>{if(!isDown)return;e.preventDefault();const x=e.pageX-track.offsetLeft;track.scrollLeft=scrollLeft-(x-startX);});
 }
 
-// ============ 存储 ============
-function vkey(s) { return 'lc_engine_' + s + '_' + (CFG?.version || 'v1'); }
-function isUnlocked() { return localStorage.getItem(vkey('unlocked')) === 'true'; }
-function getCount() { return parseInt(localStorage.getItem(vkey('count')) || '0'); }
-function incCount() { localStorage.setItem(vkey('count'), getCount() + 1); }
-function getFreeLimit() { return CFG?.free_times || 5; }
-function getCardType() { return localStorage.getItem(vkey('cardtype')) || ''; }
-function setUnlocked(ct) { localStorage.setItem(vkey('unlocked'), 'true'); localStorage.setItem(vkey('cardtype'), ct); }
+function zoomImg(src){document.getElementById('img-zoom-src').src=src;document.getElementById('img-zoom').style.display='flex';}
+document.getElementById('img-zoom').onclick=function(){this.style.display='none';};
 
-// ============ 启动 ============
-async function boot() {
-  try {
-    // 3秒超时，避免COS网络慢导致长时间转圈
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 3000);
-    const res = await fetch(CONFIG_URL + '?t=' + Date.now(), {
-      cache: 'no-store',
-      signal: controller.signal
-    });
-    clearTimeout(timer);
-    if (res.ok) CFG = await res.json();
-  } catch(e) {
-    // 超时或失败，用本地默认配置，不影响使用
-  }
-  if (!CFG) CFG = { version:'v1', free_times:5, cards:{ '次卡':{password:'LC次卡2026',times:50,price:'9.9',label:'50次体验卡'}, '月卡':{password:'LC月卡2026',days:30,price:'19.9',label:'30天无限卡'}, '永久卡':{password:'LC永久2026',price:'49.9',label:'永久畅享卡'} } };
-  const notice = CFG.notice;
-  if (notice && notice.show !== false && notice.text) {
-    const bar = document.getElementById('notice-bar');
-    bar.textContent = '📢 ' + notice.text;
-    bar.style.display = 'block';
-  }
-  updateCardUI();
-  renderHotTopics('默认');
-  document.getElementById('boot-mask').style.display = 'none';
-  if (isUnlocked()) { showMain(); }
-  else if (getCount() >= getFreeLimit()) { showLock(); }
-  else { showMain(); }
+// ===== 存储 =====
+function vk(s){return'lc_engine_'+s+'_'+(CFG?.version||'v1');}
+function isUnlocked(){return localStorage.getItem(vk('unlocked'))==='true';}
+function getCount(){return parseInt(localStorage.getItem(vk('count'))||'0');}
+function incCount(){localStorage.setItem(vk('count'),getCount()+1);}
+function getFreeLimit(){return CFG?.free_times||5;}
+function getCardType(){return localStorage.getItem(vk('cardtype'))||'';}
+function setUnlocked(ct){localStorage.setItem(vk('unlocked'),'true');localStorage.setItem(vk('cardtype'),ct);}
+
+// ===== 启动 =====
+async function boot(){
+  try{
+    const ctrl=new AbortController();
+    const t=setTimeout(()=>ctrl.abort(),3000);
+    const res=await fetch(CONFIG_URL+'?t='+Date.now(),{cache:'no-store',signal:ctrl.signal});
+    clearTimeout(t);
+    if(res.ok)CFG=await res.json();
+  }catch(e){}
+  if(!CFG)CFG={version:'v1',free_times:5,cards:{'次卡':{password:'LC次卡2026',times:50,price:'9.9',label:'50次体验卡'},'月卡':{password:'LC月卡2026',days:30,price:'19.9',label:'30天无限卡'},'永久卡':{password:'LC永久2026',price:'49.9',label:'永久畅享卡'}}};
+  const notice=CFG.notice;
+  if(notice&&notice.show!==false&&notice.text){const bar=document.getElementById('notice-bar');bar.textContent='📢 '+notice.text;bar.style.display='block';}
+  updateCardUI();initGallery();renderTopics();updateUsageBadge();
+  document.getElementById('boot-mask').style.display='none';
+  if(isUnlocked()){showMain();}else if(getCount()>=getFreeLimit()){showLock();}else{showMain();}
 }
 
-function updateCardUI() {
-  const cards = CFG.cards || {};
-  for (const [name, info] of Object.entries(cards)) {
-    const lel = document.getElementById('label-' + name);
-    const pel = document.getElementById('price-' + name);
-    if (lel) lel.textContent = info.label || name;
-    if (pel) pel.textContent = info.price || '';
-  }
-}
-
-// ============ 品类快速入口 ============
-function setCat(el, cat, prefix) {
-  document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  currentCatPrefix = prefix;
-  currentCatKey = cat;
-
-  // 更新选题库
-  renderHotTopics(cat);
-
-  // 更新输入框
-  const input = document.getElementById('topic-input');
-  input.value = prefix;
-  input.focus();
-  input.setSelectionRange(prefix.length, prefix.length);
-  document.getElementById('input-label').textContent = cat + ' · 补充你的具体内容';
-}
-
-// ============ 选题库 ============
-function renderHotTopics(catKey) {
-  const container = document.getElementById('hot-topics');
-  const topics = CAT_TOPICS[catKey] || CAT_TOPICS['默认'];
-  const isDefault = catKey === '默认';
-  container.innerHTML = topics.map(t =>
-    isDefault
-      ? `<span style="padding:5px 11px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;font-size:11px;color:var(--tx3);cursor:default;white-space:nowrap;opacity:0.5;" title="请先选择上方品类">🔥 ${t}</span>`
-      : `<span onclick="useTopic('${t}')" style="padding:5px 11px;background:rgba(245,196,74,0.05);border:1px solid rgba(245,196,74,0.12);border-radius:16px;font-size:11px;color:var(--tx2);cursor:pointer;transition:all .2s;white-space:nowrap;" onmouseover="this.style.borderColor='rgba(245,196,74,0.4)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(245,196,74,0.12)';this.style.color='var(--tx2)'">🔥 ${t}</span>`
-  ).join('');
-
-  // 提示文字
-  const hint = document.getElementById('topic-hint');
-  if (hint) {
-    hint.textContent = isDefault ? '👆 先选择上方品类，选题库自动切换为对应内容' : `已切换为「${catKey}」相关选题，点击直接填入`;
-    hint.style.color = isDefault ? 'var(--tx3)' : 'var(--gold)';
+function updateCardUI(){
+  const cards=CFG.cards||{};
+  for(const[name,info]of Object.entries(cards)){
+    const le=document.getElementById('label-'+name),pe=document.getElementById('price-'+name);
+    if(le)le.textContent=info.label||name;if(pe)pe.textContent=info.price||'';
   }
 }
 
-function switchTopicBatch() {
-  // 在当前品类内换一批（暂时未实现，品类内topic固定8个）
-  if (currentCatKey !== '默认') {
-    renderHotTopics(currentCatKey);
-  }
+// ===== 行业+选题 =====
+function selectIndustry(el,name){
+  document.querySelectorAll('.industry-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');currentIndustry=name;
+  document.getElementById('topics-label').textContent=`🔥 [${name}] 当季爆款选题（点击直接套用）`;
+  document.getElementById('topic-input').value='';
+  renderTopics();
+}
+function renderTopics(){
+  const dock=document.getElementById('chips-dock');dock.innerHTML='';
+  const data=INDUSTRY_DATA[currentIndustry]||INDUSTRY_DATA['营销海报'];
+  data.topics.forEach(t=>{
+    const chip=document.createElement('div');chip.className='topic-chip';chip.textContent='# '+t;
+    chip.onclick=()=>{document.getElementById('topic-input').value=data.formula.replace('[选题]',t);};
+    dock.appendChild(chip);
+  });
+}
+function shuffleTopics(){
+  const data=INDUSTRY_DATA[currentIndustry]||INDUSTRY_DATA['营销海报'];
+  data.topics.sort(()=>Math.random()-.5);renderTopics();
 }
 
-function useTopic(t) {
-  if (currentCatKey === '默认') return; // 未选品类不可点
-  document.getElementById('topic-input').value = currentCatPrefix ? currentCatPrefix + t : t;
-  document.getElementById('topic-input').focus();
+// ===== 文件上传 =====
+function handleFileSelect(input){
+  const file=input.files[0];if(!file)return;
+  isFileAttached=true;
+  const badge=document.getElementById('file-preview-badge');
+  const bImg=document.getElementById('badge-img');
+  const bName=document.getElementById('badge-name');
+  bName.textContent=file.name.length>20?file.name.substring(0,20)+'…':file.name;
+  if(file.type.startsWith('image/')){const r=new FileReader();r.onload=e=>{bImg.src=e.target.result;};r.readAsDataURL(file);}
+  else{bImg.src='';}
+  badge.style.display='flex';
+  // 上传到扣子
+  uploadFile(file);
 }
+async function uploadFile(file){
+  try{
+    const base64=await fileToBase64(file);
+    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze-upload',file_base64:base64,file_name:file.name,file_type:file.type||'application/octet-stream'})});
+    const data=await res.json();
+    if(data.data?.id){uploadedFileIds.push(data.data.id);}
+  }catch(e){console.log('上传失败:',e);}
+}
+function removeFile(){document.getElementById('file-input').value='';document.getElementById('file-preview-badge').style.display='none';isFileAttached=false;uploadedFileIds=[];}
+function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
 
-// ============ 锁定界面 ============
-function showLock() { document.getElementById('main-panel').style.display='none'; document.getElementById('lock-screen').style.display='flex'; showStep('select'); }
-function showMain() { document.getElementById('lock-screen').style.display='none'; document.getElementById('main-panel').style.display='block'; updateUsageBar(); }
-function showStep(s) { ['select','pay','verify','password','input','gzhguide'].forEach(x => { const el=document.getElementById('step-'+x); if(el)el.style.display='none'; }); const target=document.getElementById('step-'+s); if(target)target.style.display='block'; }
-function selectCard(name) { selectedCard=name; document.querySelectorAll('.card-item').forEach(el=>el.classList.remove('selected')); document.getElementById('card-'+name).classList.add('selected'); const btn=document.getElementById('btn-next'); btn.disabled=false; btn.textContent=`解锁 ${CFG.cards[name]?.label||name} →`; }
-function goToPay() { if(!selectedCard)return; const info=CFG.cards[selectedCard]; document.getElementById('pay-price').textContent=info.price; document.getElementById('pay-desc').textContent=`${info.label} · 付款后点击下方按钮获取密码`; showStep('pay'); }
-function backToSelect() { showStep('select'); }
-function showInputStep() { showStep('input'); }
-function onPaid() { showStep('gzhguide'); }
-function copyPassword() { if(!currentPassword)return; navigator.clipboard.writeText(currentPassword).then(()=>{ const btn=document.querySelector('.btn-copy-pwd'); btn.textContent='✅ 已复制！'; setTimeout(()=>btn.textContent='📋 一键复制密码',2000); }); }
-function goToInputStep() { document.getElementById('pwd-input').value=currentPassword||''; showStep('input'); }
-function doUnlock() {
+// ===== 风格选择 =====
+function handleStyleChange(){
+  const val=document.getElementById('style-sel').value;
+  document.getElementById('custom-style-dock').style.display=val==='custom'?'block':'none';
+}
+function getStyleGroup(){
+  const val=document.getElementById('style-sel').value;
+  if(val==='auto')return'auto';
+  if(val==='custom')return'auto';
+  // 找对应的池
+  const groupMap={'当下最火':'当下最火','3D悬浮立体风':'当下最火','莫兰迪高级感':'当下最火','镭射全息风':'当下最火','奶油肌理风':'当下最火','玻璃态透明风':'当下最火','中式国风':'中式国风','国风国潮':'中式国风','水墨古典风':'中式国风','四季浮雕纸雕风':'中式国风','民国复古风':'中式国风','敦煌壁画风':'中式国风','青花瓷风':'中式国风','知识图解':'知识图解','极简白卡风':'知识图解','扁平插画风':'知识图解','数据可视化风':'知识图解','教材插画风':'知识图解','博物学手绘风':'知识图解','思维导图风':'知识图解','生活美食':'生活美食','暖色插画风':'生活美食','日系治愈风':'生活美食','日式手账风':'生活美食','手绘水彩风':'生活美食','复古美食杂志风':'生活美食','游戏动漫':'游戏动漫','赛博朋克风':'游戏动漫','二次元插画风':'游戏动漫','像素复古风':'游戏动漫','美式漫画风':'游戏动漫','奢华商业':'奢华商业','黑金奢华风':'奢华商业','高级冷感风':'奢华商业','杂志封面风':'奢华商业','商务深色风':'奢华商业','奇幻魔幻':'奇幻魔幻','超现实主义风':'奇幻魔幻','废土蒸汽朋克风':'奇幻魔幻','星际宇宙风':'奇幻魔幻','奇幻森林风':'奇幻魔幻','马卡龙少女风':'可爱治愈','卡通绘本风':'可爱治愈','萌系Q版风':'可爱治愈','奶油ins风':'可爱治愈'};
+  return groupMap[val]||'auto';
+}
+function getStylePool(group){
+  return STYLE_POOLS[group]||STYLE_POOLS['auto'];
+}
+function getStyleBatch(group,next){
+  if(next)styleBatch[group]=((styleBatch[group]||0)+4)%(getStylePool(group).length);
+  const start=styleBatch[group]||0;
+  const pool=getStylePool(group);
+  const result=[];
+  for(let i=0;i<4;i++)result.push(pool[(start+i)%pool.length]);
+  return result;
+}
+function switchStyleBatch(){renderStyleCards(true);}
+
+// ===== 锁定界面 =====
+function showLock(){document.getElementById('main-panel').style.display='none';document.getElementById('lock-screen').style.display='flex';showStep('select');}
+function showMain(){document.getElementById('lock-screen').style.display='none';document.getElementById('main-panel').style.display='block';updateUsageBadge();}
+function showStep(s){['select','pay','verify','password','input','gzhguide'].forEach(x=>{const el=document.getElementById('step-'+x);if(el)el.style.display='none';});const t=document.getElementById('step-'+s);if(t)t.style.display='block';}
+function selectCard(name){selectedCard=name;document.querySelectorAll('.card-item').forEach(el=>el.classList.remove('selected'));document.getElementById('card-'+name).classList.add('selected');const btn=document.getElementById('btn-next');btn.disabled=false;btn.textContent=`解锁 ${CFG.cards[name]?.label||name} →`;}
+function goToPay(){if(!selectedCard)return;const info=CFG.cards[selectedCard];document.getElementById('pay-price').textContent=info.price;document.getElementById('pay-desc').textContent=`${info.label} · 付款后截图发给我确认`;showStep('pay');}
+function onPaid(){showStep('gzhguide');}
+function copyPwd(){if(!currentPassword)return;navigator.clipboard.writeText(currentPassword).then(()=>showToast());}
+function goToInput(){document.getElementById('pwd-input').value=currentPassword||'';showStep('input');}
+function doUnlock(){
   const input=document.getElementById('pwd-input').value.trim();
   const errEl=document.getElementById('err-msg');
   if(!input){errEl.textContent='请输入密码';return;}
-  const cards=CFG.cards||{};
-  let matched=null;
-  for(const [name,info] of Object.entries(cards)){if(input===info.password){matched=name;break;}}
-  if(matched){errEl.textContent='';setUnlocked(matched);showMain();setTimeout(showGift,500);}
+  const cards=CFG.cards||{};let matched=null;
+  for(const[name,info]of Object.entries(cards)){if(input===info.password){matched=name;break;}}
+  if(matched){errEl.textContent='';if(matched==='次卡')localStorage.setItem(vk('count'),'0');setUnlocked(matched);showMain();setTimeout(showGift,500);}
   else{errEl.textContent='❌ 密码不正确，请检查后重新输入';}
 }
 
-// ============ 使用次数 ============
-function updateUsageBar() {
+// ===== 使用次数 =====
+function updateUsageBadge(){
   const count=getCount(),limit=getFreeLimit(),cardType=getCardType();
-  const bar=document.getElementById('usage-bar');
-  if(!bar)return;
-  if(cardType==='永久卡'){bar.innerHTML='♾️ 永久畅享卡 · 无限使用';}
-  else if(cardType==='月卡'){bar.innerHTML='🌙 月卡会员 · 无限使用';}
-  else if(cardType==='次卡'){const total=CFG.cards?.['次卡']?.times||50;bar.innerHTML=`⚡ 次卡剩余：${Math.max(0,total-count)} 次`;}
-  else{bar.innerHTML=`⚡ 免费剩余：${Math.max(0,limit-count)} 次`;}
+  const badge=document.getElementById('usage-badge');if(!badge)return;
+  if(cardType==='永久卡'){badge.innerHTML='♾️ 永久畅享卡 · 无限使用';}
+  else if(cardType==='月卡'){badge.innerHTML='🌙 月卡会员 · 无限使用';}
+  else if(cardType==='次卡'){const total=CFG.cards?.['次卡']?.times||50;badge.innerHTML=`⚡ 次卡剩余：${Math.max(0,total-count)} 次`;}
+  else{badge.innerHTML=`⚡ 免费剩余：<span id="usage-num">${Math.max(0,limit-count)}</span> 次`;}
 }
 
-// ============ 礼包弹窗 ============
-function showGift() {
-  const gift=CFG?.gift; if(!gift||gift.show===false)return;
+// ===== 礼包弹窗 =====
+function showGift(){
+  const gift=CFG?.gift;if(!gift||gift.show===false)return;
   const te=document.getElementById('gift-title'),de=document.getElementById('gift-desc');
   if(te)te.textContent=gift.title||'专属大礼包已解锁！';
   if(de)de.innerHTML=(gift.desc||'').replace(/\\n/g,'<br>');
-  const ba=document.getElementById('gift-btn-area'); ba.innerHTML='';
+  const ba=document.getElementById('gift-btn-area');ba.innerHTML='';
   (gift.links||[]).forEach(link=>{const a=document.createElement('a');a.href=link.url||'#';a.target='_blank';a.className='gift-btn';a.textContent=link.label||'领取资源';ba.appendChild(a);});
   document.getElementById('gift-modal').style.display='flex';
 }
-function closeGift() { document.getElementById('gift-modal').style.display='none'; }
+function closeGift(){document.getElementById('gift-modal').style.display='none';}
 
-// ============ 文件上传 ============
-function handleDrop(e) { e.preventDefault(); document.getElementById('upload-zone').classList.remove('dragover'); handleFileSelect(e.dataTransfer.files); }
-async function handleFileSelect(files) {
-  if(!files||files.length===0)return;
-  const statusEl=document.getElementById('upload-status');
-  const previewEl=document.getElementById('upload-preview');
-  const hintEl=document.getElementById('upload-hint');
-  for(const file of files){
-    if(file.size>10*1024*1024){statusEl.textContent=`❌ ${file.name} 超过10MB`;continue;}
-    statusEl.textContent=`⏳ 正在上传 ${file.name}...`;
-    try{
-      const base64=await fileToBase64(file);
-      const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze-upload',file_base64:base64,file_name:file.name,file_type:file.type||'application/octet-stream'})});
-      const data=await res.json();
-      if(data.data?.id){
-        uploadedFileIds.push(data.data.id);
-        hintEl.style.display='none'; previewEl.style.display='flex';
-        const tag=document.createElement('div');
-        tag.style.cssText='background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);border-radius:8px;padding:6px 12px;font-size:12px;color:#4f8ef7;display:flex;align-items:center;gap:6px;';
-        const icon=file.type.startsWith('image')?'🖼️':'📄';
-        tag.innerHTML=`${icon} ${file.name} <span onclick="removeFile('${data.data.id}',this.parentElement)" style="cursor:pointer;color:var(--tx3);margin-left:4px;">✕</span>`;
-        previewEl.appendChild(tag);
-        statusEl.textContent=`✅ ${file.name} 上传成功，AI可识别内容`;
-      }else{statusEl.textContent=`❌ 上传失败`;}
-    }catch(e){statusEl.textContent=`❌ 上传出错：${e.message}`;}
-  }
-}
-function removeFile(id,el){uploadedFileIds=uploadedFileIds.filter(x=>x!==id);el.remove();if(uploadedFileIds.length===0){document.getElementById('upload-hint').style.display='block';document.getElementById('upload-preview').style.display='none';}document.getElementById('upload-status').textContent='';}
-function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
-
-// ============ 日志 ============
-function addLog(text,delay=0){setTimeout(()=>{const el=document.getElementById('terminalConsole');if(!el)return;const line=document.createElement('div');line.className='terminal-line';line.textContent=text;el.appendChild(line);el.scrollTop=el.scrollHeight;},delay);}
-
-// ============ 第一轮：生成风格方案 ============
-async function generate() {
+// ===== 主引擎 =====
+function runEngine(){
   const topic=document.getElementById('topic-input').value.trim();
-  if(!topic&&uploadedFileIds.length===0){alert('请输入你想做的图或上传参考文件！');return;}
-
+  if(!topic&&!isFileAttached){alert('老哥，请先选择大类爆款选题或手打大白话内容！');return;}
   const cardType=getCardType();
   if(!isUnlocked()){incCount();if(getCount()>getFreeLimit()){showLock();return;}}
   else if(cardType==='次卡'){incCount();if(getCount()>(CFG.cards?.['次卡']?.times||50)){showLock();return;}}
-
-  const size=document.getElementById('size-pref').value;
-  const style=document.getElementById('style-pref').value;
-  const btn=document.getElementById('genBtn');
-  btn.disabled=true; btn.textContent='⏳ AI 分析中…';
-
-  const termWrap=document.getElementById('terminal-wrap');
-  termWrap.style.display='block';
-  document.getElementById('terminalConsole').innerHTML='';
-  document.getElementById('style-cards-wrap').style.display='none';
-  document.getElementById('outSection').style.display='none';
-
-  addLog('⚡ [SYSTEM] 灵创 AI 出图引擎启动...',0);
-  addLog(`🛰️ [INFO] 画布规格锁定: [${size}]`,200);
-  if(uploadedFileIds.length>0)addLog(`📎 [FILE] 检测到 ${uploadedFileIds.length} 个文件，注入多模态通道...`,400);
-  addLog('🎨 [AI] 本地智能匹配风格方案...',600);
-
-  // 直接本地生成风格卡片，不调API
-  setTimeout(()=>{
-    btn.disabled=false;
-    btn.textContent='⚡ 启动 AI 出图引擎';
-    document.getElementById('terminal-wrap').style.display='none';
-    renderStyleCards();
-  }, 1200);
-  updateUsageBar();
-}
-
-// ============ 本地风格库 ============
-const LOCAL_STYLE_POOLS = {
-  '营销海报': [
-    {name:'高冲击撞色风',desc:'高饱和对比色+大字标题，视觉冲击极强',cls:'sv-zaji'},
-    {name:'暗调奢华风',desc:'深色背景+金色元素，高端品牌质感',cls:'sv-bowu'},
-    {name:'3D悬浮立体风',desc:'产品3D漂浮+玻璃质感，当下最火',cls:'sv-3d'},
-    {name:'极简白卡风',desc:'纯白底+产品实物，干净专业',cls:'sv-jianyi'},
-    {name:'促销红金风',desc:'中国红+金色+大字，喜庆促销感',cls:'sv-guochao'},
-    {name:'杂志封面风',desc:'时尚大图+简洁文字，高端感',cls:'sv-zaji'},
-    {name:'霓虹赛博风',desc:'暗底+霓虹色+未来感',cls:'sv-saibo'},
-    {name:'莫兰迪高级感',desc:'低饱和灰调+精致排版',cls:'sv-jianyi'},
-  ],
-  '知识图文': [
-    {name:'3D悬浮立体风',desc:'知识元素3D漂浮+透明质感背景',cls:'sv-3d'},
-    {name:'极简白卡风',desc:'纯白底+结构化排版，信息清晰',cls:'sv-jianyi'},
-    {name:'扁平插画风',desc:'几何色块+简洁图形，现代感强',cls:'sv-saibo'},
-    {name:'博物学手绘风',desc:'精细线稿+科学标注，专业质感',cls:'sv-bowu'},
-    {name:'数据可视化风',desc:'图表+信息图+数字突出，权威感',cls:'sv-saibo'},
-    {name:'教材插画风',desc:'清晰图解+色块分区，易读性强',cls:'sv-3d'},
-    {name:'杂志封面风',desc:'大字标题+高对比，视觉冲击',cls:'sv-zaji'},
-    {name:'四季浮雕纸雕风',desc:'米白3D微缩场景，精致质感',cls:'sv-bowu'},
-  ],
-  '菜谱美食': [
-    {name:'暖色插画风',desc:'橙红+奶白+卡通食材，温馨暖心',cls:'sv-guochao'},
-    {name:'日式手账风',desc:'牛皮纸底+手写体+胶带装饰',cls:'sv-bowu'},
-    {name:'极简白卡风',desc:'白底+黑色线稿，清爽高级',cls:'sv-jianyi'},
-    {name:'复古美食杂志风',desc:'深色背景+金色标题，高端感',cls:'sv-zaji'},
-    {name:'国潮暖红风',desc:'国风朱红+毛笔大字，传统质感',cls:'sv-guochao'},
-    {name:'清新水彩风',desc:'透明感水彩晕染+细线稿，艺术感',cls:'sv-makalong'},
-    {name:'博物学手绘风',desc:'精细食材绘图+科学标注',cls:'sv-bowu'},
-    {name:'潮流扁平风',desc:'高饱和色块+粗线条，年轻活力',cls:'sv-saibo'},
-  ],
-  '社交封面': [
-    {name:'3D悬浮立体风',desc:'玻璃质感+立体漂浮，抓眼球',cls:'sv-3d'},
-    {name:'杂志封面风',desc:'大字标题+高对比色块',cls:'sv-zaji'},
-    {name:'马卡龙少女风',desc:'粉紫奶白+甜美装饰',cls:'sv-makalong'},
-    {name:'赛博霓虹风',desc:'深色+荧光色，未来感强',cls:'sv-saibo'},
-    {name:'极简白卡风',desc:'白底+大字，清爽高级',cls:'sv-jianyi'},
-    {name:'国潮撞色风',desc:'朱红+靛蓝+金色，国风感',cls:'sv-guochao'},
-    {name:'莫兰迪高级感',desc:'低饱和高级灰，精致优雅',cls:'sv-jianyi'},
-    {name:'水墨意境风',desc:'宣纸白+墨色+诗意感',cls:'sv-shuimo'},
-  ],
-  '穿搭时尚': [
-    {name:'时尚杂志风',desc:'大字标题+高对比，时尚感',cls:'sv-zaji'},
-    {name:'马卡龙少女风',desc:'粉紫奶白+爱心，甜美少女',cls:'sv-makalong'},
-    {name:'极简白卡风',desc:'白底+单品拆解，清爽高级',cls:'sv-jianyi'},
-    {name:'复古港风',desc:'做旧滤镜+胶片感，复古韵味',cls:'sv-bowu'},
-    {name:'赛博朋克风',desc:'深色+霓虹，前卫感强',cls:'sv-saibo'},
-    {name:'国潮撞色风',desc:'朱红+靛蓝，国风时尚',cls:'sv-guochao'},
-    {name:'莫兰迪高级感',desc:'低饱和灰调，优雅高级',cls:'sv-jianyi'},
-    {name:'ins清新风',desc:'白底+柔和阴影+高级感',cls:'sv-makalong'},
-  ],
-  '护肤美妆': [
-    {name:'实验室科技风',desc:'白底+分子结构图，专业感',cls:'sv-jianyi'},
-    {name:'日系清透风',desc:'白底+粉色+樱花，清透少女',cls:'sv-makalong'},
-    {name:'高级杂志风',desc:'深色+金色标题，奢华感',cls:'sv-zaji'},
-    {name:'3D悬浮立体风',desc:'产品3D漂浮+镭射光效',cls:'sv-3d'},
-    {name:'马卡龙少女风',desc:'粉紫奶白+可爱图标',cls:'sv-makalong'},
-    {name:'极简白卡风',desc:'纯白底+成分标注，干净专业',cls:'sv-jianyi'},
-    {name:'赛博医美风',desc:'深蓝+科技感+未来美学',cls:'sv-saibo'},
-    {name:'奶油肌理风',desc:'米白细腻质感+温柔色调',cls:'sv-makalong'},
-  ],
-  '城市探店': [
-    {name:'手绘插画地图风',desc:'奶油色+手绘线条，温馨可爱',cls:'sv-bowu'},
-    {name:'3D城市浮雕风',desc:'3D微缩建筑+中英双语标注',cls:'sv-3d'},
-    {name:'清新水彩旅游风',desc:'天蓝+草绿+粉橙，清新活力',cls:'sv-saibo'},
-    {name:'国风水墨地图风',desc:'宣纸白+水墨线条+印章',cls:'sv-shuimo'},
-    {name:'民国复古手绘风',desc:'做旧米黄+水墨插画，怀旧感',cls:'sv-bowu'},
-    {name:'赛博朋克城市风',desc:'深色+霓虹线条+科技感',cls:'sv-saibo'},
-    {name:'极简摄影风',desc:'白底+实拍图+极简排版',cls:'sv-jianyi'},
-    {name:'日系治愈插画风',desc:'奶油色+细线条+温馨感',cls:'sv-makalong'},
-  ],
-  '儿童教育': [
-    {name:'卡通故事绘本风',desc:'柔和色调+大卡通插图，童趣满满',cls:'sv-makalong'},
-    {name:'3D儿童立体风',desc:'卡通3D微缩场景，活泼生动',cls:'sv-3d'},
-    {name:'清新扁平插画风',desc:'天蓝+明黄+薄荷绿，活力阳光',cls:'sv-saibo'},
-    {name:'手绘涂鸦风',desc:'彩虹色+手写字+贴纸感',cls:'sv-guochao'},
-    {name:'马卡龙绘本风',desc:'粉蓝黄柔和+大圆润卡通',cls:'sv-makalong'},
-    {name:'科学启蒙风',desc:'天蓝+明黄+简洁图表+可爱实验',cls:'sv-saibo'},
-    {name:'彩虹活力风',desc:'七彩渐变+圆形图标+儿童插画',cls:'sv-makalong'},
-    {name:'故事绘本风',desc:'暖色调+场景插画+连环图',cls:'sv-guochao'},
-  ],
-  '健身减脂': [
-    {name:'运动科技风',desc:'深蓝+荧光绿+几何线条，力量感',cls:'sv-saibo'},
-    {name:'极简白卡风',desc:'白底+人体线稿+数字标注',cls:'sv-jianyi'},
-    {name:'3D悬浮立体风',desc:'人体/器械3D立体+霓虹光效',cls:'sv-3d'},
-    {name:'国潮运动风',desc:'朱红+黑+汉字大字，热血感',cls:'sv-guochao'},
-    {name:'清新活力风',desc:'天蓝+白+橙色点缀，活力满满',cls:'sv-saibo'},
-    {name:'医疗科普风',desc:'白底+绿色+人体解剖插图',cls:'sv-jianyi'},
-    {name:'数据可视化风',desc:'深色底+彩色图表+数字突出',cls:'sv-saibo'},
-    {name:'杂志封面风',desc:'大字+高对比，运动大片感',cls:'sv-zaji'},
-  ],
-  '电商产品': [
-    {name:'3D悬浮立体风',desc:'产品3D漂浮+玻璃质感背景',cls:'sv-3d'},
-    {name:'极简白卡风',desc:'白底+产品实物+极简排版',cls:'sv-jianyi'},
-    {name:'暗调奢华风',desc:'深色+金色元素+高端感',cls:'sv-bowu'},
-    {name:'促销撞色风',desc:'高饱和撞色+大字+促销感强',cls:'sv-zaji'},
-    {name:'莫兰迪高级感',desc:'低饱和灰调，品质感强',cls:'sv-jianyi'},
-    {name:'ins清新风',desc:'白底+柔和阴影+种草感',cls:'sv-makalong'},
-    {name:'国潮暖红风',desc:'朱红+金色，节日促销首选',cls:'sv-guochao'},
-    {name:'赛博科技风',desc:'深色+霓虹，科技产品专属',cls:'sv-saibo'},
-  ],
-  '财经理财': [
-    {name:'商务深色风',desc:'深蓝+金色+数据图表，专业感',cls:'sv-saibo'},
-    {name:'极简白卡风',desc:'白底+黑字+彩色图表，清晰',cls:'sv-jianyi'},
-    {name:'扁平数据风',desc:'天蓝+明黄+卡通人物+数字',cls:'sv-3d'},
-    {name:'杂志封面风',desc:'大字标题+高对比色块',cls:'sv-zaji'},
-    {name:'报纸新闻风',desc:'做旧纸色+黑体标题+新闻版式',cls:'sv-bowu'},
-    {name:'赛博科技风',desc:'深色+霓虹线条+未来感',cls:'sv-saibo'},
-    {name:'莫兰迪高级感',desc:'低饱和灰调，严肃专业感',cls:'sv-jianyi'},
-    {name:'3D悬浮立体风',desc:'金融元素3D漂浮+科技光效',cls:'sv-3d'},
-  ],
-  '室内家装': [
-    {name:'现代简约风',desc:'白色+原木色+灰色+极简家具',cls:'sv-jianyi'},
-    {name:'新中式轻奢风',desc:'深木色+水墨+中式家具+禅意',cls:'sv-shuimo'},
-    {name:'北欧清新风',desc:'浅色系+绿植+原木+棉麻质感',cls:'sv-bowu'},
-    {name:'轻奢现代风',desc:'大理石+金属线条+高级灰',cls:'sv-zaji'},
-    {name:'工业复古风',desc:'裸砖+铁艺+深色+工业灯具',cls:'sv-bowu'},
-    {name:'法式浪漫风',desc:'米白+金色线条+花卉装饰',cls:'sv-makalong'},
-    {name:'日式侘寂风',desc:'原木+素色+自然质感+留白',cls:'sv-jianyi'},
-    {name:'美式复古风',desc:'做旧木色+皮质+暖色调',cls:'sv-bowu'},
-  ],
-  '营销海报': [
-    {name:'高冲击撞色风',desc:'高饱和对比色+大字标题，视觉冲击极强',cls:'sv-zaji'},
-    {name:'暗调奢华风',desc:'深色背景+金色元素，高端品牌质感',cls:'sv-bowu'},
-    {name:'3D悬浮立体风',desc:'产品3D漂浮+玻璃质感，当下最火',cls:'sv-3d'},
-    {name:'极简白卡风',desc:'纯白底+产品实物，干净专业',cls:'sv-jianyi'},
-  ],
-  '知识图文': [
-    {name:'3D悬浮立体风',desc:'知识元素3D漂浮+透明质感背景',cls:'sv-3d'},
-    {name:'极简白卡风',desc:'纯白底+结构化排版，信息清晰',cls:'sv-jianyi'},
-    {name:'扁平插画风',desc:'几何色块+简洁图形，现代感强',cls:'sv-saibo'},
-    {name:'博物学手绘风',desc:'精细线稿+科学标注，专业质感',cls:'sv-bowu'},
-  ],
-  '菜谱美食': [
-    {name:'暖色插画风',desc:'橙红+奶白+卡通食材，温馨暖心',cls:'sv-guochao'},
-    {name:'日式手账风',desc:'牛皮纸底+手写体+胶带装饰',cls:'sv-bowu'},
-    {name:'极简白卡风',desc:'白底+黑色线稿，清爽高级',cls:'sv-jianyi'},
-    {name:'复古美食杂志风',desc:'深色背景+金色标题，高端感',cls:'sv-zaji'},
-  ],
-  '社交封面': [
-    {name:'3D悬浮立体风',desc:'玻璃质感+立体漂浮，抓眼球',cls:'sv-3d'},
-    {name:'杂志封面风',desc:'大字标题+高对比色块',cls:'sv-zaji'},
-    {name:'马卡龙少女风',desc:'粉紫奶白+甜美装饰',cls:'sv-makalong'},
-    {name:'赛博霓虹风',desc:'深色+荧光色，未来感强',cls:'sv-saibo'},
-  ],
-  '穿搭时尚': [
-    {name:'时尚杂志风',desc:'大字标题+高对比，时尚感',cls:'sv-zaji'},
-    {name:'马卡龙少女风',desc:'粉紫奶白+爱心，甜美少女',cls:'sv-makalong'},
-    {name:'极简白卡风',desc:'白底+单品拆解，清爽高级',cls:'sv-jianyi'},
-    {name:'复古港风',desc:'做旧滤镜+胶片感，复古韵味',cls:'sv-bowu'},
-  ],
-  '护肤美妆': [
-    {name:'实验室科技风',desc:'白底+分子结构图，专业感',cls:'sv-jianyi'},
-    {name:'日系清透风',desc:'白底+粉色+樱花，清透少女',cls:'sv-makalong'},
-    {name:'高级杂志风',desc:'深色+金色标题，奢华感',cls:'sv-zaji'},
-    {name:'3D悬浮立体风',desc:'产品3D漂浮+镭射光效',cls:'sv-3d'},
-  ],
-  '城市探店': [
-    {name:'手绘插画地图风',desc:'奶油色+手绘线条，温馨可爱',cls:'sv-bowu'},
-    {name:'3D城市浮雕风',desc:'3D微缩建筑+中英双语标注',cls:'sv-3d'},
-    {name:'清新水彩旅游风',desc:'天蓝+草绿+粉橙，清新活力',cls:'sv-saibo'},
-    {name:'国风水墨地图风',desc:'宣纸白+水墨线条+印章',cls:'sv-shuimo'},
-  ],
-  '儿童教育': [
-    {name:'卡通故事绘本风',desc:'柔和色调+大卡通插图，童趣满满',cls:'sv-makalong'},
-    {name:'3D儿童立体风',desc:'卡通3D微缩场景，活泼生动',cls:'sv-3d'},
-    {name:'清新扁平插画风',desc:'天蓝+明黄+薄荷绿，活力阳光',cls:'sv-saibo'},
-    {name:'手绘涂鸦风',desc:'彩虹色+手写字+贴纸感',cls:'sv-guochao'},
-  ],
-  '健身减脂': [
-    {name:'运动科技风',desc:'深蓝+荧光绿+几何线条，力量感',cls:'sv-saibo'},
-    {name:'极简白卡风',desc:'白底+人体线稿+数字标注',cls:'sv-jianyi'},
-    {name:'3D悬浮立体风',desc:'人体/器械3D立体+霓虹光效',cls:'sv-3d'},
-    {name:'国潮运动风',desc:'朱红+黑+汉字大字，热血感',cls:'sv-guochao'},
-  ],
-  '电商产品': [
-    {name:'3D悬浮立体风',desc:'产品3D漂浮+玻璃质感背景',cls:'sv-3d'},
-    {name:'极简白卡风',desc:'白底+产品实物+极简排版',cls:'sv-jianyi'},
-    {name:'暗调奢华风',desc:'深色+金色元素+高端感',cls:'sv-bowu'},
-    {name:'促销撞色风',desc:'高饱和撞色+大字+促销感强',cls:'sv-zaji'},
-  ],
-  '财经理财': [
-    {name:'商务深色风',desc:'深蓝+金色+数据图表，专业感',cls:'sv-saibo'},
-    {name:'极简白卡风',desc:'白底+黑字+彩色图表，清晰',cls:'sv-jianyi'},
-    {name:'扁平数据风',desc:'天蓝+明黄+卡通人物+数字',cls:'sv-3d'},
-    {name:'杂志封面风',desc:'大字标题+高对比色块',cls:'sv-zaji'},
-  ],
-  '室内家装': [
-    {name:'现代简约风',desc:'白色+原木色+灰色+极简家具',cls:'sv-jianyi'},
-    {name:'新中式轻奢风',desc:'深木色+水墨+中式家具+禅意',cls:'sv-shuimo'},
-    {name:'北欧清新风',desc:'浅色系+绿植+原木+棉麻质感',cls:'sv-bowu'},
-    {name:'轻奢现代风',desc:'大理石+金属线条+高级灰',cls:'sv-zaji'},
-  ],
-  'default': [
-    {name:'3D悬浮立体风',desc:'玻璃质感卡片+元素3D漂浮，当下最火',cls:'sv-3d'},
-    {name:'国潮手绘温暖风',desc:'暖红+金黄+做旧纸色，传统国潮质感',cls:'sv-guochao'},
-    {name:'极简白卡风',desc:'纯白底+黑字+留白美学，清爽高级',cls:'sv-jianyi'},
-    {name:'四季浮雕纸雕风',desc:'米白3D微缩立体场景，精致纸雕质感',cls:'sv-bowu'},
-  ],
-};
-
-// 记录每个品类当前显示的batch
-const styleBatchIndex = {};
-
-function getLocalStyles(catKey, nextBatch) {
-  const pool = LOCAL_STYLE_POOLS[catKey] || LOCAL_STYLE_POOLS['default'];
-  if (nextBatch) {
-    styleBatchIndex[catKey] = ((styleBatchIndex[catKey] || 0) + 4) % pool.length;
+  const styleVal=document.getElementById('style-sel').value;
+  if(styleVal==='custom'){
+    const customStyle=document.getElementById('custom-style-input').value.trim();
+    if(!customStyle){alert('老哥，请先填入你专属的风格词组！');return;}
+    renderSingleCustomCard(customStyle);
+    return;
   }
-  const start = styleBatchIndex[catKey] || 0;
-  // 循环取4个
-  const result = [];
-  for (let i = 0; i < 4; i++) {
-    result.push(pool[(start + i) % pool.length]);
-  }
-  return result;
+  const btn=document.getElementById('gen-btn');btn.disabled=true;btn.textContent='⚡ 正在启动引擎…';
+  setTimeout(()=>{btn.disabled=false;btn.textContent='🔮 启动大脑 · 开始全行业智能生图充能';renderStyleCards(false);},800);
+  updateUsageBadge();
 }
 
-function switchStyleBatch() {
-  renderStyleCards(true); // true = 换一批
+function renderSingleCustomCard(customStyle){
+  document.getElementById('style-cards-section').style.display='block';
+  const grid=document.getElementById('style-cards-grid');grid.innerHTML='';
+  grid.style.gridTemplateColumns='1fr';
+  const card=document.createElement('div');card.className='style-card style-card-rec';card.style.maxWidth='360px';card.style.margin='0 auto';
+  card.innerHTML=`<div class="style-card-badge">💎 用户专属指定风格</div><div class="style-card-visual sv-luxury" style="height:100px;margin-top:24px;"><span class="scv-emoji">✨</span><span class="scv-name">${customStyle}</span></div><div class="style-card-body"><div class="style-card-title">${customStyle}</div><div class="style-card-desc">系统已锁定你的专属调性，全量大厂模型最契合的光影链路已就绪</div><button class="style-card-btn scb-primary" onclick="confirmStyle('${customStyle.replace(/'/g,'')}')">🔮 确认锁定，开始全速充能 ➔</button></div>`;
+  grid.appendChild(card);
+  document.getElementById('style-cards-section').scrollIntoView({behavior:'smooth'});
 }
 
-function cancelStyleSelect() {
-  document.getElementById('style-cards-wrap').style.display = 'none';
-  document.getElementById('terminal-wrap').style.display = 'none';
-}
-
-// ============ 本地渲染风格卡片 ============
-function renderStyleCards(nextBatch) {
-  const grid = document.getElementById('style-cards-grid');
-  grid.innerHTML = '';
-
-  const styleList = getLocalStyles(currentCatKey, nextBatch);
-
-  // 响应式
-  if (window.innerWidth < 768) {
-    grid.style.gridTemplateColumns = 'repeat(2,1fr)';
-  } else {
-    grid.style.gridTemplateColumns = 'repeat(4,1fr)';
-  }
-
-  styleList.forEach((s, i) => {
-    const isFirst = i === 0;
-    const card = document.createElement('div');
-    card.id = 'style-card-' + i;
-    card.className = 'style-card' + (isFirst ? ' style-card-recommended' : '');
-    card.innerHTML = `
-      ${isFirst ? '<div class="style-card-badge">🏆 AI首选推荐</div>' : ''}
-      <div class="style-card-visual ${s.cls}" style="height:90px;${isFirst ? 'margin-top:24px;' : ''}"></div>
+function renderStyleCards(next){
+  const group=getStyleGroup();
+  const styleList=getStyleBatch(group,next);
+  const grid=document.getElementById('style-cards-grid');grid.innerHTML='';
+  grid.style.gridTemplateColumns=window.innerWidth<600?'repeat(2,1fr)':'repeat(4,1fr)';
+  styleList.forEach((s,i)=>{
+    const isFirst=i===0;
+    const card=document.createElement('div');card.className='style-card'+(isFirst?' style-card-rec':'');
+    card.id='sc-'+i;
+    card.innerHTML=`
+      ${isFirst?'<div class="style-card-badge">🏅 AI首选推荐</div>':''}
+      <div class="style-card-visual ${s.cls}" style="height:95px;${isFirst?'margin-top:22px;':''}">
+        <span class="scv-emoji">${s.e||'✨'}</span>
+        <span class="scv-name">${s.n}</span>
+      </div>
       <div class="style-card-body">
-        <div class="style-card-title">${s.name}</div>
-        <div class="style-card-desc">${s.desc}</div>
-        <button class="style-card-btn ${isFirst ? 'style-card-btn-primary' : 'style-card-btn-secondary'}"
-          onclick="confirmStyle(${i},'${s.name.replace(/'/g,'')}')">
-          ${isFirst ? '⚡ 锁定推荐，立即出图' : '选择此风格'}
+        <div class="style-card-title">${s.n}</div>
+        <div class="style-card-desc">${s.d}</div>
+        <button class="style-card-btn ${isFirst?'scb-primary':'scb-secondary'}" onclick="confirmStyle('${s.n.replace(/'/g,'')}',${i})">
+          ${isFirst?'⚡ 锁定推荐，立即出图':'确定锁定该风格 ➔'}
         </button>
       </div>
     `;
     grid.appendChild(card);
   });
-
-  document.getElementById('style-cards-wrap').style.display = 'block';
-  document.getElementById('style-cards-wrap').scrollIntoView({ behavior: 'smooth' });
+  document.getElementById('style-cards-section').style.display='block';
+  document.getElementById('style-cards-section').scrollIntoView({behavior:'smooth'});
 }
 
-// ============ 确认风格（单轮API，直接出结果）============
-async function confirmStyle(cardIndex, styleName) {
-  const grid = document.getElementById('style-cards-grid');
-  const allCards = grid.querySelectorAll('.style-card');
-  const cancelBtn = document.querySelector('#style-cards-wrap button');
-  if (cancelBtn) cancelBtn.style.display = 'none';
-
-  // 其他卡片淡出消失
-  allCards.forEach((card, i) => {
-    if (i !== cardIndex) {
-      card.style.transition = 'all 0.4s ease';
-      card.style.opacity = '0';
-      card.style.transform = 'scale(0.9)';
-      setTimeout(() => card.style.display = 'none', 400);
+// ===== 确认风格 → 思考单卡 → API =====
+async function confirmStyle(styleName,cardIdx){
+  lastStyleName=styleName;
+  const grid=document.getElementById('style-cards-grid');
+  const allCards=grid.querySelectorAll('.style-card');
+  // 其他卡淡出
+  allCards.forEach((card,i)=>{
+    if(i!==cardIdx&&cardIdx!==undefined){
+      card.style.transition='all 0.35s ease';card.style.opacity='0';card.style.transform='scale(0.88)';
+      setTimeout(()=>card.style.display='none',350);
     }
   });
-
-  // 选中卡片变为单列居中+光圈动画
-  const selectedCard = document.getElementById('style-card-' + cardIndex);
-  setTimeout(() => {
-    grid.style.gridTemplateColumns = '1fr';
-    selectedCard.className = 'style-card style-card-recommended style-card-waiting style-card-single';
-    selectedCard.querySelector('.style-card-body').innerHTML = `
-      <div class="style-card-wait-text">
-        <div style="font-size:15px;font-weight:700;color:var(--gold);margin-bottom:8px;">${styleName}</div>
-        <div class="spin" style="margin:12px auto;"></div>
-        <div style="font-size:13px;color:var(--tx2);margin-top:8px;">AI正在联网搜索爆款内容</div>
-        <div style="font-size:11px;color:var(--tx3);margin-top:4px;">生成完整版提示词中…</div>
-      </div>
-    `;
-  }, 450);
-
-  document.getElementById('outSection').style.display = 'none';
-  document.getElementById('terminal-wrap').style.display = 'none';
-
-  // 拼装完整query，单轮搞定
-  const topic = document.getElementById('topic-input').value.trim();
-  const size = document.getElementById('size-pref').value;
-  const query = `请先联网搜索"${topic} 爆款风格"和"${topic} 热门话题标签"获取最新流行信息。
-
-然后直接按系统模板输出完整提示词：
-主题：${topic}
-风格：${styleName}
-尺寸：${size}
-
-严格按格式输出：知识点结构化 → 完整版英文提示词 → 精简版中文提示词 → 即梦参数设置 → 热门话题标签。不需要风格确认，直接出图。`;
-
-  try {
-    const res = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        mode: 'coze',
-        query,
-        file_ids: uploadedFileIds.length > 0 ? uploadedFileIds : undefined,
-      })
-    });
-    const data = await res.json();
-    if (data.code !== 0) throw new Error(data.msg || 'API异常');
-    const msg = data.messages?.find(m => m.role === 'assistant' && m.type === 'answer');
-    if (!msg) throw new Error('未获取到提示词');
-
-    // 卡片淡出，结果出现
-    selectedCard.style.transition = 'all 0.5s ease';
-    selectedCard.style.opacity = '0';
-    selectedCard.style.transform = 'scale(0.95)';
-    setTimeout(() => {
-      document.getElementById('style-cards-wrap').style.display = 'none';
-      renderFinalOutput(msg.content, styleName);
-    }, 500);
-
-  } catch(e) {
-    // 失败时恢复卡片
-    selectedCard.className = 'style-card style-card-recommended style-card-single';
-    selectedCard.querySelector('.style-card-wait-text').innerHTML = `
-      <div style="color:#ff4d4f;font-size:13px;margin-bottom:12px;">❌ 生成失败，请重试</div>
-      <button onclick="cancelStyleSelect()" style="background:var(--gold-l);border:1px solid var(--gold);color:var(--gold);border-radius:8px;padding:8px 20px;cursor:pointer;font-size:13px;">重新选择</button>
-    `;
-  }
-}
-
-// ============ 渲染最终输出 ============
-function renderFinalOutput(rawText,styleName){
-  let detect='',knowledge='',fullPrompt='',shortPrompt='',hashtags=[];
-  try{
-    const jsonMatch=rawText.match(/```json([\s\S]*?)```/);
-    if(jsonMatch){
-      const json=JSON.parse(jsonMatch[1].trim());
-      const d=json.detect||{};
-      detect=`✅ 品类判定：${d.category||'自动识别'}\n✅ 匹配手法：${d.technique||'自动匹配'}\n🎲 本次风格：${styleName}\n📐 推荐尺寸：${d.size||'9:16'}`;
-      knowledge=json.knowledge_structure||'';
-      fullPrompt=json.full_prompt||'';
-      shortPrompt=json.short_prompt||'';
-      hashtags=json.hashtags||[];
+  // 选中卡加光圈
+  if(cardIdx!==undefined){
+    const selCard=document.getElementById('sc-'+cardIdx);
+    if(selCard){
+      setTimeout(()=>{
+        selCard.style.transition='all 0.35s ease';
+        selCard.style.gridColumn='1/-1';selCard.style.maxWidth='320px';selCard.style.margin='0 auto';
+        const overlay=document.createElement('div');overlay.className='card-waiting-overlay';
+        overlay.innerHTML=`<div class="atom-ring"></div><p>AI正在联网搜索爆款参数<br>生图提示词生成中…</p>`;
+        selCard.style.position='relative';selCard.appendChild(overlay);
+      },380);
     }
-  }catch(e){}
-
-  if(!fullPrompt){
-    const fm=rawText.match(/完整版[（(]推荐[）)][\s\S]{0,20}：?\s*([\s\S]*?)(?=📱|精简版|⚙️|$)/);
-    const sm=rawText.match(/精简版[（(]手机端[）)][\s\S]{0,20}：?\s*([\s\S]*?)(?=⚙️|即梦设置|📣|$)/);
-    fullPrompt=(fm?fm[1].trim():'')||rawText;
-    shortPrompt=sm?sm[1].trim():'';
-    detect=`🎲 本次风格：${styleName}\n✅ 提示词已生成，可直接复制使用`;
-    knowledge=rawText;
   }
-
-  document.getElementById('detect-body').textContent=detect||`🎲 本次风格：${styleName}`;
-  document.getElementById('knowledge-body').textContent=knowledge;
-  document.getElementById('full-prompt').textContent=fullPrompt;
-  document.getElementById('short-prompt').textContent=shortPrompt||fullPrompt;
-  document.getElementById('block-copywrite').style.display='none';
-  document.getElementById('outSection').style.display='block';
-
-  bindCopy('copy-know',()=>document.getElementById('knowledge-body').textContent);
-  bindCopy('copy-full',()=>document.getElementById('full-prompt').textContent);
-  bindCopy('copy-short',()=>document.getElementById('short-prompt').textContent);
-
-  if(!document.getElementById('result-contact')){
-    const d=document.createElement('div');
-    d.id='result-contact';
-    d.innerHTML=`<div style="background:linear-gradient(135deg,rgba(79,142,247,0.06),rgba(245,196,74,0.04));border:1px solid rgba(245,196,74,0.2);border-radius:16px;padding:1.5rem;margin-top:1rem;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87%E4%BA%8C%E7%BB%B4%E7%A0%81_20260515141550_400_2.jpg" style="width:80px;height:80px;border-radius:10px;border:1.5px solid rgba(245,196,74,0.25);object-fit:cover;flex-shrink:0;"><div style="flex:1;min-width:160px;"><div style="font-size:14px;font-weight:800;color:var(--gold);margin-bottom:4px;">💬 觉得好用？扫码加微信</div><div style="font-size:12px;color:var(--tx2);line-height:1.7;margin-bottom:6px;">获取更多AI出图技巧、爆款案例和专属玩法</div><div style="font-size:12px;color:var(--tx3);">微信号：<span style="color:var(--gold);font-weight:700;">palinyu</span></div></div></div>`;
-    document.getElementById('outSection').appendChild(d);
-  }
-  // 显示文案生成提示
-  document.getElementById('copywrite-prompt').style.display='block';
-  document.getElementById('outSection').scrollIntoView({behavior:'smooth'});
+  // 显示思考单卡
+  setTimeout(async()=>{
+    document.getElementById('style-cards-section').style.display='none';
+    const ts=document.getElementById('thinking-section');ts.style.display='flex';
+    document.getElementById('thinking-size').innerHTML=`<span>${document.getElementById('size-sel').value}</span>`;
+    document.getElementById('thinking-style').innerHTML=`<span>${styleName}</span>`;
+    ts.scrollIntoView({behavior:'smooth'});
+    await callCoze(styleName);
+  },750);
 }
 
-// ============ 生成配套文案 ============
-async function generateCopywrite(){
-  const topic = document.getElementById('topic-input').value.trim();
-  document.getElementById('copywrite-prompt').style.display='none';
+async function callCoze(styleName){
+  const topic=document.getElementById('topic-input').value.trim();
+  const size=document.getElementById('size-sel').value;
+  const industry=currentIndustry;
+  const fileNotice=isFileAttached?'\n【重要多模态指令】：用户已上传参考图/文档，请优先识别并解构图像内容，据此生成提示词。':'';
+  const query=`【当前所属品类】：${industry}
+【限定画布比例】：${size}
+【所选具体风格】：${styleName}
+【大白话描述】：${topic||'（见上传文件）'}${fileNotice}
 
-  const termWrap=document.getElementById('terminal-wrap');
-  termWrap.style.display='block';
-  document.getElementById('terminalConsole').innerHTML='';
-
-  addLog('✍️ [AI] 正在生成配套爆款文案...',0);
-  addLog('🌐 [SEARCH] 联网搜索当前热门话题和爆款标题...',400);
-
+【重要直通口令】：严禁触发多轮确认，必须在本轮直接按系统模板格式输出完整提示词。包含：知识点结构化、完整版英文提示词（1600字符以内，即梦可直接用）、精简版中文提示词、即梦参数设置、热门话题标签。直接出图。`;
   try{
-    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query:'X',conversation_id:globalConversationId})});
+    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query,file_ids:uploadedFileIds.length>0?uploadedFileIds:undefined})});
     const data=await res.json();
-    if(data.code!==0)throw new Error(data.msg||'文案生成失败');
+    if(data.code!==0)throw new Error(data.msg||'API异常');
     const msg=data.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
-    if(!msg)throw new Error('未获取到文案');
-
-    addLog('✨ [SUCCESS] 配套文案生成完毕！',400);
+    if(!msg)throw new Error('未获取到内容');
+    // 成功：更新思考卡状态
+    const ring=document.getElementById('thinking-ring');
+    ring.style.animation='none';ring.style.borderColor='#f3af42';ring.innerHTML='<span style="color:#f3af42;font-size:18px;font-weight:900;">✓</span>';
+    document.getElementById('thinking-status').style.color='var(--gold)';
+    document.getElementById('thinking-status').textContent='✨ 成果已闭环注入！三大成果显舱全量解冻！';
+    const rawContent=msg.content;
+    cachedPrompt=extractPrompt(rawContent);
     setTimeout(()=>{
-      termWrap.style.display='none';
-      document.getElementById('copywrite-body').textContent=msg.content;
-      document.getElementById('block-copywrite').style.display='block';
-      bindCopy('copy-copy',()=>document.getElementById('copywrite-body').textContent);
-      document.getElementById('block-copywrite').scrollIntoView({behavior:'smooth'});
-    },600);
+      document.getElementById('thinking-section').style.display='none';
+      renderOutput(rawContent,styleName);
+    },1000);
   }catch(e){
-    addLog('❌ [ERROR] '+e.message,0);
+    document.getElementById('thinking-status').style.color='#ef4444';
+    document.getElementById('thinking-status').textContent='❌ 生成失败：'+e.message+'\n请重新选择风格重试';
+    setTimeout(()=>{document.getElementById('thinking-section').style.display='none';document.getElementById('style-cards-section').style.display='block';},2000);
   }
 }
 
-// ============ 复制工具 ============
-function bindCopy(btnId,getText){
-  const btn=document.getElementById(btnId);
-  if(!btn)return;
-  btn.onclick=()=>{
-    const text=getText();
-    navigator.clipboard.writeText(text).then(()=>{btn.textContent='✓ 已复制';btn.classList.add('ok');setTimeout(()=>{btn.textContent='复制';btn.classList.remove('ok');},2000);}).catch(()=>{
-      const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);
-      btn.textContent='✓ 已复制';btn.classList.add('ok');setTimeout(()=>{btn.textContent='复制';btn.classList.remove('ok');},2000);
-    });
-  };
+function extractPrompt(raw){
+  const m=raw.match(/完整版[（(]推荐[）)][\s\S]{0,30}：?\s*([\s\S]*?)(?=📱|精简版|⚙️|$)/);
+  return m?m[1].trim():raw;
 }
-function copyAndGo(e){
-  const fp=document.getElementById('full-prompt');
-  if(!fp||!fp.textContent){alert('请先生成提示词！');return;}
-  navigator.clipboard.writeText(fp.textContent).then(()=>{
-    const btn=e.target;const orig=btn.textContent;btn.textContent='✓ 已复制！去生图吧';btn.classList.add('ok');setTimeout(()=>{btn.textContent=orig;btn.classList.remove('ok');},2000);
+
+// ===== 渲染输出 =====
+function renderOutput(rawContent,styleName){
+  document.getElementById('out-prompt').textContent=cachedPrompt||rawContent;
+  // 小红书笔记（本地生成，配合扣子原内容）
+  const xhsContent=`📕【某书垂类高赞图文引流笔记】\n\n标题：救命！单人靠这个「${styleName}」公式，首条直接引流500+！😱\n\n家人们求求你们别再盲目抄那些乱七八糟的咒语了！😭 最近朋友圈大佬都在偷偷套用这套黑金魔方公式！✨\n\n大厂级别的奢华调性，一秒锁定高级材质感，逼格恐怖如斯！💎\n\n单人团队按这套傻瓜级SOP直接一键平铺，20分钟批量产出高质量物料，流量分成直接拿到手软！🚀\n\n💡 想要同款《33大热门全赛道AI搞钱地图合集》的，在下方扣【想要】，我看到就发！👇\n\n#AI生图 #知识图文变现 #某书爆款起号 #副业翻盘日记 #单人团队逆袭 #灵创星球\n\n⚠️ 注：本文案为AI辅助生成，发布前请结合个人真实经历修改，切勿直接发布。`;
+  document.getElementById('out-xhs').textContent=xhsContent;
+  const mpContent=`🟢【微信公众号深度商业文章骨架】\n\n📌 标题：2026搞钱壁垒洗牌：如何依靠「${styleName}」撬动单人自动化变现？\n\n📢 行业开篇：\n在公域信息饱和的存量时代，普通生图已失去截流能力。只有具备大厂视觉溢价的"降维调性"，才能撕裂用户防线。\n\n💡 三大认知金律：\n1️⃣ 视觉美学即主权：用${styleName}构筑无法被抄袭的视觉资产护城河\n2️⃣ 评论区强效钩子：预埋高价值资料，实现公域向私域的高效迁徙\n3️⃣ 漏斗式闭环裂变：体验产品 → 系统课程 → 合伙人深度分账\n\n⚠️ 免责声明：本内容仅供学习参考，不构成任何投资、法律、医疗或经营建议。具体情况请咨询专业人士，自主评估风险。`;
+  document.getElementById('out-mp').textContent=mpContent;
+  const videoContent=`🎬【短视频平台爆款高燃标题】\n1️⃣ 颠覆认知！只要扔张参考图进去，点一下直接出大厂总监级封面！🔥\n2️⃣ 别去交几千块智商税了！用AI垫图功能偷偷实现降维霸屏！🤫\n3️⃣ 20分钟一条高赞视频！解密灵创星球单人快速起号的底层黑科技！🚀\n\n#️⃣【核心话题标签】\n#AI生图变现 #知识图文 #副业搞钱 #AI出图 #灵创星球 #${styleName}\n\n================================\n\n💬【评论区截流神评话术】\n\n👉 话术A（高价值资料引导）：\n「🔥 本期视频提到的《AI全赛道搞钱地图.pdf》已打包好啦！想要的老哥下方扣【地图】，我看到就发！👇」\n\n👉 话术B（打破认知壁垒）：\n「别去外面买高价培训了！😭 很多机构所谓的核心就是这套工业级提示词矩阵。觉得有用直接拿走，动了别人利益本条随时可能被删！🛑」\n\n⚠️ 以上话术仅供参考，请根据实际情况修改使用，遵守平台规则。`;
+  document.getElementById('out-video').textContent=videoContent;
+  renderRadar();
+  document.getElementById('output-section').style.display='block';
+  document.getElementById('output-section').scrollIntoView({behavior:'smooth'});
+}
+
+function renderRadar(){
+  const area=document.getElementById('radar-area');area.innerHTML='';
+  const items=[
+    {tag:'🔥 限时新人福利',text:'《33大热门全赛道AI单人团队搞钱地图全集.pdf》免密领取',alert:'🎁 搞钱大礼包已解锁！扫描下方二维码加微信，回复【搞钱地图】免费领取！'},
+    {tag:'💰 变现渠道',text:'灵创星球官方网盘分成后台（用户转存你拿官方拉新补贴）',alert:'网盘分成联盟链路已对接！加微信拉你进合伙人分成变现群，对接官方分成后台。'},
+  ];
+  items.forEach(item=>{
+    const el=document.createElement('div');el.className='radar-item';
+    el.onclick=()=>alert(item.alert);
+    el.innerHTML=`<div style="flex:1;"><div class="radar-tag">${item.tag}</div><div class="radar-text">${item.text}</div></div><span class="radar-go">免密提取 ➔</span>`;
+    area.appendChild(el);
   });
 }
 
-document.addEventListener('DOMContentLoaded', boot);
+// ===== 复制 =====
+function showToast(){const t=document.getElementById('clip-toast');t.style.display='block';setTimeout(()=>t.style.display='none',900);}
+function copyById(id,name){
+  const text=document.getElementById(id).textContent;
+  if(!text){alert('老哥，请先等待生成完成！');return;}
+  navigator.clipboard.writeText(text).then(()=>showToast());
+}
+function copyAndGo(url){
+  if(!cachedPrompt){alert('老哥，请先生成提示词！');return;}
+  navigator.clipboard.writeText(cachedPrompt).then(()=>{showToast();setTimeout(()=>window.open(url,'_blank'),800);});
+}
 
-// 展示墙拖拽滚动
-document.addEventListener('DOMContentLoaded', () => {
-  const scroll = document.querySelector('.showcase-scroll');
-  if (!scroll) return;
-  let isDown = false, startX, scrollLeft;
-  scroll.addEventListener('mousedown', e => { isDown=true; scroll.style.cursor='grabbing'; startX=e.pageX-scroll.offsetLeft; scrollLeft=scroll.scrollLeft; });
-  scroll.addEventListener('mouseleave', () => { isDown=false; scroll.style.cursor='grab'; });
-  scroll.addEventListener('mouseup', () => { isDown=false; scroll.style.cursor='grab'; });
-  scroll.addEventListener('mousemove', e => { if(!isDown)return; e.preventDefault(); const x=e.pageX-scroll.offsetLeft; scroll.scrollLeft=scrollLeft-(x-startX); });
-});
+
+document.addEventListener('DOMContentLoaded',boot);
 </script>
 </body>
 </html>
