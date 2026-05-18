@@ -1079,30 +1079,16 @@ function extractPrompt(raw){
 
 // ===== 渲染输出 =====
 function renderOutput(rawContent,styleName,copywriteContent){
-  // 完整显示扣子第二轮原始输出
+  // 第二轮完整原文 → 提示词框
   document.getElementById('out-prompt').textContent=rawContent;
-  // 文案：优先用扣子第三轮返回内容，否则用动态模板
+  // 第三轮完整原文 → 文案框（直接显示，不截取）
+  const copyText = copywriteContent || '（文案生成中，请稍后重试）';
+  document.getElementById('out-xhs').textContent=copyText;
+  document.getElementById('out-mp').textContent=copyText;
   const userTopic=document.getElementById('main-textarea')?.value.trim()||'AI出图';
   const shortTopic=userTopic.substring(0,12);
-
-  if(copywriteContent&&copywriteContent.length>50){
-    // 扣子第三轮返回了文案，按内容拆分显示
-    const xhsMatch=copywriteContent.match(/某书([\s\S]*?)(?=公众号|微信|$)/i);
-    const mpMatch=copywriteContent.match(/公众号([\s\S]*?)(?=话题|标签|$)/i);
-    const tagMatch=copywriteContent.match(/#[^
-]{2,}/g);
-    document.getElementById('out-xhs').textContent=xhsMatch?xhsMatch[0].trim():copywriteContent.substring(0,500);
-    document.getElementById('out-mp').textContent=mpMatch?mpMatch[0].trim():copywriteContent.substring(0,500);
-    document.getElementById('out-video').textContent=tagMatch?tagMatch.join(' '):copywriteContent.substring(0,200);
-  } else {
-    // 降级：用动态模板
-    const xhs=`📕【某书垂类高赞图文引流笔记】\n\n标题：做「${shortTopic}」内容？这个AI出图工具直接帮你出大厂级配图！😱\n\n#AI生图 #${shortTopic} #某书爆款起号 #灵创星球`;
-    document.getElementById('out-xhs').textContent=xhs;
-    const mp=`🟢【微信公众号文章】\n\n📌 标题：做「${shortTopic}」内容的必看：如何用AI出图工具实现降维霸屏？\n\n⚠️ 免责声明：本内容仅供学习参考，不构成任何投资、法律建议。`;
-    document.getElementById('out-mp').textContent=mp;
-    const video=`🎬【短视频爆款标题】\n做「${shortTopic}」内容？这个AI工具直接出大厂级提示词！🔥\n\n#AI生图 #${shortTopic} #灵创星球`;
-    document.getElementById('out-video').textContent=video;
-  }
+  const tagLine=`#AI生图 #${shortTopic} #灵创星球 #AI出图 #提示词`;
+  document.getElementById('out-video').textContent=copyText||tagLine;
   renderRadar();
   document.getElementById('output-section').style.display='block';
   document.getElementById('output-section').scrollIntoView({behavior:'smooth'});
