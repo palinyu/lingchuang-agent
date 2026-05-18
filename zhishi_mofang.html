@@ -469,6 +469,7 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
           <div class="edit-param-arrow">▾</div>
           <div class="edit-dropdown" id="dd-style">
             <div class="dropdown-item active" onclick="setParam('style','AI联网匹配',event)">🎲 AI联网匹配最火风格（推荐）</div>
+            <div class="dropdown-item" onclick="setParam('style','自定义',event)" style="color:var(--gold);border:1px dashed rgba(243,175,66,0.2);margin:4px 0;border-radius:6px;">✍️ 手打自定义专属风格</div>
             <div style="font-size:10px;color:var(--tx3);padding:4px 10px;margin-top:4px;">🔥 当下最火</div>
             <div class="dropdown-item" onclick="setParam('style','3D悬浮立体风',event)">🧊 3D悬浮立体风</div>
             <div class="dropdown-item" onclick="setParam('style','莫兰迪高级感',event)">🎨 莫兰迪高级感</div>
@@ -498,8 +499,7 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
             <div class="dropdown-item" onclick="setParam('style','赛博霓虹风',event)">⚡ 赛博霓虹风</div>
             <div class="dropdown-item" onclick="setParam('style','商务深色风',event)">💼 商务深色风</div>
             <div class="dropdown-item" onclick="setParam('style','星际宇宙风',event)">🌌 星际宇宙风</div>
-            <div style="font-size:10px;color:var(--tx3);padding:4px 10px;margin-top:4px;">✍️ 自定义</div>
-            <div class="dropdown-item" onclick="setParam('style','自定义',event)">✍️ 手打自定义风格</div>
+
           </div>
         </div>
       </div>
@@ -721,7 +721,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 function matchBubbles(text){
-  if(!text||text.trim().length<2){
+  if(!text||text.trim().length<1){
     document.getElementById('bubble-label').style.display='none';
     document.getElementById('bubble-hint').style.display='none';
     document.getElementById('bubbles-wrap').innerHTML='';
@@ -730,8 +730,16 @@ function matchBubbles(text){
   }
   const lower=text.toLowerCase();
   let matched=null;
+  // 精确关键词匹配
   for(const group of SEMANTIC_MAP){
     if(group.keys.some(k=>lower.includes(k))){matched=group;break;}
+  }
+  // 降级：短文本也给通用气泡
+  if(!matched&&text.trim().length>=1){
+    matched={bubbles:[
+      {e:'🎨',t:'知识卡片竖版'},{e:'📸',t:'精美插画风'},
+      {e:'⬜',t:'极简白卡图解'},{e:'🗺️',t:'地图插画风'},{e:'✨',t:'3D悬浮立体'}
+    ]};
   }
   if(!matched){
     document.getElementById('bubble-label').style.display='none';
@@ -903,7 +911,14 @@ function launchCustom(){
 
 function goDirectly(){
   document.getElementById('recommend-stage').style.display='none';
-  launchStyleCards(aiParams.style);
+  document.getElementById('custom-stage').style.display='none';
+  // 直接进入思考单卡，不经过4张风格卡
+  const ts=document.getElementById('thinking-stage');
+  ts.style.display='flex';
+  const tsz=document.getElementById('t-size');if(tsz)tsz.innerHTML=`<span>${aiParams.size}</span>`;
+  const tst=document.getElementById('t-style');if(tst)tst.innerHTML=`<span>${aiParams.style}</span>`;
+  ts.scrollIntoView({behavior:'smooth'});
+  callCoze(aiParams.style);
 }
 
 // ===== 主引擎 =====
