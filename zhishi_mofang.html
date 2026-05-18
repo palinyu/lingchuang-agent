@@ -119,7 +119,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
 .pill-badge{position:absolute;top:-8px;right:-2px;background:linear-gradient(135deg,#f3af42,#b87b14);color:#000;font-size:9px;font-weight:900;padding:1px 6px;border-radius:10px 10px 10px 0;letter-spacing:.2px;z-index:10;box-shadow:0 2px 6px rgba(0,0,0,0.5);}
 
 /* 选题面板 */
-.topics-panel(background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:24px;}
+.topics-panel{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:24px;}
 .topics-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
 .topics-label{font-size:13px;font-weight:700;color:#fff;}
 .btn-shuffle{background:transparent;border:none;color:var(--gold);font-size:12px;cursor:pointer;font-weight:700;}
@@ -127,7 +127,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
 .topic-chip{background:#191b24;border:1px solid rgba(255,255,255,0.03);border-radius:16px;padding:6px 13px;font-size:12px;color:var(--tx2);cursor:pointer;transition:all .2s;}
 .topic-chip:hover{background:#222533;color:#fff;border-color:rgba(243,175,66,0.2);}
 
-/* 配额 */
+/* 输入区 */
 .quota-bar{text-align:right;font-size:12px;color:var(--tx3);margin-bottom:10px;}
 .quota-bar span{color:var(--gold);font-weight:800;}
 .input-container{background:var(--input-bg);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:20px;transition:all .3s;}
@@ -282,6 +282,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
 <div id="notice-bar"></div>
 
 
+<!-- 锁定页 -->
 <div id="lock-screen">
   <div class="lock-wrap">
     <div id="step-select">
@@ -349,6 +350,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
   </div>
 </div>
 
+<!-- 礼包弹窗 -->
 <div id="gift-modal">
   <div class="gift-card">
     <div style="font-size:44px;margin-bottom:14px;">🎁</div>
@@ -359,15 +361,19 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
   </div>
 </div>
 
+<!-- 图片放大 -->
 <div id="img-zoom" onclick="this.style.display='none'">
   <img id="img-zoom-src" src="">
 </div>
 
+<!-- 复制Toast -->
 <div id="clip-toast"><span>✓</span><p>已复制到剪贴板</p></div>
 
+<!-- 主面板 -->
 <div id="main-panel" style="display:block;">
 <div class="shell">
 
+  <!-- Hero -->
   <div class="hero">
     <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(243,175,66,0.06);border:1px solid rgba(243,175,66,0.2);border-radius:30px;padding:5px 16px;font-size:12px;color:var(--gold);font-weight:700;margin-bottom:14px;letter-spacing:.5px;">🌐 灵创星球 · AI出图引擎</div>
     <h1>心有所想，<span>一键出图</span></h1>
@@ -376,6 +382,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
     <div class="usage-badge" id="usage-badge">⚡ 免费剩余：<span id="usage-num">5</span> 次</div>
   </div>
 
+  <!-- 展示墙 -->
   <div class="gallery-wall">
     <div class="gallery-header">
       <div class="gallery-header-title">✨ 真实出图效果（复制提示词 ➔ 灵创星球/即梦粘贴 ➔ 直接出图）</div>
@@ -384,6 +391,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
     <div class="gallery-track" id="gallery-track"></div>
   </div>
 
+  <!-- 行业大类 -->
   <div class="section-title">选择图像类型大类（可选，也可直接在输入框手打描述）</div>
   <div class="industry-grid">
     <div class="industry-pill active" onclick="selectIndustry(this,'营销海报')">📢 营销海报</div>
@@ -400,6 +408,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
     <div class="industry-pill" onclick="selectIndustry(this,'室内家装')">🏠 室内家装</div>
   </div>
 
+  <!-- 选题面板 -->
   <div class="topics-panel">
     <div class="topics-header">
       <div class="topics-label" id="topics-label">🔥 爆款选题快捷入口（选择上方类型后解锁，或直接在输入框手打）</div>
@@ -408,12 +417,14 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
     <div class="chips-dock" id="chips-dock"></div>
   </div>
 
+  <!-- 配额 -->
   <div class="quota-bar">💡 今日算力余量：<span id="quota-num">∞</span></div>
 
+  <!-- 输入框 -->
   <div class="input-container">
     <textarea id="topic-input" placeholder="请在这里用大白话描述你的画面内容，或点击上方爆款选题直接套用…&#10;&#10;💡 示例：做一张光合作用科普图 / 红烧肉步骤图 / 成都美食地图 / 梨形身材穿搭公式…&#10;💡 也可上传参考图/文档/手写稿，AI自动识别内容生成提示词&#10;💡 无需专业词汇，说清楚意思即可"></textarea>
     <div class="input-toolbar">
-      <input type="file" id="file-input" style="display:none;" accept="image/*,.pdf,.doc,.docx" onchange="handleFileSelected(this)">
+      <input type="file" id="file-input" style="display:none;" accept="image/*,.pdf,.doc,.docx" onchange="handleFileSelect(this)">
       <button class="btn-attach" onclick="document.getElementById('file-input').click()">📎 上传参考图 / 文档 / 手写稿</button>
       <div id="file-preview-badge" class="file-preview-badge">
         <img id="badge-img" src="" alt="">
@@ -423,6 +434,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
     </div>
   </div>
 
+  <!-- 选择器 -->
   <div class="selectors-grid">
     <div class="select-wrap">
       <label>📐 指定画面输出尺寸</label>
@@ -454,7 +466,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
           <option value="3D悬浮立体风">🧊 3D悬浮立体风（玻璃质感+立体漂浮）</option>
           <option value="莫兰迪高级感">🎨 莫兰迪高级感（低饱和高级灰）</option>
           <option value="镭射全息风">💎 镭射全息风（彩虹光效+金属质感）</option>
-          <option value="奶油肌理风">🍦奶油肌理风（米白细腻质感）</option>
+          <option value="奶油肌理风">🍦 奶油肌理风（米白细腻质感）</option>
           <option value="玻璃态透明风">🔮 玻璃态透明风（毛玻璃+高级透明感）</option>
         </optgroup>
         <optgroup label="🎏 中式国风">
@@ -488,7 +500,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
           <option value="赛博朋克风">⚡ 赛博朋克风（霓虹+暗调+未来感）</option>
           <option value="二次元插画风">🌸 二次元插画风（日系动漫+清新色调）</option>
           <option value="像素复古风">👾 像素复古风（8bit+复古游戏感）</option>
-          <option value="美式漫画风">💥 美式漫画风（粗线描边+强烈对比色）</option>
+          <option value="美式漫画风">💥 美式漫画风（粗线描边+强烈对比）</option>
         </optgroup>
         <optgroup label="💎 奢华商业">
           <option value="奢华商业">💎 奢华商业（黑金奢华/高级冷感/杂志封面）</option>
@@ -520,6 +532,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
 
   <button id="gen-btn" class="btn-generate" onclick="runEngine()">🔮 启动大脑 · 开始全行业智能生图充能</button>
 
+  <!-- 风格卡片 -->
   <div id="style-cards-section">
     <div class="style-cards-header">
       <div class="style-cards-header-left">
@@ -531,6 +544,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
     <div class="style-cards-grid" id="style-cards-grid"></div>
   </div>
 
+  <!-- 思考单卡 -->
   <div id="thinking-section">
     <div class="thinking-wrapper">
       <div class="thinking-wing wing-l"></div>
@@ -548,6 +562,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
     </div>
   </div>
 
+  <!-- 双栏输出 -->
   <div id="output-section">
     <div class="dual-board">
       <div class="engine-wing">
@@ -623,12 +638,12 @@ let lastStyleName = '';
 // ===== 品类数据 =====
 const INDUSTRY_DATA = {
   '默认':{formula:'',topics:['光合作用原理','红烧肉的做法','摩羯座性格分析','成都美食地图','烟酰胺护肤','深蹲标准姿势','基金定投入门','秋冬通勤穿搭']},
-  '营销海报':{formula:'帮我做一张高档商用营销海报图，主题是：[选题]，画面要有强烈视觉冲击力和大厂设计感，核心画面 is：',topics:['感恩节促销海报','新店开业重工业海报','极简科技风招商海报','国潮大促盛典壁报','豪车品鉴高端海报','春季美妆上新宣传图','双十一活动图','限时优惠促销海报']},
+  '营销海报':{formula:'帮我做一张高档商用营销海报图，主题是：[选题]，画面要有强烈视觉冲击力和大厂设计感，核心画面是：',topics:['感恩节促销海报','新店开业重工业海报','极简科技风招商海报','国潮大促盛典壁报','豪车品鉴高端海报','春季美妆上新宣传图','双十一活动图','限时优惠促销海报']},
   '知识图文':{formula:'帮我做一张适合知识图文解析的背景配图，主题是：[选题]，要求画面结构工整有科技感，核心内容是：',topics:['光合作用原理','商业大亨搞钱认知图解','高分子材料科技原理','极简风历史人物卡','DNA双螺旋结构','量子力学入门','宇宙大爆炸理论','人体血液循环原理']},
-  '菜谱美食':{formula:'帮我做一张让人极度有食欲的高精美食宣传图，主题是：[选题]，采用高档商业棚拍光影，核心画面是：',topics:['麻辣小龙虾','顶奢黑金法式甜点','深夜食堂日系治愈居酒屋','传统佛跳墙','红烧肉家常版','酸菜鱼家常版','糖醋排骨步骤','戚风蛋糕烘焙']},
+  '菜谱美食':{formula:'帮我做一张让人极度有食欲的高精美食宣传图，主题是：[选题]，采用高档商业棚拍光影，核心画面是：',topics:['麻辣小龙虾','顶奢黑金法式甜点','深夜食堂日系居酒屋','传统佛跳墙','红烧肉家常版','酸菜鱼家常版','糖醋排骨步骤','戚风蛋糕烘焙']},
   '社交封面':{formula:'帮我做一张高点赞率的小红书/抖音图文封面图，主题是：[选题]，视觉风格要抓人眼球，核心画面是：',topics:['美食探店网红封面','穿搭博主每日OOTD','小说推文高燃封面','自律搞钱博主黑金封面','健身打卡封面','旅行vlog封面','读书笔记分享封面','生活记录日记封面']},
   '穿搭时尚':{formula:'帮我做一张高质感穿搭时尚图，主题是：[选题]，核心画面是：',topics:['秋冬通勤穿搭公式','梨形身材显瘦穿搭','小个子显高穿搭','黑白灰搭配法则','法式穿搭公式','韩系清新穿搭','商务正装搭配','周末休闲穿搭']},
-  '护肤美妆':{formula:'帮我做一张护肤美妆科普图，主题是：[选题]，核心内容是：',topics:['烟酰胺功效解析','视黄醇抗衰指南','敏感肌护肤步骤','油皮控油方案','防晒成分对比','早C晚A使用法','玻浅酸补水原理','干皮护肤全攻略']},
+  '护肤美妆':{formula:'帮我做一张护肤美妆科普图，主题是：[选题]，核心内容是：',topics:['烟酰胺功效解析','视黄醇抗衰指南','敏感肌护肤步骤','油皮控油方案','防晒成分对比','早C晚A使用法','玻尿酸补水原理','干皮护肤全攻略']},
   '城市探店':{formula:'帮我做一张城市探店/Citywalk攻略图，主题是：[选题]，核心内容是：',topics:['成都太古里打卡','上海安福路探店','北京798艺术区','广州北京路漫游','重庆洪崖洞攻略','杭州西湖周边','深圳海岸城探店','南京夫子庙攻略']},
   '儿童教育':{formula:'帮我做一张儿童教育知识图解，主题是：[选题]，要求画面生动有趣，核心内容是：',topics:['儿童数字认知','字母ABC学习','加减法趣味图解','恐龙科普图鉴','植物生长过程','动物百科图解','四季认知卡片','交通工具认识']},
   '健身减脂':{formula:'帮我做一张健身减脂科普图，主题是：[选题]，核心内容是：',topics:['平板支撑标准动作','深蹲正确姿势','臀部训练动作','腹肌撕裂计划','减脂饮食搭配','跑步入门指南','瑜伽基础体式','徒手胸肌训练']},
@@ -838,7 +853,7 @@ function shuffleTopics(){
 }
 
 // ===== 文件上传 =====
-function handleFileSelected(input){
+function handleFileSelect(input){
   const file=input.files[0];if(!file)return;
   isFileAttached=true;
   const badge=document.getElementById('file-preview-badge');
@@ -1067,7 +1082,8 @@ function extractPrompt(raw){
   ];
   for(const p of patterns){const m=raw.match(p);if(m&&m[1].trim().length>20)return m[1].trim();}
   // 找最长的英文段落
-  const enBlocks=raw.match(/[A-Za-z][^，。\r\n]{100,}/g)||[];
+  const enBlocks=raw.match(/[A-Za-z][^，。
+]{100,}/g)||[];
   if(enBlocks.length>0)return enBlocks.sort((a,b)=>b.length-a.length)[0];
   return raw;
 }
@@ -1076,7 +1092,7 @@ function extractPrompt(raw){
 function renderOutput(rawContent,styleName){
   document.getElementById('out-prompt').textContent=cachedPrompt||rawContent;
   // 小红书笔记（本地生成，配合扣子原内容）
-  const xhsContent=`📕【某书垂类高赞图文引流笔记】\n\n标题：救命！单人靠这个「${styleName}」公式，首条直接引流500+！😱\n\n家人们求求你们别再盲目抄那些乱七八糟的咒语了！😭 最近朋友圈大佬都在偷偷套用这套黑金魔方公式！✨\n\n大厂级别的奢华调性，一秒锁定高级材质感，逼格恐怖如斯！💎\n\n单人团队按这套傻瓜级SOP直接一键平铺，20分钟批量产出高质量物料，流量分成直接拿到手软！🚀\n\n💡 想要同款《33大热门全赛道AI单人团队搞钱地图合集》的，在下方扣【想要】，我看到就发！👇\n\n#AI生图 #知识图文变现 #某书爆款起号 #副业翻盘日记 #单人团队逆袭 #灵创星球\n\n⚠️ 注：本文案为AI辅助生成，发布前请结合个人真实经历修改，切勿直接发布。`;
+  const xhsContent=`📕【某书垂类高赞图文引流笔记】\n\n标题：救命！单人靠这个「${styleName}」公式，首条直接引流500+！😱\n\n家人们求求你们别再盲目抄那些乱七八糟的咒语了！😭 最近朋友圈大佬都在偷偷套用这套黑金魔方公式！✨\n\n大厂级别的奢华调性，一秒锁定高级材质感，逼格恐怖如斯！💎\n\n单人团队按这套傻瓜级SOP直接一键平铺，20分钟批量产出高质量物料，流量分成直接拿到手软！🚀\n\n💡 想要同款《33大热门全赛道AI搞钱地图合集》的，在下方扣【想要】，我看到就发！👇\n\n#AI生图 #知识图文变现 #某书爆款起号 #副业翻盘日记 #单人团队逆袭 #灵创星球\n\n⚠️ 注：本文案为AI辅助生成，发布前请结合个人真实经历修改，切勿直接发布。`;
   document.getElementById('out-xhs').textContent=xhsContent;
   const mpContent=`🟢【微信公众号深度商业文章骨架】\n\n📌 标题：2026搞钱壁垒洗牌：如何依靠「${styleName}」撬动单人自动化变现？\n\n📢 行业开篇：\n在公域信息饱和的存量时代，普通生图已失去截流能力。只有具备大厂视觉溢价的"降维调性"，才能撕裂用户防线。\n\n💡 三大认知金律：\n1️⃣ 视觉美学即主权：用${styleName}构筑无法被抄袭的视觉资产护城河\n2️⃣ 评论区强效钩子：预埋高价值资料，实现公域向私域的高效迁徙\n3️⃣ 漏斗式闭环裂变：体验产品 → 系统课程 → 合伙人深度分账\n\n⚠️ 免责声明：本内容仅供学习参考，不构成任何投资、法律、医疗或经营建议。具体情况请咨询专业人士，自主评估风险。`;
   document.getElementById('out-mp').textContent=mpContent;
@@ -1090,7 +1106,7 @@ function renderOutput(rawContent,styleName){
 function renderRadar(){
   const area=document.getElementById('radar-area');area.innerHTML='';
   const items=[
-    {tag:'🔥 限时新人福利',text:'《33大热门全赛道AI单人团队从生图到暴力变现搞钱地图全集.pdf》免密领取',alert:'🎁 搞钱大礼包已解锁！扫描下方二维码加微信，回复【搞钱地图】免费领取！'},
+    {tag:'🔥 限时新人福利',text:'《33大热门全赛道AI单人团队搞钱地图全集.pdf》免密领取',alert:'🎁 搞钱大礼包已解锁！扫描下方二维码加微信，回复【搞钱地图】免费领取！'},
     {tag:'💰 变现渠道',text:'灵创星球官方网盘分成后台（用户转存你拿官方拉新补贴）',alert:'网盘分成联盟链路已对接！加微信拉你进合伙人分成变现群，对接官方分成后台。'},
   ];
   items.forEach(item=>{
