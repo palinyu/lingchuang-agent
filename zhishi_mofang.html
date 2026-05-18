@@ -298,6 +298,12 @@ textarea{resize:vertical;min-height:100px;line-height:1.7;}
   </div>
 </div>
 
+<!-- 图片放大查看 -->
+<div id="img-zoom-modal" onclick="this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:99999;align-items:center;justify-content:center;cursor:zoom-out;">
+  <img id="img-zoom-src" style="max-width:90vw;max-height:90vh;border-radius:12px;box-shadow:0 0 60px rgba(0,0,0,0.8);">
+  <div style="position:absolute;top:20px;right:20px;color:rgba(255,255,255,0.5);font-size:24px;">✕</div>
+</div>
+
 <!-- 礼包弹窗 -->
 <div id="gift-modal">
   <div class="gift-card">
@@ -327,13 +333,13 @@ textarea{resize:vertical;min-height:100px;line-height:1.7;}
     </div>
     <div class="showcase-scroll">
       <div class="showcase-track">
-        <div class="showcase-card"><div class="showcase-img-wrap"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/3D%E8%8D%B7%E8%8A%B1.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">3D悬浮立体风</span></div></div><div class="showcase-info">植物科普</div></div>
-        <div class="showcase-card"><div class="showcase-img-wrap"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E6%A1%82%E8%8A%B1.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">国风水彩</span></div></div><div class="showcase-info">植物科普</div></div>
-        <div class="showcase-card"><div class="showcase-img-wrap"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E8%8B%8F%E5%B7%9E3D.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">3D城市浮雕</span></div></div><div class="showcase-info">城市文化</div></div>
-        <div class="showcase-card"><div class="showcase-img-wrap"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E9%95%BF%E6%B2%99.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">手绘地图风</span></div></div><div class="showcase-info">城市文化</div></div>
-        <div class="showcase-card"><div class="showcase-img-wrap"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E7%81%AB%E9%94%85.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">暖色插画风</span></div></div><div class="showcase-info">美食菜谱</div></div>
-        <div class="showcase-card"><div class="showcase-img-wrap"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/ChatGPT%20Image%202026%E5%B9%B45%E6%9C%8815%E6%97%A5%2012_30_04.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">精美插画风</span></div></div><div class="showcase-info">知识图文</div></div>
-        <div class="showcase-card"><div class="showcase-img-wrap"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E9%BB%84%E5%B1%B1.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">山水国风</span></div></div><div class="showcase-info">旅游攻略</div></div>
+        <div class="showcase-card"><div class="showcase-img-wrap"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/3D%E8%8D%B7%E8%8A%B1.png" loading="lazy" onclick="zoomImg(this.src)" style="cursor:zoom-in;" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">3D悬浮立体风</span></div></div><div class="showcase-info">植物科普</div></div>
+        <div class="showcase-card"><div class="showcase-img-wrap"><img onclick="zoomImg(this.src)" style="cursor:zoom-in;" src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E6%A1%82%E8%8A%B1.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">国风水彩</span></div></div><div class="showcase-info">植物科普</div></div>
+        <div class="showcase-card"><div class="showcase-img-wrap"><img onclick="zoomImg(this.src)" style="cursor:zoom-in;" src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E8%8B%8F%E5%B7%9E3D.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">3D城市浮雕</span></div></div><div class="showcase-info">城市文化</div></div>
+        <div class="showcase-card"><div class="showcase-img-wrap"><img onclick="zoomImg(this.src)" style="cursor:zoom-in;" src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E9%95%BF%E6%B2%99.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">手绘地图风</span></div></div><div class="showcase-info">城市文化</div></div>
+        <div class="showcase-card"><div class="showcase-img-wrap"><img onclick="zoomImg(this.src)" style="cursor:zoom-in;" src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E7%81%AB%E9%94%85.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">暖色插画风</span></div></div><div class="showcase-info">美食菜谱</div></div>
+        <div class="showcase-card"><div class="showcase-img-wrap"><img onclick="zoomImg(this.src)" style="cursor:zoom-in;" src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/ChatGPT%20Image%202026%E5%B9%B45%E6%9C%8815%E6%97%A5%2012_30_04.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">精美插画风</span></div></div><div class="showcase-info">知识图文</div></div>
+        <div class="showcase-card"><div class="showcase-img-wrap"><img onclick="zoomImg(this.src)" style="cursor:zoom-in;" src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E9%BB%84%E5%B1%B1.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">山水国风</span></div></div><div class="showcase-info">旅游攻略</div></div>
       </div>
     </div>
   </div>
@@ -357,26 +363,7 @@ textarea{resize:vertical;min-height:100px;line-height:1.7;}
     </div>
   </div>
 
-  <!-- 上传区 -->
-  <div class="card">
-    <div class="card-title"><span></span>上传参考内容（可选）</div>
-    <div id="upload-zone"
-      ondragover="event.preventDefault();this.classList.add('dragover')"
-      ondragleave="this.classList.remove('dragover')"
-      ondrop="handleDrop(event)"
-      onclick="document.getElementById('file-input').click()">
-      <input type="file" id="file-input" accept="image/*,.pdf,.doc,.docx" multiple style="display:none" onchange="handleFileSelect(this.files)">
-      <div id="upload-hint">
-        <div style="font-size:32px;margin-bottom:8px;opacity:0.6">📎</div>
-        <div style="font-size:13px;color:var(--tx2);margin-bottom:4px;">拖拽或点击上传参考图 / 文档 / 手写稿</div>
-        <div style="font-size:11px;color:var(--tx3);">支持 JPG · PNG · PDF · Word · 最大10MB · AI自动识别内容</div>
-      </div>
-      <div id="upload-preview" style="display:none;gap:8px;flex-wrap:wrap;justify-content:center;"></div>
-    </div>
-    <div id="upload-status" style="font-size:12px;color:var(--tx3);margin-top:8px;text-align:center;min-height:16px;"></div>
-  </div>
-
-  <!-- 输入区 -->
+  <!-- 输入区（含上传） -->
   <div class="card">
     <div class="card-title"><span></span>告诉 AI 你想做什么图</div>
     <div style="margin-bottom:16px;">
@@ -388,31 +375,89 @@ textarea{resize:vertical;min-height:100px;line-height:1.7;}
     </div>
     <div style="margin-bottom:14px;">
       <label id="input-label">用大白话描述你想做的图（越详细越好）</label>
-      <textarea id="topic-input" placeholder="例如：光合作用原理图 / 红烧肉的做法 / 摩羯座性格分析 / 秋冬通勤穿搭公式 / 成都美食地图…&#10;&#10;💡 不需要专业词汇，说清楚意思就行&#10;💡 也可以上传图片/文件，我来识别内容"></textarea>
+      <textarea id="topic-input" placeholder="例如：光合作用原理图 / 红烧肉的做法 / 摩羯座性格分析 / 秋冬通勤穿搭公式 / 成都美食地图…&#10;&#10;💡 不需要专业词汇，说清楚意思就行"></textarea>
+    </div>
+    <!-- 上传区（紧贴输入框下方） -->
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <label>📎 上传参考内容（可选）图片/文档/手写稿</label>
+        <span style="font-size:11px;color:var(--tx3);">AI自动识别内容</span>
+      </div>
+      <div id="upload-zone"
+        ondragover="event.preventDefault();this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="handleDrop(event)"
+        onclick="document.getElementById('file-input').click()"
+        style="border:1.5px dashed rgba(79,142,247,0.2);border-radius:10px;padding:12px 16px;cursor:pointer;transition:all .2s;background:rgba(79,142,247,0.02);display:flex;align-items:center;gap:12px;min-height:52px;">
+        <input type="file" id="file-input" accept="image/*,.pdf,.doc,.docx" multiple style="display:none" onchange="handleFileSelect(this.files)">
+        <div id="upload-hint" style="display:flex;align-items:center;gap:10px;width:100%;">
+          <span style="font-size:20px;opacity:0.5;">📎</span>
+          <span style="font-size:13px;color:var(--tx3);">点击或拖拽上传 · 支持 JPG / PNG / PDF / Word · 最大10MB</span>
+        </div>
+        <div id="upload-preview" style="display:none;gap:8px;flex-wrap:wrap;width:100%;"></div>
+      </div>
+      <div id="upload-status" style="font-size:11px;color:var(--tx3);margin-top:6px;min-height:14px;"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
       <div>
         <label>输出尺寸</label>
         <select id="size-pref">
-          <option value="AI自动推荐">🤖 AI自动推荐</option>
-          <option value="9:16竖版">9:16 竖版（刷屏首选）</option>
-          <option value="3:4竖版">3:4 竖版（小红书封面）</option>
-          <option value="1:1方版">1:1 方版（朋友圈）</option>
-          <option value="16:9横版">16:9 横版（PPT/横屏）</option>
+          <option value="AI自动推荐">🤖 AI自动推荐（默认）</option>
+          <optgroup label="📱 竖版">
+          <option value="9:16竖版">9:16 竖版（刷屏传播首选）</option>
+          <option value="3:4竖版">3:4 竖版（小红书封面首选）</option>
+          <option value="2:3竖版">2:3 竖版（小红书多图）</option>
+          <option value="4:5竖版">4:5 竖版（Instagram竖版）</option>
+          </optgroup>
+          <optgroup label="⬛ 方版">
+          <option value="1:1方版">1:1 方版（朋友圈/社交首选）</option>
+          </optgroup>
+          <optgroup label="🖥️ 横版">
+          <option value="16:9横版">16:9 横版（PPT/场景叙事）</option>
+          <option value="4:3横版">4:3 横版（公众号头图/banner）</option>
+          <option value="3:2横版">3:2 横版（横版海报）</option>
+          </optgroup>
         </select>
       </div>
       <div>
         <label>风格倾向（可选，留空让AI决定）</label>
         <select id="style-pref">
-          <option value="AI自动匹配">🎲 AI联网匹配最火风格</option>
-          <option value="3D悬浮立体风">🧊 3D悬浮立体风</option>
-          <option value="国风国潮">🎋 国风国潮</option>
-          <option value="极简白卡风">⬜ 极简白卡风</option>
-          <option value="四季浮雕纸雕风">🌿 四季浮雕纸雕风</option>
-          <option value="赛博朋克风">⚡ 赛博朋克风</option>
-          <option value="水墨古典风">🖋️ 水墨古典风</option>
-          <option value="马卡龙少女风">🎀 马卡龙少女风</option>
-          <option value="博物学手绘风">🔬 博物学手绘风</option>
+          <option value="AI自动匹配">🎲 AI联网匹配最火风格（推荐）</option>
+          <optgroup label="🔥 当下最火">
+          <option value="3D悬浮立体风">🧊 3D悬浮立体风（玻璃质感+漂浮）</option>
+          <option value="莫兰迪高级感">🎨 莫兰迪高级感（低饱和高级灰）</option>
+          <option value="国潮赛博风">🌆 国潮赛博风（霓虹+国风）</option>
+          <option value="镭射全息风">💎 镭射全息风（彩虹光效）</option>
+          <option value="奶油肌理风">🍦 奶油肌理风（米白细腻质感）</option>
+          </optgroup>
+          <optgroup label="🎋 中式国风">
+          <option value="国风国潮">🎋 国风国潮（朱红+金色）</option>
+          <option value="水墨古典风">🖋️ 水墨古典风（宣纸+墨色）</option>
+          <option value="四季浮雕纸雕风">🌿 四季浮雕纸雕风（3D微缩）</option>
+          <option value="民国复古风">🏮 民国复古风（做旧米黄）</option>
+          </optgroup>
+          <optgroup label="📚 知识图解">
+          <option value="极简白卡风">⬜ 极简白卡风（白底+黑字）</option>
+          <option value="扁平插画风">📐 扁平插画风（几何色块）</option>
+          <option value="数据可视化风">📊 数据可视化风（图表+数字）</option>
+          <option value="教材插画风">📖 教材插画风（清晰图解）</option>
+          </optgroup>
+          <optgroup label="🌸 生活美食">
+          <option value="暖色插画风">🍊 暖色插画风（橙红+奶白）</option>
+          <option value="日系治愈风">🍃 日系治愈风（奶油色+手绘）</option>
+          <option value="手绘水彩风">🖌️ 手绘水彩风（透明感晕染）</option>
+          <option value="博物学手绘风">🔬 博物学手绘风（精细线稿）</option>
+          </optgroup>
+          <optgroup label="💄 美妆时尚">
+          <option value="马卡龙少女风">🎀 马卡龙少女风（粉紫奶白）</option>
+          <option value="高级杂志风">💎 高级杂志风（深色+金色）</option>
+          <option value="赛博霓虹风">⚡ 赛博霓虹风（深紫+荧光）</option>
+          </optgroup>
+          <optgroup label="💼 职场商务">
+          <option value="商务深色风">💼 商务深色风（深蓝+金色）</option>
+          <option value="PPT简约风">📊 PPT简约风（白底+色块）</option>
+          <option value="杂志封面风">📰 杂志封面风（大字+高对比）</option>
+          </optgroup>
         </select>
       </div>
     </div>
@@ -530,6 +575,12 @@ textarea{resize:vertical;min-height:100px;line-height:1.7;}
 </div>
 
 <script>
+// ============ 图片放大 ============
+function zoomImg(src) {
+  document.getElementById('img-zoom-src').src = src;
+  document.getElementById('img-zoom-modal').style.display = 'flex';
+}
+
 // ============ 全局变量 ============
 let globalConversationId = null;
 let uploadedFileIds = [];
@@ -686,7 +737,7 @@ async function handleFileSelect(files) {
     statusEl.textContent=`⏳ 正在上传 ${file.name}...`;
     try{
       const base64=await fileToBase64(file);
-      const res=await fetch('/api/api/coze-upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({file_base64:base64,file_name:file.name,file_type:file.type||'application/octet-stream'})});
+      const res=await fetch('/api/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze-upload',file_base64:base64,file_name:file.name,file_type:file.type||'application/octet-stream'})});
       const data=await res.json();
       if(data.data?.id){
         uploadedFileIds.push(data.data.id);
@@ -749,7 +800,7 @@ ${style!=='AI自动匹配'?'风格偏好：'+style:''}
 然后等待用户选择。`;
 
   try{
-    const res=await fetch('/api/api/coze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query,file_ids:uploadedFileIds.length>0?uploadedFileIds:undefined})});
+    const res=await fetch('/api/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query,file_ids:uploadedFileIds.length>0?uploadedFileIds:undefined})});
     const data=await res.json();
     if(data.code!==0)throw new Error(data.msg||'扣子API响应异常');
     globalConversationId=data.conversation_id;
@@ -849,7 +900,7 @@ async function lockStyle(optionNum,styleName){
   try{
     // 发送选项数字，符合扣子智能体的交互协议
     const query = `${optionNum}`;
-    const res=await fetch('/api/api/coze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query,conversation_id:globalConversationId})});
+    const res=await fetch('/api/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query,conversation_id:globalConversationId})});
     const data=await res.json();
     if(data.code!==0)throw new Error(data.msg||'第二轮API异常');
     const msg=data.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
@@ -927,7 +978,7 @@ async function generateCopywrite(){
   addLog('🌐 [SEARCH] 联网搜索当前热门话题和爆款标题...',400);
 
   try{
-    const res=await fetch('/api/api/coze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:'X',conversation_id:globalConversationId})});
+    const res=await fetch('/api/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query:'X',conversation_id:globalConversationId})});
     const data=await res.json();
     if(data.code!==0)throw new Error(data.msg||'文案生成失败');
     const msg=data.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
