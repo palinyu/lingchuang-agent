@@ -159,10 +159,10 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
 .custom-panel-title span{color:var(--gold);}
 /* 三个可编辑参数 */
 .edit-params{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
-.edit-param{background:#0f1015;border:1px solid var(--bd);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;position:relative;}
-.edit-param:hover,.edit-param.open{border-color:var(--gold);background:var(--gold-dim);}
-.edit-param-label{font-size:10px;color:var(--tx3);margin-bottom:4px;}
-.edit-param-value{font-size:13px;font-weight:700;color:var(--gold);}
+.edit-param{background:#13141e;border:1px solid rgba(243,175,66,0.2);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;position:relative;}
+.edit-param:hover,.edit-param.open{border-color:var(--gold);background:var(--gold-dim);box-shadow:0 0 12px rgba(243,175,66,0.08);}
+.edit-param-label{font-size:10px;color:var(--tx2);margin-bottom:4px;letter-spacing:.3px;}
+.edit-param-value{font-size:13px;font-weight:800;color:var(--gold);text-shadow:0 0 8px rgba(243,175,66,0.3);}
 .edit-param-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:11px;}
 /* 下拉选项 */
 .edit-dropdown{display:none;position:absolute;top:100%;left:0;right:0;background:#0f1015;border:1px solid var(--bd-gold);border-radius:10px;padding:8px;z-index:100;margin-top:4px;box-shadow:0 8px 24px rgba(0,0,0,0.6);max-height:220px;overflow-y:auto;}
@@ -982,21 +982,45 @@ async function confirmStyle(styleName,cardIdx){
   lastStyleName=styleName;
   const grid=document.getElementById('style-grid');
   const allCards=grid?.querySelectorAll('.sc');
+
+  // 其他卡淡出
   allCards?.forEach((card,i)=>{
-    if(i!==cardIdx){card.style.transition='all .35s ease';card.style.opacity='0';card.style.transform='scale(0.88)';setTimeout(()=>card.style.display='none',350);}
+    if(i!==cardIdx){
+      card.style.transition='all .35s ease';
+      card.style.opacity='0';card.style.transform='scale(0.9)';
+      setTimeout(()=>card.style.display='none',350);
+    }
   });
-  if(cardIdx!==undefined){
+
+  // 选中卡变为左侧确认卡 + 右侧重选卡
+  setTimeout(()=>{
+    grid.style.gridTemplateColumns='1fr 1fr';
+    grid.style.maxWidth='680px';grid.style.margin='0 auto';
+
     const selCard=document.getElementById('sc-'+cardIdx);
     if(selCard){
-      setTimeout(()=>{
-        grid.style.gridTemplateColumns='1fr';
-        selCard.style.maxWidth='320px';selCard.style.margin='0 auto';
-        const overlay=document.createElement('div');overlay.className='card-waiting-overlay';
-        overlay.innerHTML=`<div class="atom-ring"></div><p>AI联网搜索爆款参数中<br>完整提示词生成中…</p>`;
-        selCard.style.position='relative';selCard.appendChild(overlay);
-      },380);
+      selCard.style.position='relative';
+      // 加光圈等待overlay
+      const overlay=document.createElement('div');overlay.className='card-waiting-overlay';overlay.id='waiting-overlay';
+      overlay.innerHTML=`<div class="atom-ring"></div><p style="font-size:12px;color:var(--gold);font-weight:700;">${styleName}</p><p style="font-size:11px;color:var(--tx2);margin-top:4px;">AI联网生成中…</p>`;
+      selCard.appendChild(overlay);
     }
-  }
+
+    // 加重选卡
+    const reCard=document.createElement('div');reCard.className='sc';reCard.id='sc-reselect';
+    reCard.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:200px;cursor:pointer;border-style:dashed;';
+    reCard.innerHTML=`<div style="font-size:32px;">🔀</div><div style="font-size:13px;font-weight:700;color:var(--tx2);">重新选择风格</div><div style="font-size:11px;color:var(--tx3);">返回上一步</div>`;
+    reCard.onclick=()=>{
+      document.getElementById('waiting-overlay')?.remove();
+      reCard.remove();
+      grid.style.gridTemplateColumns='repeat(4,1fr)';
+      grid.style.maxWidth='';grid.style.margin='';
+      allCards?.forEach(card=>{card.style.display='';card.style.opacity='1';card.style.transform='';});
+    };
+    grid.appendChild(reCard);
+  },380);
+
+  // 进入思考单卡
   setTimeout(async()=>{
     document.getElementById('style-stage').style.display='none';
     const ts=document.getElementById('thinking-stage');ts.style.display='flex';
@@ -1004,7 +1028,7 @@ async function confirmStyle(styleName,cardIdx){
     const tst=document.getElementById('t-style');if(tst)tst.innerHTML=`<span>${styleName}</span>`;
     ts.scrollIntoView({behavior:'smooth'});
     await callCoze(styleName);
-  },750);
+  },800);
 }
 
 async function callCoze(styleName){
@@ -1014,34 +1038,12 @@ async function callCoze(styleName){
   const bubbleTags=selectedBubbles.length>0?`\n追加出图方向：${selectedBubbles.join('、')}`:'';
   const fileNotice=isFileAttached?'\n【多模态指令】：用户已上传参考图/文档，请优先识别内容并据此生成提示词。':'';
 
-  const query=`你是专业的AI生图提示词专家，具备全品类出图能力。
+  // 简洁query格式，匹配扣子智能体的输入协议
+  const query=`${topic||'请识别上传文件内容'}
 
-【执行指令】
-1. 先调用联网搜索工具，搜索"${topic||category} 爆款图文 热门风格 2025"
-2. 结合搜索结果和以下参数，生成高质量专业提示词
-3. 严禁触发多轮确认，本轮直接按格式输出
-
-【用户参数】
-主题内容：${topic||'见上传文件'}
-图像品类：${category}
-视觉风格：${styleName}
-输出尺寸：${size}${bubbleTags}${fileNotice}
-
-【输出格式，严格执行】
-📊【内容结构化】
-（核心内容拆解，3-5个要点）
-
-🎨【完整英文提示词】
-（专业英文提示词，800-1200字符，即梦/MJ可直接使用）
-
-📱【精简中文提示词】
-（中文精简版，100字内，手机端粘贴用）
-
-⚙️【即梦参数建议】
-模型·图片5.0 Lite | 尺寸·${size} | 参考强度·0
-
-📣【热门话题标签】
-（结合联网搜索结果，8-12个当前热门标签）`;
+【当前所属品类】：${category}
+【限定画布比例】：${size}
+【所选具体小流派】：${styleName}${bubbleTags?'\n【追加出图方向】：'+bubbleTags:''}${fileNotice}`;
 
   try{
     const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query,file_ids:uploadedFileIds.length>0?uploadedFileIds:undefined})});
@@ -1080,11 +1082,58 @@ function extractPrompt(raw){
 // ===== 渲染输出 =====
 function renderOutput(rawContent,styleName){
   document.getElementById('out-prompt').textContent=cachedPrompt||rawContent;
-  const xhs=`📕【某书垂类高赞图文引流笔记】\n\n标题：救命！单人靠这个「${styleName}」公式，首条直接引流500+！😱\n\n家人们求求你们别再盲目抄那些乱七八糟的咒语了！😭\n\n最近朋友圈大佬都在偷偷套用这套黑金魔方公式！✨ 大厂级别的视觉调性，一秒锁定高级质感，逼格恐怖如斯！💎\n\n单人团队按这套傻瓜级SOP直接一键平铺，20分钟批量产出高质量物料！🚀\n\n💡 想要同款《33大热门全赛道AI搞钱地图合集》的，下方扣【想要】，我看到就发！👇\n\n#AI生图 #知识图文变现 #某书爆款起号 #副业翻盘日记 #灵创星球\n\n⚠️ 本文案为AI辅助生成，发布前请结合个人经历修改，切勿直接复制发布。`;
+  // 动态文案：基于用户输入的主题
+  const userTopic=document.getElementById('main-textarea')?.value.trim()||'AI出图';
+  const shortTopic=userTopic.substring(0,12);
+  const xhs=`📕【某书垂类高赞图文引流笔记】
+
+标题：救命！用AI做「${shortTopic}」相关图，首条直接引流500+！😱
+
+家人们！最近发现一个超强出图工具，专门为「${shortTopic}」这类内容打造高质量配图！✨
+
+只需要用大白话说出你的想法，AI自动联网搜爆款参数，秒出大厂级别的「${styleName}」视觉方案！💎
+
+我用它做「${shortTopic}」相关内容，出图质量直接拉满，粉丝说以为是专业设计师做的！🚀
+
+💡 想要同款《33大热门全赛道AI搞钱地图合集》的，下方扣【想要】，我看到就发！👇
+
+#AI生图 #${shortTopic} #某书爆款起号 #副业翻盘日记 #灵创星球 #AI出图
+
+⚠️ 本文案为AI辅助生成，发布前请结合个人真实经历修改，切勿直接复制发布。`;
   document.getElementById('out-xhs').textContent=xhs;
-  const mp=`🟢【微信公众号深度商业文章】\n\n📌 标题：2026搞钱壁垒洗牌：如何依靠「${styleName}」撬动单人自动化变现？\n\n📢 行业开篇：\n在公域信息饱和的存量时代，普通生图已失去截流能力。只有具备大厂视觉溢价的"降维调性"，才能撕裂用户防线。\n\n💡 三大认知金律：\n1️⃣ 视觉美学即主权：用「${styleName}」构筑无法被抄袭的视觉资产护城河\n2️⃣ 评论区强效钩子：预埋高价值资料，实现公域向私域的高效迁徙\n3️⃣ 漏斗式闭环裂变：体验产品 → 系统课程 → 合伙人深度分账\n\n⚠️ 免责声明：本内容仅供学习参考，不构成任何投资、法律、医疗建议。具体情况请咨询专业人士，自主评估风险。`;
+  const mp=`🟢【微信公众号深度商业文章】
+
+📌 标题：做「${shortTopic}」内容的必看：如何用AI出图工具实现降维霸屏？
+
+📢 行业开篇：
+做「${shortTopic}」相关内容的创作者越来越多，但真正能做出高质量配图的却寥寥无几。核心原因：大多数人不懂提示词，生图质量参差不齐。
+
+💡 三大解法：
+1️⃣ 用大白话描述想法，AI自动联网匹配「${styleName}」等专业视觉方案
+2️⃣ 一键获取完整英文提示词，直接粘贴到即梦/MJ即可出图
+3️⃣ 配套小红书笔记+话题标签，出图即发布，流量自来
+
+⚠️ 免责声明：本内容仅供学习参考，不构成任何投资、法律、医疗建议。具体情况请咨询专业人士，自主评估风险。`;
   document.getElementById('out-mp').textContent=mp;
-  const video=`🎬【短视频平台爆款高燃标题】\n1️⃣ 颠覆认知！只要你说出想做什么图，AI秒出大厂总监级提示词！🔥\n2️⃣ 别去交几千块智商税了！用这个工具偷偷实现降维霸屏！🤫\n3️⃣ 20分钟出一套高质量物料！灵创星球底层黑科技！🚀\n\n#️⃣【核心话题标签】\n#AI生图 #提示词 #知识图文 #副业搞钱 #AI出图 #灵创星球 #${styleName.replace(/风$/,'')}\n\n================================\n\n💬【评论区截流神评话术】\n\n👉 话术A（资料引导）：\n「🔥 本期提到的《AI全赛道搞钱地图.pdf》已打包好！下方扣【地图】，我看到就发！👇」\n\n👉 话术B（打破认知）：\n「别去买高价培训了！😭 很多机构所谓的核心就是这套提示词矩阵。有用直接拿走！🛑」\n\n⚠️ 话术仅供参考，请根据实际情况修改，遵守平台规则。`;
+  const video=`🎬【短视频平台爆款高燃标题】
+1️⃣ 做「${shortTopic}」内容？这个AI出图工具直接帮你出大厂级配图！🔥
+2️⃣ 不懂提示词也没关系！大白话输入，秒出「${styleName}」专业方案！🤫
+3️⃣ 20分钟批量产出「${shortTopic}」系列配图，流量直接起飞！🚀
+
+#️⃣【核心话题标签】
+#AI生图 #${shortTopic} #AI出图 #提示词 #副业搞钱 #灵创星球 #${styleName.replace(/风$/,'')}
+
+================================
+
+💬【评论区截流神评话术】
+
+👉 话术A（资料引导）：
+「🔥 本期视频提到的《AI出图提示词大全.pdf》已打包好！下方扣【提示词】，我看到就发！👇」
+
+👉 话术B（打破认知）：
+「别去买高价培训了！😭 「${shortTopic}」这类内容用AI一键出图，核心就是这套提示词方案。有用直接拿走！🛑」
+
+⚠️ 话术仅供参考，请根据实际情况修改，遵守平台规则。`;
   document.getElementById('out-video').textContent=video;
   renderRadar();
   document.getElementById('output-section').style.display='block';
