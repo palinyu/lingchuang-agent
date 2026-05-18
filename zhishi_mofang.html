@@ -1036,11 +1036,12 @@ async function callCoze(styleName){
   const bubbleTags=selectedBubbles.length>0?`\n追加出图方向：${selectedBubbles.join('、')}`:'';
   const fileNotice=isFileAttached?'\n【多模态指令】：用户已上传参考图/文档，请优先识别内容并据此生成提示词。':'';
 
-  // 最简query，完全匹配扣子智能体协议
-  const query=`${topic||'请识别上传文件内容作为主题'}
+  // 完全还原扣子原版输入格式，让智能体自动判断品类
+  const bubbleStr = bubbleTags ? `，出图方向偏向：${bubbleTags}` : '';
+  const query = `${topic||'请识别上传文件内容'}${bubbleStr}
 
-【限定画布比例】：${size}
-【所选具体小流派】：${styleName}${bubbleTags?'\n【追加出图方向】：'+bubbleTags:''}${fileNotice}`;
+画布比例：${size}
+风格：${styleName}${fileNotice}`;
 
   try{
     const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query,file_ids:uploadedFileIds.length>0?uploadedFileIds:undefined})});
