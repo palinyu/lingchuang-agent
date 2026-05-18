@@ -210,6 +210,55 @@ textarea{resize:vertical;min-height:100px;line-height:1.7;}
 @media(max-width:480px){
   #style-cards-grid{grid-template-columns:1fr;}
 }
+
+/* 光圈动画 */
+@keyframes ring-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes card-fadeout {
+  0% { opacity:1; transform:scale(1); }
+  100% { opacity:0; transform:scale(0.95); }
+}
+@keyframes card-fadein {
+  0% { opacity:0; transform:scale(0.95); }
+  100% { opacity:1; transform:scale(1); }
+}
+.style-card-waiting {
+  position:relative;
+  overflow:visible !important;
+}
+.style-card-waiting::before {
+  content:'';
+  position:absolute;
+  inset:-3px;
+  border-radius:19px;
+  background:conic-gradient(from 0deg, transparent 0deg, var(--gold) 60deg, #fff 120deg, var(--blue) 180deg, transparent 240deg);
+  animation:ring-rotate 1.2s linear infinite;
+  z-index:-1;
+}
+.style-card-waiting::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:16px;
+  background:rgba(15,15,22,0.95);
+  z-index:0;
+}
+.style-card-waiting .style-card-wait-text {
+  position:relative;
+  z-index:1;
+  text-align:center;
+  padding:30px 20px;
+}
+.style-card-other-fade {
+  animation: card-fadeout 0.4s ease forwards;
+}
+.style-card-single {
+  max-width:320px;
+  margin:0 auto;
+  animation: card-fadein 0.3s ease;
+}
 </style>
 </head>
 <body>
@@ -303,21 +352,6 @@ textarea{resize:vertical;min-height:100px;line-height:1.7;}
         <button class="btn-unlock" onclick="doUnlock()">🚀 立即解锁</button>
         <button class="btn-already" onclick="backToSelect()">← 重新选择套餐</button>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- 风格选择弹窗（炫酷弹出形式） -->
-<div id="style-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9990;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;backdrop-filter:blur(8px);">
-  <div style="max-width:1100px;width:100%;background:linear-gradient(135deg,#080812,#0d0d1a);border:1px solid rgba(245,196,74,0.2);border-radius:24px;padding:32px;margin:auto;box-shadow:0 0 80px rgba(79,142,247,0.1);">
-    <div style="text-align:center;margin-bottom:28px;">
-      <div style="font-size:12px;color:var(--blue);font-weight:700;letter-spacing:.1em;margin-bottom:8px;">⚡ AI STYLE ENGINE</div>
-      <h3 style="font-size:22px;font-weight:900;background:linear-gradient(135deg,#fff,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;">AI已联网分析，推荐以下风格方案</h3>
-      <p style="font-size:13px;color:var(--tx3);">选择一套风格，立即生成完整提示词</p>
-    </div>
-    <div id="style-cards-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;"></div>
-    <div style="text-align:center;margin-top:20px;">
-      <button onclick="closeStyleModal()" style="background:transparent;border:1px solid var(--bd);color:var(--tx3);padding:8px 24px;border-radius:20px;font-size:12px;cursor:pointer;">取消，重新输入</button>
     </div>
   </div>
 </div>
@@ -499,8 +533,23 @@ textarea{resize:vertical;min-height:100px;line-height:1.7;}
     </div>
   </div>
 
-  <!-- 风格卡片（弹窗modal形式，见上方style-modal） -->
-  <div id="style-cards-wrap" style="display:none;"></div>
+  <!-- 风格选择区（inline展示）-->
+  <div id="style-cards-wrap" style="display:none;margin-top:1.25rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-size:11px;color:var(--blue);font-weight:700;letter-spacing:.1em;margin-bottom:4px;">⚡ AI STYLE ENGINE</div>
+        <div style="font-size:16px;font-weight:800;color:var(--tx);margin-bottom:2px;">选择风格，立即出图</div>
+        <div style="font-size:12px;color:var(--tx3);">点击任意风格卡片确认，AI立即开始生成</div>
+      </div>
+      <button onclick="switchStyleBatch()" style="background:rgba(245,196,74,0.08);border:1px solid rgba(245,196,74,0.25);color:var(--gold);padding:8px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;" onmouseover="this.style.background='rgba(245,196,74,0.15)'" onmouseout="this.style.background='rgba(245,196,74,0.08)'">
+        🔀 换一批风格
+      </button>
+    </div>
+    <div id="style-cards-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;"></div>
+    <div style="text-align:center;margin-top:14px;">
+      <button onclick="cancelStyleSelect()" style="background:transparent;border:1px solid var(--bd);color:var(--tx3);padding:7px 20px;border-radius:20px;font-size:12px;cursor:pointer;">取消重新输入</button>
+    </div>
+  </div>
 
   <!-- 输出区（第二轮） -->
   <div class="out-section" id="outSection">
@@ -850,140 +899,362 @@ async function generate() {
   addLog('⚡ [SYSTEM] 灵创 AI 出图引擎启动...',0);
   addLog(`🛰️ [INFO] 画布规格锁定: [${size}]`,200);
   if(uploadedFileIds.length>0)addLog(`📎 [FILE] 检测到 ${uploadedFileIds.length} 个文件，注入多模态通道...`,400);
-  addLog('🌐 [SEARCH] 正在联网搜索当前爆款风格和热门话题...',600);
-  addLog('🔮 [AI] 分析内容品类，生成4套定制风格方案...',1000);
+  addLog('🎨 [AI] 本地智能匹配风格方案...',600);
 
-  // 联网搜索指令嵌入query
-  const searchInstruction = uploadedFileIds.length > 0
-    ? `请先识别上传的文件/图片内容，提取核心主题。然后联网搜索该主题当前在小红书/抖音的流行风格和热门话题标签。`
-    : `请先联网搜索"${topic} 流行风格 爆款图文"和"${topic} 热门话题标签"，获取最新流行信息。`;
-
-  const query = `${searchInstruction}
-
-主题内容：${topic||'（见上传文件）'}
-设定尺寸：${size}
-${style!=='AI自动匹配'?'风格偏好：'+style:''}
-
-根据以上信息，推荐4套不同风格方案，融合联网搜索到的最新流行趋势。
-严格按JSON格式输出：{"list":[{"option":1,"style_name":"风格名称","desc":"一句话描述，包含配色和质感"},{"option":2,"style_name":"...","desc":"..."},{"option":3,"style_name":"...","desc":"..."},{"option":4,"style_name":"...","desc":"..."}]}
-然后等待用户选择。`;
-
-  try{
-    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query,file_ids:uploadedFileIds.length>0?uploadedFileIds:undefined})});
-    const data=await res.json();
-    if(data.code!==0)throw new Error(data.msg||'扣子API响应异常');
-    globalConversationId=data.conversation_id;
-    const msg=data.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
-    if(!msg)throw new Error('未获取到有效输出');
-    addLog('✨ [SUCCESS] 联网搜索完成，风格方案已生成！',400);
-    setTimeout(()=>{btn.disabled=false;btn.textContent='⚡ 启动 AI 出图引擎';renderStyleCards(msg.content);},600);
-  }catch(e){
-    addLog('❌ [ERROR] '+e.message,0);
-    btn.disabled=false;btn.textContent='⚡ 启动 AI 出图引擎';
-  }
+  // 直接本地生成风格卡片，不调API
+  setTimeout(()=>{
+    btn.disabled=false;
+    btn.textContent='⚡ 启动 AI 出图引擎';
+    document.getElementById('terminal-wrap').style.display='none';
+    renderStyleCards();
+  }, 1200);
   updateUsageBar();
 }
 
-// ============ 渲染风格卡片（弹窗形式）============
-function closeStyleModal(){document.getElementById('style-modal').style.display='none';}
+// ============ 本地风格库 ============
+const LOCAL_STYLE_POOLS = {
+  '营销海报': [
+    {name:'高冲击撞色风',desc:'高饱和对比色+大字标题，视觉冲击极强',cls:'sv-zaji'},
+    {name:'暗调奢华风',desc:'深色背景+金色元素，高端品牌质感',cls:'sv-bowu'},
+    {name:'3D悬浮立体风',desc:'产品3D漂浮+玻璃质感，当下最火',cls:'sv-3d'},
+    {name:'极简白卡风',desc:'纯白底+产品实物，干净专业',cls:'sv-jianyi'},
+    {name:'促销红金风',desc:'中国红+金色+大字，喜庆促销感',cls:'sv-guochao'},
+    {name:'杂志封面风',desc:'时尚大图+简洁文字，高端感',cls:'sv-zaji'},
+    {name:'霓虹赛博风',desc:'暗底+霓虹色+未来感',cls:'sv-saibo'},
+    {name:'莫兰迪高级感',desc:'低饱和灰调+精致排版',cls:'sv-jianyi'},
+  ],
+  '知识图文': [
+    {name:'3D悬浮立体风',desc:'知识元素3D漂浮+透明质感背景',cls:'sv-3d'},
+    {name:'极简白卡风',desc:'纯白底+结构化排版，信息清晰',cls:'sv-jianyi'},
+    {name:'扁平插画风',desc:'几何色块+简洁图形，现代感强',cls:'sv-saibo'},
+    {name:'博物学手绘风',desc:'精细线稿+科学标注，专业质感',cls:'sv-bowu'},
+    {name:'数据可视化风',desc:'图表+信息图+数字突出，权威感',cls:'sv-saibo'},
+    {name:'教材插画风',desc:'清晰图解+色块分区，易读性强',cls:'sv-3d'},
+    {name:'杂志封面风',desc:'大字标题+高对比，视觉冲击',cls:'sv-zaji'},
+    {name:'四季浮雕纸雕风',desc:'米白3D微缩场景，精致质感',cls:'sv-bowu'},
+  ],
+  '菜谱美食': [
+    {name:'暖色插画风',desc:'橙红+奶白+卡通食材，温馨暖心',cls:'sv-guochao'},
+    {name:'日式手账风',desc:'牛皮纸底+手写体+胶带装饰',cls:'sv-bowu'},
+    {name:'极简白卡风',desc:'白底+黑色线稿，清爽高级',cls:'sv-jianyi'},
+    {name:'复古美食杂志风',desc:'深色背景+金色标题，高端感',cls:'sv-zaji'},
+    {name:'国潮暖红风',desc:'国风朱红+毛笔大字，传统质感',cls:'sv-guochao'},
+    {name:'清新水彩风',desc:'透明感水彩晕染+细线稿，艺术感',cls:'sv-makalong'},
+    {name:'博物学手绘风',desc:'精细食材绘图+科学标注',cls:'sv-bowu'},
+    {name:'潮流扁平风',desc:'高饱和色块+粗线条，年轻活力',cls:'sv-saibo'},
+  ],
+  '社交封面': [
+    {name:'3D悬浮立体风',desc:'玻璃质感+立体漂浮，抓眼球',cls:'sv-3d'},
+    {name:'杂志封面风',desc:'大字标题+高对比色块',cls:'sv-zaji'},
+    {name:'马卡龙少女风',desc:'粉紫奶白+甜美装饰',cls:'sv-makalong'},
+    {name:'赛博霓虹风',desc:'深色+荧光色，未来感强',cls:'sv-saibo'},
+    {name:'极简白卡风',desc:'白底+大字，清爽高级',cls:'sv-jianyi'},
+    {name:'国潮撞色风',desc:'朱红+靛蓝+金色，国风感',cls:'sv-guochao'},
+    {name:'莫兰迪高级感',desc:'低饱和高级灰，精致优雅',cls:'sv-jianyi'},
+    {name:'水墨意境风',desc:'宣纸白+墨色+诗意感',cls:'sv-shuimo'},
+  ],
+  '穿搭时尚': [
+    {name:'时尚杂志风',desc:'大字标题+高对比，时尚感',cls:'sv-zaji'},
+    {name:'马卡龙少女风',desc:'粉紫奶白+爱心，甜美少女',cls:'sv-makalong'},
+    {name:'极简白卡风',desc:'白底+单品拆解，清爽高级',cls:'sv-jianyi'},
+    {name:'复古港风',desc:'做旧滤镜+胶片感，复古韵味',cls:'sv-bowu'},
+    {name:'赛博朋克风',desc:'深色+霓虹，前卫感强',cls:'sv-saibo'},
+    {name:'国潮撞色风',desc:'朱红+靛蓝，国风时尚',cls:'sv-guochao'},
+    {name:'莫兰迪高级感',desc:'低饱和灰调，优雅高级',cls:'sv-jianyi'},
+    {name:'ins清新风',desc:'白底+柔和阴影+高级感',cls:'sv-makalong'},
+  ],
+  '护肤美妆': [
+    {name:'实验室科技风',desc:'白底+分子结构图，专业感',cls:'sv-jianyi'},
+    {name:'日系清透风',desc:'白底+粉色+樱花，清透少女',cls:'sv-makalong'},
+    {name:'高级杂志风',desc:'深色+金色标题，奢华感',cls:'sv-zaji'},
+    {name:'3D悬浮立体风',desc:'产品3D漂浮+镭射光效',cls:'sv-3d'},
+    {name:'马卡龙少女风',desc:'粉紫奶白+可爱图标',cls:'sv-makalong'},
+    {name:'极简白卡风',desc:'纯白底+成分标注，干净专业',cls:'sv-jianyi'},
+    {name:'赛博医美风',desc:'深蓝+科技感+未来美学',cls:'sv-saibo'},
+    {name:'奶油肌理风',desc:'米白细腻质感+温柔色调',cls:'sv-makalong'},
+  ],
+  '城市探店': [
+    {name:'手绘插画地图风',desc:'奶油色+手绘线条，温馨可爱',cls:'sv-bowu'},
+    {name:'3D城市浮雕风',desc:'3D微缩建筑+中英双语标注',cls:'sv-3d'},
+    {name:'清新水彩旅游风',desc:'天蓝+草绿+粉橙，清新活力',cls:'sv-saibo'},
+    {name:'国风水墨地图风',desc:'宣纸白+水墨线条+印章',cls:'sv-shuimo'},
+    {name:'民国复古手绘风',desc:'做旧米黄+水墨插画，怀旧感',cls:'sv-bowu'},
+    {name:'赛博朋克城市风',desc:'深色+霓虹线条+科技感',cls:'sv-saibo'},
+    {name:'极简摄影风',desc:'白底+实拍图+极简排版',cls:'sv-jianyi'},
+    {name:'日系治愈插画风',desc:'奶油色+细线条+温馨感',cls:'sv-makalong'},
+  ],
+  '儿童教育': [
+    {name:'卡通故事绘本风',desc:'柔和色调+大卡通插图，童趣满满',cls:'sv-makalong'},
+    {name:'3D儿童立体风',desc:'卡通3D微缩场景，活泼生动',cls:'sv-3d'},
+    {name:'清新扁平插画风',desc:'天蓝+明黄+薄荷绿，活力阳光',cls:'sv-saibo'},
+    {name:'手绘涂鸦风',desc:'彩虹色+手写字+贴纸感',cls:'sv-guochao'},
+    {name:'马卡龙绘本风',desc:'粉蓝黄柔和+大圆润卡通',cls:'sv-makalong'},
+    {name:'科学启蒙风',desc:'天蓝+明黄+简洁图表+可爱实验',cls:'sv-saibo'},
+    {name:'彩虹活力风',desc:'七彩渐变+圆形图标+儿童插画',cls:'sv-makalong'},
+    {name:'故事绘本风',desc:'暖色调+场景插画+连环图',cls:'sv-guochao'},
+  ],
+  '健身减脂': [
+    {name:'运动科技风',desc:'深蓝+荧光绿+几何线条，力量感',cls:'sv-saibo'},
+    {name:'极简白卡风',desc:'白底+人体线稿+数字标注',cls:'sv-jianyi'},
+    {name:'3D悬浮立体风',desc:'人体/器械3D立体+霓虹光效',cls:'sv-3d'},
+    {name:'国潮运动风',desc:'朱红+黑+汉字大字，热血感',cls:'sv-guochao'},
+    {name:'清新活力风',desc:'天蓝+白+橙色点缀，活力满满',cls:'sv-saibo'},
+    {name:'医疗科普风',desc:'白底+绿色+人体解剖插图',cls:'sv-jianyi'},
+    {name:'数据可视化风',desc:'深色底+彩色图表+数字突出',cls:'sv-saibo'},
+    {name:'杂志封面风',desc:'大字+高对比，运动大片感',cls:'sv-zaji'},
+  ],
+  '电商产品': [
+    {name:'3D悬浮立体风',desc:'产品3D漂浮+玻璃质感背景',cls:'sv-3d'},
+    {name:'极简白卡风',desc:'白底+产品实物+极简排版',cls:'sv-jianyi'},
+    {name:'暗调奢华风',desc:'深色+金色元素+高端感',cls:'sv-bowu'},
+    {name:'促销撞色风',desc:'高饱和撞色+大字+促销感强',cls:'sv-zaji'},
+    {name:'莫兰迪高级感',desc:'低饱和灰调，品质感强',cls:'sv-jianyi'},
+    {name:'ins清新风',desc:'白底+柔和阴影+种草感',cls:'sv-makalong'},
+    {name:'国潮暖红风',desc:'朱红+金色，节日促销首选',cls:'sv-guochao'},
+    {name:'赛博科技风',desc:'深色+霓虹，科技产品专属',cls:'sv-saibo'},
+  ],
+  '财经理财': [
+    {name:'商务深色风',desc:'深蓝+金色+数据图表，专业感',cls:'sv-saibo'},
+    {name:'极简白卡风',desc:'白底+黑字+彩色图表，清晰',cls:'sv-jianyi'},
+    {name:'扁平数据风',desc:'天蓝+明黄+卡通人物+数字',cls:'sv-3d'},
+    {name:'杂志封面风',desc:'大字标题+高对比色块',cls:'sv-zaji'},
+    {name:'报纸新闻风',desc:'做旧纸色+黑体标题+新闻版式',cls:'sv-bowu'},
+    {name:'赛博科技风',desc:'深色+霓虹线条+未来感',cls:'sv-saibo'},
+    {name:'莫兰迪高级感',desc:'低饱和灰调，严肃专业感',cls:'sv-jianyi'},
+    {name:'3D悬浮立体风',desc:'金融元素3D漂浮+科技光效',cls:'sv-3d'},
+  ],
+  '室内家装': [
+    {name:'现代简约风',desc:'白色+原木色+灰色+极简家具',cls:'sv-jianyi'},
+    {name:'新中式轻奢风',desc:'深木色+水墨+中式家具+禅意',cls:'sv-shuimo'},
+    {name:'北欧清新风',desc:'浅色系+绿植+原木+棉麻质感',cls:'sv-bowu'},
+    {name:'轻奢现代风',desc:'大理石+金属线条+高级灰',cls:'sv-zaji'},
+    {name:'工业复古风',desc:'裸砖+铁艺+深色+工业灯具',cls:'sv-bowu'},
+    {name:'法式浪漫风',desc:'米白+金色线条+花卉装饰',cls:'sv-makalong'},
+    {name:'日式侘寂风',desc:'原木+素色+自然质感+留白',cls:'sv-jianyi'},
+    {name:'美式复古风',desc:'做旧木色+皮质+暖色调',cls:'sv-bowu'},
+  ],
+  '营销海报': [
+    {name:'高冲击撞色风',desc:'高饱和对比色+大字标题，视觉冲击极强',cls:'sv-zaji'},
+    {name:'暗调奢华风',desc:'深色背景+金色元素，高端品牌质感',cls:'sv-bowu'},
+    {name:'3D悬浮立体风',desc:'产品3D漂浮+玻璃质感，当下最火',cls:'sv-3d'},
+    {name:'极简白卡风',desc:'纯白底+产品实物，干净专业',cls:'sv-jianyi'},
+  ],
+  '知识图文': [
+    {name:'3D悬浮立体风',desc:'知识元素3D漂浮+透明质感背景',cls:'sv-3d'},
+    {name:'极简白卡风',desc:'纯白底+结构化排版，信息清晰',cls:'sv-jianyi'},
+    {name:'扁平插画风',desc:'几何色块+简洁图形，现代感强',cls:'sv-saibo'},
+    {name:'博物学手绘风',desc:'精细线稿+科学标注，专业质感',cls:'sv-bowu'},
+  ],
+  '菜谱美食': [
+    {name:'暖色插画风',desc:'橙红+奶白+卡通食材，温馨暖心',cls:'sv-guochao'},
+    {name:'日式手账风',desc:'牛皮纸底+手写体+胶带装饰',cls:'sv-bowu'},
+    {name:'极简白卡风',desc:'白底+黑色线稿，清爽高级',cls:'sv-jianyi'},
+    {name:'复古美食杂志风',desc:'深色背景+金色标题，高端感',cls:'sv-zaji'},
+  ],
+  '社交封面': [
+    {name:'3D悬浮立体风',desc:'玻璃质感+立体漂浮，抓眼球',cls:'sv-3d'},
+    {name:'杂志封面风',desc:'大字标题+高对比色块',cls:'sv-zaji'},
+    {name:'马卡龙少女风',desc:'粉紫奶白+甜美装饰',cls:'sv-makalong'},
+    {name:'赛博霓虹风',desc:'深色+荧光色，未来感强',cls:'sv-saibo'},
+  ],
+  '穿搭时尚': [
+    {name:'时尚杂志风',desc:'大字标题+高对比，时尚感',cls:'sv-zaji'},
+    {name:'马卡龙少女风',desc:'粉紫奶白+爱心，甜美少女',cls:'sv-makalong'},
+    {name:'极简白卡风',desc:'白底+单品拆解，清爽高级',cls:'sv-jianyi'},
+    {name:'复古港风',desc:'做旧滤镜+胶片感，复古韵味',cls:'sv-bowu'},
+  ],
+  '护肤美妆': [
+    {name:'实验室科技风',desc:'白底+分子结构图，专业感',cls:'sv-jianyi'},
+    {name:'日系清透风',desc:'白底+粉色+樱花，清透少女',cls:'sv-makalong'},
+    {name:'高级杂志风',desc:'深色+金色标题，奢华感',cls:'sv-zaji'},
+    {name:'3D悬浮立体风',desc:'产品3D漂浮+镭射光效',cls:'sv-3d'},
+  ],
+  '城市探店': [
+    {name:'手绘插画地图风',desc:'奶油色+手绘线条，温馨可爱',cls:'sv-bowu'},
+    {name:'3D城市浮雕风',desc:'3D微缩建筑+中英双语标注',cls:'sv-3d'},
+    {name:'清新水彩旅游风',desc:'天蓝+草绿+粉橙，清新活力',cls:'sv-saibo'},
+    {name:'国风水墨地图风',desc:'宣纸白+水墨线条+印章',cls:'sv-shuimo'},
+  ],
+  '儿童教育': [
+    {name:'卡通故事绘本风',desc:'柔和色调+大卡通插图，童趣满满',cls:'sv-makalong'},
+    {name:'3D儿童立体风',desc:'卡通3D微缩场景，活泼生动',cls:'sv-3d'},
+    {name:'清新扁平插画风',desc:'天蓝+明黄+薄荷绿，活力阳光',cls:'sv-saibo'},
+    {name:'手绘涂鸦风',desc:'彩虹色+手写字+贴纸感',cls:'sv-guochao'},
+  ],
+  '健身减脂': [
+    {name:'运动科技风',desc:'深蓝+荧光绿+几何线条，力量感',cls:'sv-saibo'},
+    {name:'极简白卡风',desc:'白底+人体线稿+数字标注',cls:'sv-jianyi'},
+    {name:'3D悬浮立体风',desc:'人体/器械3D立体+霓虹光效',cls:'sv-3d'},
+    {name:'国潮运动风',desc:'朱红+黑+汉字大字，热血感',cls:'sv-guochao'},
+  ],
+  '电商产品': [
+    {name:'3D悬浮立体风',desc:'产品3D漂浮+玻璃质感背景',cls:'sv-3d'},
+    {name:'极简白卡风',desc:'白底+产品实物+极简排版',cls:'sv-jianyi'},
+    {name:'暗调奢华风',desc:'深色+金色元素+高端感',cls:'sv-bowu'},
+    {name:'促销撞色风',desc:'高饱和撞色+大字+促销感强',cls:'sv-zaji'},
+  ],
+  '财经理财': [
+    {name:'商务深色风',desc:'深蓝+金色+数据图表，专业感',cls:'sv-saibo'},
+    {name:'极简白卡风',desc:'白底+黑字+彩色图表，清晰',cls:'sv-jianyi'},
+    {name:'扁平数据风',desc:'天蓝+明黄+卡通人物+数字',cls:'sv-3d'},
+    {name:'杂志封面风',desc:'大字标题+高对比色块',cls:'sv-zaji'},
+  ],
+  '室内家装': [
+    {name:'现代简约风',desc:'白色+原木色+灰色+极简家具',cls:'sv-jianyi'},
+    {name:'新中式轻奢风',desc:'深木色+水墨+中式家具+禅意',cls:'sv-shuimo'},
+    {name:'北欧清新风',desc:'浅色系+绿植+原木+棉麻质感',cls:'sv-bowu'},
+    {name:'轻奢现代风',desc:'大理石+金属线条+高级灰',cls:'sv-zaji'},
+  ],
+  'default': [
+    {name:'3D悬浮立体风',desc:'玻璃质感卡片+元素3D漂浮，当下最火',cls:'sv-3d'},
+    {name:'国潮手绘温暖风',desc:'暖红+金黄+做旧纸色，传统国潮质感',cls:'sv-guochao'},
+    {name:'极简白卡风',desc:'纯白底+黑字+留白美学，清爽高级',cls:'sv-jianyi'},
+    {name:'四季浮雕纸雕风',desc:'米白3D微缩立体场景，精致纸雕质感',cls:'sv-bowu'},
+  ],
+};
 
-function renderStyleCards(rawText) {
-  const grid=document.getElementById('style-cards-grid');
-  grid.innerHTML='';
+// 记录每个品类当前显示的batch
+const styleBatchIndex = {};
 
-  let styleList=[];
-  try{
-    // 尝试多种JSON提取方式
-    let jsonStr = rawText;
-    const match1 = rawText.match(/```json([\s\S]*?)```/);
-    const match2 = rawText.match(/\{[\s\S]*?"list"[\s\S]*?\]\s*\}/);
-    if(match1) jsonStr = match1[1].trim();
-    else if(match2) jsonStr = match2[0].trim();
-    const parsed=JSON.parse(jsonStr);
-    if(parsed.list&&Array.isArray(parsed.list))styleList=parsed.list;
-  }catch(e){
-    // 降级：从文字中提取风格名
-    const matches=rawText.match(/[一-龥A-Za-z0-9]+风/g)||[];
-    const unique=[...new Set(matches)].slice(0,4);
-    styleList=unique.map((m,i)=>({option:i+1,style_name:m,desc:'AI推荐风格'}));
+function getLocalStyles(catKey, nextBatch) {
+  const pool = LOCAL_STYLE_POOLS[catKey] || LOCAL_STYLE_POOLS['default'];
+  if (nextBatch) {
+    styleBatchIndex[catKey] = ((styleBatchIndex[catKey] || 0) + 4) % pool.length;
+  }
+  const start = styleBatchIndex[catKey] || 0;
+  // 循环取4个
+  const result = [];
+  for (let i = 0; i < 4; i++) {
+    result.push(pool[(start + i) % pool.length]);
+  }
+  return result;
+}
+
+function switchStyleBatch() {
+  renderStyleCards(true); // true = 换一批
+}
+
+function cancelStyleSelect() {
+  document.getElementById('style-cards-wrap').style.display = 'none';
+  document.getElementById('terminal-wrap').style.display = 'none';
+}
+
+// ============ 本地渲染风格卡片 ============
+function renderStyleCards(nextBatch) {
+  const grid = document.getElementById('style-cards-grid');
+  grid.innerHTML = '';
+
+  const styleList = getLocalStyles(currentCatKey, nextBatch);
+
+  // 响应式
+  if (window.innerWidth < 768) {
+    grid.style.gridTemplateColumns = 'repeat(2,1fr)';
+  } else {
+    grid.style.gridTemplateColumns = 'repeat(4,1fr)';
   }
 
-  if(styleList.length===0){
-    styleList=[
-      {option:1,style_name:'3D悬浮立体风',desc:'玻璃质感卡片+元素3D漂浮+镭射渐变背景，当下最火'},
-      {option:2,style_name:'国潮手绘温暖风',desc:'暖红+金黄+做旧纸色，传统国潮质感'},
-      {option:3,style_name:'极简白卡风',desc:'纯白底+黑字+留白美学，清爽高级'},
-      {option:4,style_name:'四季浮雕纸雕风',desc:'米白3D微缩立体场景，精致纸雕质感'},
-    ];
-  }
-
-  // 确保4张
-  while(styleList.length<4){
-    const defaults=['莫兰迪高级感','赛博朋克风','博物学手绘风','马卡龙少女风'];
-    styleList.push({option:styleList.length+1,style_name:defaults[styleList.length%defaults.length],desc:'AI推荐风格'});
-  }
-
-  styleList.slice(0,4).forEach((s,i)=>{
-    const isFirst=i===0;
-    const visualClass=getStyleVisual(s.style_name||'');
-    const card=document.createElement('div');
-    card.className='style-card'+(isFirst?' style-card-recommended':'');
-    card.innerHTML=`
-      ${isFirst?'<div class="style-card-badge">🏆 AI首选推荐</div>':''}
-      <div class="style-card-visual ${visualClass}" style="height:90px;${isFirst?'margin-top:24px;':''}"></div>
+  styleList.forEach((s, i) => {
+    const isFirst = i === 0;
+    const card = document.createElement('div');
+    card.id = 'style-card-' + i;
+    card.className = 'style-card' + (isFirst ? ' style-card-recommended' : '');
+    card.innerHTML = `
+      ${isFirst ? '<div class="style-card-badge">🏆 AI首选推荐</div>' : ''}
+      <div class="style-card-visual ${s.cls}" style="height:90px;${isFirst ? 'margin-top:24px;' : ''}"></div>
       <div class="style-card-body">
-        <div class="style-card-title">${s.style_name||'风格'+(i+1)}</div>
-        <div class="style-card-desc">${s.desc||'AI推荐风格'}</div>
-        <button class="style-card-btn ${isFirst?'style-card-btn-primary':'style-card-btn-secondary'}" onclick="lockStyle(${s.option||i+1},'${(s.style_name||'').replace(/'/g,'').replace(/"/g,'')}')">
-          ${isFirst?'⚡ 锁定推荐，立即出图':'选择此风格'}
+        <div class="style-card-title">${s.name}</div>
+        <div class="style-card-desc">${s.desc}</div>
+        <button class="style-card-btn ${isFirst ? 'style-card-btn-primary' : 'style-card-btn-secondary'}"
+          onclick="confirmStyle(${i},'${s.name.replace(/'/g,'')}')">
+          ${isFirst ? '⚡ 锁定推荐，立即出图' : '选择此风格'}
         </button>
       </div>
     `;
     grid.appendChild(card);
   });
 
-  // 弹出modal
-  const modal=document.getElementById('style-modal');
-  modal.style.display='flex';
-  // 响应式：窄屏改2列
-  if(window.innerWidth<768){
-    grid.style.gridTemplateColumns='repeat(2,1fr)';
-  }
+  document.getElementById('style-cards-wrap').style.display = 'block';
+  document.getElementById('style-cards-wrap').scrollIntoView({ behavior: 'smooth' });
 }
 
-// ============ 第二轮：生成完整提示词 ============
-async function lockStyle(optionNum,styleName){
-  // 关闭弹窗
-  document.getElementById('style-modal').style.display='none';
+// ============ 确认风格（单轮API，直接出结果）============
+async function confirmStyle(cardIndex, styleName) {
+  const grid = document.getElementById('style-cards-grid');
+  const allCards = grid.querySelectorAll('.style-card');
+  const cancelBtn = document.querySelector('#style-cards-wrap button');
+  if (cancelBtn) cancelBtn.style.display = 'none';
 
-  const termWrap=document.getElementById('terminal-wrap');
-  termWrap.style.display='block';
-  document.getElementById('terminalConsole').innerHTML='';
-  document.getElementById('outSection').style.display='none';
+  // 其他卡片淡出消失
+  allCards.forEach((card, i) => {
+    if (i !== cardIndex) {
+      card.style.transition = 'all 0.4s ease';
+      card.style.opacity = '0';
+      card.style.transform = 'scale(0.9)';
+      setTimeout(() => card.style.display = 'none', 400);
+    }
+  });
 
-  addLog(`⚡ [LOCK] 已锁定方案${optionNum}：${styleName}`,0);
-  addLog(`🪐 [SESSION] 会话记忆锁定，ID: ${globalConversationId}`,300);
-  addLog('📡 [AI] 正在生成完整版提示词...',600);
-  addLog('🌐 [SEARCH] 联网补充最新热门话题标签...',900);
+  // 选中卡片变为单列居中+光圈动画
+  const selectedCard = document.getElementById('style-card-' + cardIndex);
+  setTimeout(() => {
+    grid.style.gridTemplateColumns = '1fr';
+    selectedCard.className = 'style-card style-card-recommended style-card-waiting style-card-single';
+    selectedCard.querySelector('.style-card-body').innerHTML = `
+      <div class="style-card-wait-text">
+        <div style="font-size:15px;font-weight:700;color:var(--gold);margin-bottom:8px;">${styleName}</div>
+        <div class="spin" style="margin:12px auto;"></div>
+        <div style="font-size:13px;color:var(--tx2);margin-top:8px;">AI正在联网搜索爆款内容</div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:4px;">生成完整版提示词中…</div>
+      </div>
+    `;
+  }, 450);
 
-  try{
-    // 发送选项数字，符合扣子智能体的交互协议
-    const query = `${optionNum}`;
-    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query,conversation_id:globalConversationId})});
-    const data=await res.json();
-    if(data.code!==0)throw new Error(data.msg||'第二轮API异常');
-    const msg=data.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
-    if(!msg)throw new Error('未获取到提示词');
+  document.getElementById('outSection').style.display = 'none';
+  document.getElementById('terminal-wrap').style.display = 'none';
 
-    addLog('✨ [SUCCESS] 完整提示词生成完毕！',400);
-    setTimeout(()=>{
-      termWrap.style.display='none';
-      renderFinalOutput(msg.content,styleName);
-    },600);
-  }catch(e){
-    addLog('❌ [ERROR] '+e.message,0);
-    // 重新打开modal让用户重选
-    setTimeout(()=>document.getElementById('style-modal').style.display='flex',1500);
+  // 拼装完整query，单轮搞定
+  const topic = document.getElementById('topic-input').value.trim();
+  const size = document.getElementById('size-pref').value;
+  const query = `请先联网搜索"${topic} 爆款风格"和"${topic} 热门话题标签"获取最新流行信息。
+
+然后直接按系统模板输出完整提示词：
+主题：${topic}
+风格：${styleName}
+尺寸：${size}
+
+严格按格式输出：知识点结构化 → 完整版英文提示词 → 精简版中文提示词 → 即梦参数设置 → 热门话题标签。不需要风格确认，直接出图。`;
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: 'coze',
+        query,
+        file_ids: uploadedFileIds.length > 0 ? uploadedFileIds : undefined,
+      })
+    });
+    const data = await res.json();
+    if (data.code !== 0) throw new Error(data.msg || 'API异常');
+    const msg = data.messages?.find(m => m.role === 'assistant' && m.type === 'answer');
+    if (!msg) throw new Error('未获取到提示词');
+
+    // 卡片淡出，结果出现
+    selectedCard.style.transition = 'all 0.5s ease';
+    selectedCard.style.opacity = '0';
+    selectedCard.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      document.getElementById('style-cards-wrap').style.display = 'none';
+      renderFinalOutput(msg.content, styleName);
+    }, 500);
+
+  } catch(e) {
+    // 失败时恢复卡片
+    selectedCard.className = 'style-card style-card-recommended style-card-single';
+    selectedCard.querySelector('.style-card-wait-text').innerHTML = `
+      <div style="color:#ff4d4f;font-size:13px;margin-bottom:12px;">❌ 生成失败，请重试</div>
+      <button onclick="cancelStyleSelect()" style="background:var(--gold-l);border:1px solid var(--gold);color:var(--gold);border-radius:8px;padding:8px 20px;cursor:pointer;font-size:13px;">重新选择</button>
+    `;
   }
 }
 
