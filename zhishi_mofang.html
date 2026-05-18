@@ -1078,61 +1078,31 @@ function extractPrompt(raw){
 }
 
 // ===== 渲染输出 =====
-function renderOutput(rawContent,styleName){
-  document.getElementById('out-prompt').textContent=cachedPrompt||rawContent;
-  // 动态文案：基于用户输入的主题
+function renderOutput(rawContent,styleName,copywriteContent){
+  // 完整显示扣子第二轮原始输出
+  document.getElementById('out-prompt').textContent=rawContent;
+  // 文案：优先用扣子第三轮返回内容，否则用动态模板
   const userTopic=document.getElementById('main-textarea')?.value.trim()||'AI出图';
   const shortTopic=userTopic.substring(0,12);
-  const xhs=`📕【某书垂类高赞图文引流笔记】
 
-标题：救命！用AI做「${shortTopic}」相关图，首条直接引流500+！😱
-
-家人们！最近发现一个超强出图工具，专门为「${shortTopic}」这类内容打造高质量配图！✨
-
-只需要用大白话说出你的想法，AI自动联网搜爆款参数，秒出大厂级别的「${styleName}」视觉方案！💎
-
-我用它做「${shortTopic}」相关内容，出图质量直接拉满，粉丝说以为是专业设计师做的！🚀
-
-💡 想要同款《33大热门全赛道AI搞钱地图合集》的，下方扣【想要】，我看到就发！👇
-
-#AI生图 #${shortTopic} #某书爆款起号 #副业翻盘日记 #灵创星球 #AI出图
-
-⚠️ 本文案为AI辅助生成，发布前请结合个人真实经历修改，切勿直接复制发布。`;
-  document.getElementById('out-xhs').textContent=xhs;
-  const mp=`🟢【微信公众号深度商业文章】
-
-📌 标题：做「${shortTopic}」内容的必看：如何用AI出图工具实现降维霸屏？
-
-📢 行业开篇：
-做「${shortTopic}」相关内容的创作者越来越多，但真正能做出高质量配图的却寥寥无几。核心原因：大多数人不懂提示词，生图质量参差不齐。
-
-💡 三大解法：
-1️⃣ 用大白话描述想法，AI自动联网匹配「${styleName}」等专业视觉方案
-2️⃣ 一键获取完整英文提示词，直接粘贴到即梦/MJ即可出图
-3️⃣ 配套小红书笔记+话题标签，出图即发布，流量自来
-
-⚠️ 免责声明：本内容仅供学习参考，不构成任何投资、法律、医疗建议。具体情况请咨询专业人士，自主评估风险。`;
-  document.getElementById('out-mp').textContent=mp;
-  const video=`🎬【短视频平台爆款高燃标题】
-1️⃣ 做「${shortTopic}」内容？这个AI出图工具直接帮你出大厂级配图！🔥
-2️⃣ 不懂提示词也没关系！大白话输入，秒出「${styleName}」专业方案！🤫
-3️⃣ 20分钟批量产出「${shortTopic}」系列配图，流量直接起飞！🚀
-
-#️⃣【核心话题标签】
-#AI生图 #${shortTopic} #AI出图 #提示词 #副业搞钱 #灵创星球 #${styleName.replace(/风$/,'')}
-
-================================
-
-💬【评论区截流神评话术】
-
-👉 话术A（资料引导）：
-「🔥 本期视频提到的《AI出图提示词大全.pdf》已打包好！下方扣【提示词】，我看到就发！👇」
-
-👉 话术B（打破认知）：
-「别去买高价培训了！😭 「${shortTopic}」这类内容用AI一键出图，核心就是这套提示词方案。有用直接拿走！🛑」
-
-⚠️ 话术仅供参考，请根据实际情况修改，遵守平台规则。`;
-  document.getElementById('out-video').textContent=video;
+  if(copywriteContent&&copywriteContent.length>50){
+    // 扣子第三轮返回了文案，按内容拆分显示
+    const xhsMatch=copywriteContent.match(/某书([\s\S]*?)(?=公众号|微信|$)/i);
+    const mpMatch=copywriteContent.match(/公众号([\s\S]*?)(?=话题|标签|$)/i);
+    const tagMatch=copywriteContent.match(/#[^
+]{2,}/g);
+    document.getElementById('out-xhs').textContent=xhsMatch?xhsMatch[0].trim():copywriteContent.substring(0,500);
+    document.getElementById('out-mp').textContent=mpMatch?mpMatch[0].trim():copywriteContent.substring(0,500);
+    document.getElementById('out-video').textContent=tagMatch?tagMatch.join(' '):copywriteContent.substring(0,200);
+  } else {
+    // 降级：用动态模板
+    const xhs=`📕【某书垂类高赞图文引流笔记】\n\n标题：做「${shortTopic}」内容？这个AI出图工具直接帮你出大厂级配图！😱\n\n#AI生图 #${shortTopic} #某书爆款起号 #灵创星球`;
+    document.getElementById('out-xhs').textContent=xhs;
+    const mp=`🟢【微信公众号文章】\n\n📌 标题：做「${shortTopic}」内容的必看：如何用AI出图工具实现降维霸屏？\n\n⚠️ 免责声明：本内容仅供学习参考，不构成任何投资、法律建议。`;
+    document.getElementById('out-mp').textContent=mp;
+    const video=`🎬【短视频爆款标题】\n做「${shortTopic}」内容？这个AI工具直接出大厂级提示词！🔥\n\n#AI生图 #${shortTopic} #灵创星球`;
+    document.getElementById('out-video').textContent=video;
+  }
   renderRadar();
   document.getElementById('output-section').style.display='block';
   document.getElementById('output-section').scrollIntoView({behavior:'smooth'});
