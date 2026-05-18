@@ -32,8 +32,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
 /* 公告 */
 #notice-bar{display:none;background:linear-gradient(90deg,#1a1228,#231520,#1a1228);color:var(--gold);font-size:13px;font-weight:700;text-align:center;padding:10px;border-bottom:1px solid var(--bd-gold);letter-spacing:.5px;}
 
-/* 启动遮罩 */
-#boot-mask{position:fixed;inset:0;background:var(--bg-dark);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:20px;}
+
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{width:36px;height:36px;border:3px solid rgba(243,175,66,0.1);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
 .boot-logo{font-size:26px;font-weight:900;color:#fff;}
@@ -273,11 +272,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
 <body>
 
 <div id="notice-bar"></div>
-<div id="boot-mask">
-  <div class="spin"></div>
-  <div class="boot-logo">灵创星球 · <span>AI出图引擎</span></div>
-  <p style="font-size:12px;color:var(--tx3)">正在初始化系统…</p>
-</div>
+
 
 <!-- 锁定页 -->
 <div id="lock-screen">
@@ -367,7 +362,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
 <div id="clip-toast"><span>✓</span><p>已复制到剪贴板</p></div>
 
 <!-- 主面板 -->
-<div id="main-panel" style="display:none;">
+<div id="main-panel" style="display:block;">
 <div class="shell">
 
   <!-- Hero -->
@@ -787,11 +782,13 @@ function setUnlocked(ct){localStorage.setItem(vk('unlocked'),'true');localStorag
 const DEFAULT_CFG={version:'v1',free_times:5,cards:{'次卡':{password:'LC次卡2026',times:50,price:'9.9',label:'50次体验卡'},'月卡':{password:'LC月卡2026',days:30,price:'19.9',label:'30天无限卡'},'永久卡':{password:'LC永久2026',price:'49.9',label:'永久畅享卡'}}};
 
 async function boot(){
-  // 先用默认配置立即显示页面，不等网络
-  CFG = {...DEFAULT_CFG};
-  updateCardUI();initGallery();currentIndustry='默认';renderTopics();updateUsageBadge();
-  document.getElementById('boot-mask').style.display='none';
-  if(isUnlocked()){showMain();}else if(getCount()>=getFreeLimit()){showLock();}else{showMain();}
+  updateCardUI();
+  try{initGallery();}catch(e){}
+  currentIndustry='默认';
+  try{renderTopics();}catch(e){}
+  updateUsageBadge();
+  // 直接判断状态，无遮罩
+  if(getCount()>=getFreeLimit()&&!isUnlocked()){showLock();}
 
   // 后台静默拉取远程配置，拉到了再更新
   try{
@@ -1135,7 +1132,12 @@ function copyAndGo(url){
 }
 
 
-document.addEventListener('DOMContentLoaded',boot);
+// 双保险：DOMContentLoaded和立即执行
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',boot);
+}else{
+  boot();
+}
 </script>
 </body>
 </html>
