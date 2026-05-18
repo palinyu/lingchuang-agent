@@ -114,6 +114,9 @@ textarea:focus{border-color:var(--gold);}
 </head>
 <body>
 
+<!-- 公告栏 -->
+<div id="notice-bar" style="display:none;background:linear-gradient(90deg,var(--gold2),var(--gold));color:#000;font-size:13px;font-weight:700;text-align:center;padding:10px;z-index:100;position:relative;"></div>
+
 <!-- 启动遮罩 -->
 <div id="boot-mask">
   <div class="spin"></div>
@@ -239,9 +242,7 @@ textarea:focus{border-color:var(--gold);}
     <div class="gift-icon">🎁</div>
     <h2>专属大礼包已解锁！</h2>
     <p>感谢支持灵创星球<br>以下资源包免费赠送给你</p>
-    <a href="#" class="gift-btn" id="gift-btn1" target="_blank">📦 资源包一：AI提示词模板库</a>
-    <a href="#" class="gift-btn" id="gift-btn2" target="_blank">🎨 资源包二：4K背景图合集</a>
-    <a href="#" class="gift-btn" id="gift-btn3" target="_blank">✨ 资源包三：商用素材大礼包</a>
+    <div id="gift-btn-area"></div>
     <button class="gift-close" onclick="closeGift()">关闭，进入工具</button>
   </div>
 </div>
@@ -252,12 +253,7 @@ const API_BASE = 'https://www.lcxq88.com';
 const CONFIG_URL = `${API_BASE}/api/api/config`;
 const GENERATE_URL = `${API_BASE}/api/generate`;
 
-// 夸克网盘链接（后续填入）
-const GIFT_LINKS = {
-  link1: 'https://pan.quark.cn/s/填入链接1',
-  link2: 'https://pan.quark.cn/s/填入链接2',
-  link3: 'https://pan.quark.cn/s/填入链接3'
-};
+
 
 let CFG = null;
 let selectedCard = null;
@@ -269,6 +265,7 @@ async function boot() {
     const res = await fetch(CONFIG_URL);
     CFG = await res.json();
     updateCardUI();
+    showNotice();
   } catch(e) {
     CFG = {
       version: 'v1',
@@ -288,6 +285,14 @@ async function boot() {
   } else {
     showLock();
   }
+}
+
+function showNotice() {
+  const notice = CFG?.notice;
+  if (!notice || notice.show === false) return;
+  const bar = document.getElementById('notice-bar');
+  bar.textContent = notice.text || '';
+  bar.style.display = 'block';
 }
 
 function updateCardUI() {
@@ -492,11 +497,29 @@ function copyResult() {
   });
 }
 
-// ============ 礼包弹窗 ============
+// ============ 礼包弹窗（从COS动态读取）============
 function showGift() {
-  document.getElementById('gift-btn1').href = GIFT_LINKS.link1;
-  document.getElementById('gift-btn2').href = GIFT_LINKS.link2;
-  document.getElementById('gift-btn3').href = GIFT_LINKS.link3;
+  const gift = CFG?.gift;
+  if (!gift || gift.show === false) return; // show:false 时不弹出
+
+  // 标题和描述
+  const titleEl = document.querySelector('.gift-card h2');
+  const descEl = document.querySelector('.gift-card p');
+  if (titleEl) titleEl.textContent = gift.title || '专属大礼包已解锁！';
+  if (descEl) descEl.innerHTML = (gift.desc || '').replace(/\n/g, '<br>');
+
+  // 动态生成按钮
+  const btnArea = document.getElementById('gift-btn-area');
+  btnArea.innerHTML = '';
+  (gift.links || []).forEach(link => {
+    const a = document.createElement('a');
+    a.href = link.url || '#';
+    a.target = '_blank';
+    a.className = 'gift-btn';
+    a.textContent = link.label || '领取资源';
+    btnArea.appendChild(a);
+  });
+
   document.getElementById('gift-modal').style.display = 'flex';
 }
 
