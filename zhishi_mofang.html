@@ -906,7 +906,18 @@ function launchCustom(){
   }
   document.getElementById('custom-stage').style.display='none';
   document.getElementById('recommend-stage').style.display='none';
-  launchStyleCards(aiParams.style);
+  // 选了AI联网匹配 → 显示4张风格卡让用户选
+  if(aiParams.style==='AI联网匹配'){
+    launchStyleCards(aiParams.style);
+    return;
+  }
+  // 已选具体风格 → 直接进单卡等待
+  const ts=document.getElementById('thinking-stage');
+  ts.style.display='flex';
+  const tsz=document.getElementById('t-size');if(tsz)tsz.innerHTML=`<span>${aiParams.size}</span>`;
+  const tst=document.getElementById('t-style');if(tst)tst.innerHTML=`<span>${aiParams.style}</span>`;
+  ts.scrollIntoView({behavior:'smooth'});
+  callCoze(aiParams.style);
 }
 
 function goDirectly(){
