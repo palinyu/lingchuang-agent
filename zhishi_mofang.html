@@ -160,7 +160,8 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
 .style-cards-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
 .style-card{background:linear-gradient(145deg,#2d2f39,#14151b,#22242d);border:1px solid var(--bd);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .25s;position:relative;}
 .style-card:hover{border-color:rgba(243,175,66,0.4);transform:translateY(-2px);box-shadow:0 12px 35px rgba(0,0,0,0.5);}
-.style-card-rec{border-color:var(--gold)!important;box-shadow:0 0 25px rgba(243,175,66,0.12)!important;}
+.style-card-rec{border-color:#f3af42!important;box-shadow:0 0 25px rgba(243,175,66,0.15)!important;}
+.style-card.selected-highlight{border-color:#f3af42!important;box-shadow:0 0 30px rgba(243,175,66,0.25)!important;transform:scale(1.02);}
 .style-card-badge{position:absolute;top:0;right:0;background:linear-gradient(135deg,#f3af42,#b87b14);color:#000;font-size:10px;font-weight:800;padding:3px 10px;border-radius:0 0 0 10px;z-index:3;}
 .style-card-visual{height:90px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;position:relative;overflow:hidden;}
 .style-card-visual::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(0,0,0,0.5));pointer-events:none;}
@@ -370,6 +371,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
 
   <!-- Hero -->
   <div class="hero">
+    <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(243,175,66,0.06);border:1px solid rgba(243,175,66,0.2);border-radius:30px;padding:5px 16px;font-size:12px;color:var(--gold);font-weight:700;margin-bottom:14px;letter-spacing:.5px;">🌐 灵创星球 · AI出图引擎</div>
     <h1>心有所想，<span>一键出图</span></h1>
     <p class="hero-sub">大白话描述你的想法 ➔ AI自动匹配风格 ➔ 复制提示词去即梦生图</p>
     <p class="hero-features">全品类覆盖<span>•</span>联网搜爆款<span>•</span>傻瓜式操作</p>
@@ -454,6 +456,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
       <label>🎭 限定全局视觉调性风格</label>
       <select id="style-sel" class="bgs" onchange="handleStyleChange()">
         <option value="auto">🎲 AI联网匹配最火风格（推荐）</option>
+        <option value="custom">✍️ 自定义专属风格（手打输入）➔</option>
         <optgroup label="🔥 当下最火">
           <option value="当下最火">🔥 当下最火（3D悬浮/莫兰迪/全息镭射/意境裂变）</option>
           <option value="3D悬浮立体风">🧊 3D悬浮立体风（玻璃质感+立体漂浮）</option>
@@ -515,9 +518,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
           <option value="萌系Q版风">🐱 萌系Q版风（圆润卡通+马卡龙色）</option>
           <option value="奶油ins风">🤍 奶油ins风（米白+精致阴影）</option>
         </optgroup>
-        <optgroup label="✍️ 自定义">
-          <option value="custom">✍️ 自定义专属风格（手打输入）➔</option>
-        </optgroup>
+
       </select>
     </div>
     <div id="custom-style-dock" class="custom-style-dock">
@@ -562,17 +563,17 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
     <div class="dual-board">
       <div class="engine-wing">
         <div>
-          <div class="wing-title">🔮 1号框：工业级生图提示词矩阵（直接去即梦/MJ生图）</div>
+          <div class="wing-title">🔮 ①提示词：工业级生图提示词矩阵（直接去即梦/MJ生图）</div>
           <div class="prompt-box" id="out-prompt"></div>
           <button class="btn-copy-action" onclick="copyById('out-prompt','生图提示词')">📋 一键复制工业提示词</button>
         </div>
         <div>
-          <div class="wing-title">📕 3号框-A：某书独家垂直高赞引流笔记</div>
+          <div class="wing-title">📕 ③某书笔记：独家垂直高赞引流笔记</div>
           <div class="text-box" id="out-xhs"></div>
           <button class="btn-copy-action" onclick="copyById('out-xhs','小红书笔记')">📝 一键复制某书爆款笔记</button>
         </div>
         <div>
-          <div class="wing-title">🟢 3号框-B：微信公众号深度商业文章骨架</div>
+          <div class="wing-title">🟢 ④公众号：微信公众号深度商业文章骨架</div>
           <div class="text-box" id="out-mp"></div>
           <button class="btn-copy-action" onclick="copyById('out-mp','公众号文章')">📰 一键复制公众号文章</button>
         </div>
@@ -585,7 +586,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
           <button class="btn-copy-action" onclick="copyById('out-video','短视频截流秘籍')">⚡ 一键复制短视频截流秘籍</button>
         </div>
         <div>
-          <div class="wing-title">🎁 2号框：灵创星球专属会员变现福利雷达</div>
+          <div class="wing-title">🎁 ⑤变现雷达：灵创星球专属会员变现福利</div>
           <div class="radar-area" id="radar-area"></div>
         </div>
       </div>
@@ -632,18 +633,19 @@ let lastStyleName = '';
 
 // ===== 品类数据 =====
 const INDUSTRY_DATA = {
-  '营销海报':{formula:'帮我做一张高档商用营销海报图，主题是：[选题]，画面要有强烈视觉冲击力和大厂设计感，核心画面是：',topics:['感恩节促销海报','新店开业重工业海报','极简科技风招商海报','国潮大促盛典壁报','豪车品鉴高端海报','春季美妆上新宣传图']},
-  '知识图文':{formula:'帮我做一张适合知识图文解析的背景配图，主题是：[选题]，要求画面结构工整有科技感，核心内容是：',topics:['光合作用原理','商业大亨搞钱认知图解','高分子材料科技原理','极简风历史人物卡','DNA双螺旋结构','量子力学入门']},
-  '菜谱美食':{formula:'帮我做一张让人极度有食欲的高精美食宣传图，主题是：[选题]，采用高档商业棚拍光影，核心画面是：',topics:['麻辣小龙虾','顶奢黑金法式甜点','深夜食堂日系居酒屋','传统佛跳墙','红烧肉家常版','酸菜鱼家常版']},
-  '社交封面':{formula:'帮我做一张高点赞率的小红书/抖音图文封面图，主题是：[选题]，视觉风格要抓人眼球，核心画面是：',topics:['美食探店网红封面','穿搭博主每日OOTD','小说推文高燃封面','自律搞钱博主黑金封面','健身打卡封面','旅行vlog封面']},
-  '穿搭时尚':{formula:'帮我做一张高质感穿搭时尚图，主题是：[选题]，核心画面是：',topics:['秋冬通勤穿搭公式','梨形身材显瘦穿搭','小个子显高穿搭','黑白灰搭配法则','法式穿搭公式','韩系清新穿搭']},
-  '护肤美妆':{formula:'帮我做一张护肤美妆科普图，主题是：[选题]，核心内容是：',topics:['烟酰胺功效解析','视黄醇抗衰指南','敏感肌护肤步骤','油皮控油方案','防晒成分对比','早C晚A使用法']},
-  '城市探店':{formula:'帮我做一张城市探店/Citywalk攻略图，主题是：[选题]，核心内容是：',topics:['成都太古里打卡','上海安福路探店','北京798艺术区','广州北京路漫游','重庆洪崖洞攻略','杭州西湖周边']},
-  '儿童教育':{formula:'帮我做一张儿童教育知识图解，主题是：[选题]，要求画面生动有趣，核心内容是：',topics:['儿童数字认知','字母ABC学习','加减法趣味图解','恐龙科普图鉴','植物生长过程','动物百科图解']},
-  '健身减脂':{formula:'帮我做一张健身减脂科普图，主题是：[选题]，核心内容是：',topics:['平板支撑标准动作','深蹲正确姿势','臀部训练动作','腹肌撕裂计划','减脂饮食搭配','跑步入门指南']},
-  '电商产品':{formula:'帮我做一张极具质感的电商商用主图/海报，主题是：[选题]，要求突出品级和核心材质，画面是：',topics:['北欧极简不锈钢保温杯','未来科技感智能手表','极轻钛合金高端眼镜','复古原木香薰底座','护肤品主图设计','食品详情页图']},
-  '财经理财':{formula:'帮我做一张财经理财知识科普图，主题是：[选题]，核心内容是：',topics:['基金定投入门','复利原理图解','信用卡使用技巧','理财入门知识','股票K线图解','消费降级攻略']},
-  '室内家装':{formula:'帮我做一张室内家装效果/设计图，主题是：[选题]，核心内容是：',topics:['北欧风客厅设计','新中式卧室效果','轻奢餐厅设计','工业风书房改造','小户型空间利用','儿童房布置方案']},
+  '默认':{formula:'',topics:['光合作用原理','红烧肉的做法','摩羯座性格分析','成都美食地图','烟酰胺护肤','深蹲标准姿势','基金定投入门','秋冬通勤穿搭']},
+  '营销海报':{formula:'帮我做一张高档商用营销海报图，主题是：[选题]，画面要有强烈视觉冲击力和大厂设计感，核心画面是：',topics:['感恩节促销海报','新店开业重工业海报','极简科技风招商海报','国潮大促盛典壁报','豪车品鉴高端海报','春季美妆上新宣传图','双十一活动图','限时优惠促销海报']},
+  '知识图文':{formula:'帮我做一张适合知识图文解析的背景配图，主题是：[选题]，要求画面结构工整有科技感，核心内容是：',topics:['光合作用原理','商业大亨搞钱认知图解','高分子材料科技原理','极简风历史人物卡','DNA双螺旋结构','量子力学入门','宇宙大爆炸理论','人体血液循环原理']},
+  '菜谱美食':{formula:'帮我做一张让人极度有食欲的高精美食宣传图，主题是：[选题]，采用高档商业棚拍光影，核心画面是：',topics:['麻辣小龙虾','顶奢黑金法式甜点','深夜食堂日系居酒屋','传统佛跳墙','红烧肉家常版','酸菜鱼家常版','糖醋排骨步骤','戚风蛋糕烘焙']},
+  '社交封面':{formula:'帮我做一张高点赞率的小红书/抖音图文封面图，主题是：[选题]，视觉风格要抓人眼球，核心画面是：',topics:['美食探店网红封面','穿搭博主每日OOTD','小说推文高燃封面','自律搞钱博主黑金封面','健身打卡封面','旅行vlog封面','读书笔记分享封面','生活记录日记封面']},
+  '穿搭时尚':{formula:'帮我做一张高质感穿搭时尚图，主题是：[选题]，核心画面是：',topics:['秋冬通勤穿搭公式','梨形身材显瘦穿搭','小个子显高穿搭','黑白灰搭配法则','法式穿搭公式','韩系清新穿搭','商务正装搭配','周末休闲穿搭']},
+  '护肤美妆':{formula:'帮我做一张护肤美妆科普图，主题是：[选题]，核心内容是：',topics:['烟酰胺功效解析','视黄醇抗衰指南','敏感肌护肤步骤','油皮控油方案','防晒成分对比','早C晚A使用法','玻尿酸补水原理','干皮护肤全攻略']},
+  '城市探店':{formula:'帮我做一张城市探店/Citywalk攻略图，主题是：[选题]，核心内容是：',topics:['成都太古里打卡','上海安福路探店','北京798艺术区','广州北京路漫游','重庆洪崖洞攻略','杭州西湖周边','深圳海岸城探店','南京夫子庙攻略']},
+  '儿童教育':{formula:'帮我做一张儿童教育知识图解，主题是：[选题]，要求画面生动有趣，核心内容是：',topics:['儿童数字认知','字母ABC学习','加减法趣味图解','恐龙科普图鉴','植物生长过程','动物百科图解','四季认知卡片','交通工具认识']},
+  '健身减脂':{formula:'帮我做一张健身减脂科普图，主题是：[选题]，核心内容是：',topics:['平板支撑标准动作','深蹲正确姿势','臀部训练动作','腹肌撕裂计划','减脂饮食搭配','跑步入门指南','瑜伽基础体式','徒手胸肌训练']},
+  '电商产品':{formula:'帮我做一张极具质感的电商商用主图/海报，主题是：[选题]，要求突出品级和核心材质，画面是：',topics:['北欧极简不锈钢保温杯','未来科技感智能手表','极轻钛合金高端眼镜','复古原木香薰底座','护肤品主图设计','食品详情页图','运动器材展示图','母婴产品主图']},
+  '财经理财':{formula:'帮我做一张财经理财知识科普图，主题是：[选题]，核心内容是：',topics:['基金定投入门','复利原理图解','信用卡使用技巧','理财入门知识','股票K线图解','消费降级攻略','保险配置指南','副业收入规划']},
+  '室内家装':{formula:'帮我做一张室内家装效果/设计图，主题是：[选题]，核心内容是：',topics:['北欧风客厅设计','新中式卧室效果','轻奢餐厅设计','工业风书房改造','小户型空间利用','儿童房布置方案','卫生间改造设计','阳台花园设计']},
 };
 
 // ===== 风格组池 =====
@@ -791,7 +793,7 @@ async function boot(){
   if(!CFG)CFG={version:'v1',free_times:5,cards:{'次卡':{password:'LC次卡2026',times:50,price:'9.9',label:'50次体验卡'},'月卡':{password:'LC月卡2026',days:30,price:'19.9',label:'30天无限卡'},'永久卡':{password:'LC永久2026',price:'49.9',label:'永久畅享卡'}}};
   const notice=CFG.notice;
   if(notice&&notice.show!==false&&notice.text){const bar=document.getElementById('notice-bar');bar.textContent='📢 '+notice.text;bar.style.display='block';}
-  updateCardUI();initGallery();renderTopics();updateUsageBadge();
+  updateCardUI();initGallery();currentIndustry='默认';renderTopics();updateUsageBadge();
   document.getElementById('boot-mask').style.display='none';
   if(isUnlocked()){showMain();}else if(getCount()>=getFreeLimit()){showLock();}else{showMain();}
 }
@@ -808,22 +810,32 @@ function updateCardUI(){
 function selectIndustry(el,name){
   document.querySelectorAll('.industry-pill').forEach(p=>p.classList.remove('active'));
   el.classList.add('active');currentIndustry=name;
-  document.getElementById('topics-label').textContent=`🔥 [${name}] 当季爆款选题（点击直接套用）`;
-  document.getElementById('topic-input').value='';
   renderTopics();
 }
 function renderTopics(){
   const dock=document.getElementById('chips-dock');dock.innerHTML='';
-  const data=INDUSTRY_DATA[currentIndustry]||INDUSTRY_DATA['营销海报'];
+  const isDefault=currentIndustry==='默认';
+  const data=INDUSTRY_DATA[currentIndustry]||INDUSTRY_DATA['默认'];
   data.topics.forEach(t=>{
-    const chip=document.createElement('div');chip.className='topic-chip';chip.textContent='# '+t;
-    chip.onclick=()=>{document.getElementById('topic-input').value=data.formula.replace('[选题]',t);};
+    const chip=document.createElement('div');
+    if(isDefault){
+      chip.className='topic-chip';
+      chip.style.cssText='opacity:0.35;cursor:default;';
+      chip.title='请先选择上方图像类型';
+      chip.textContent='# '+t;
+    }else{
+      chip.className='topic-chip';chip.textContent='# '+t;
+      chip.onclick=()=>{document.getElementById('topic-input').value=data.formula.replace('[选题]',t);};
+    }
     dock.appendChild(chip);
   });
+  document.getElementById('topics-label').textContent=isDefault?'🔥 爆款选题库（请先选择上方图像类型）':`🔥 [${currentIndustry}] 当季爆款选题（点击直接套用）`;
 }
 function shuffleTopics(){
-  const data=INDUSTRY_DATA[currentIndustry]||INDUSTRY_DATA['营销海报'];
-  data.topics.sort(()=>Math.random()-.5);renderTopics();
+  if(currentIndustry==='默认')return;
+  const data=INDUSTRY_DATA[currentIndustry];
+  if(data)data.topics.sort(()=>Math.random()-.5);
+  renderTopics();
 }
 
 // ===== 文件上传 =====
@@ -1017,12 +1029,17 @@ async function callCoze(styleName){
   const size=document.getElementById('size-sel').value;
   const industry=currentIndustry;
   const fileNotice=isFileAttached?'\n【重要多模态指令】：用户已上传参考图/文档，请优先识别并解构图像内容，据此生成提示词。':'';
-  const query=`【当前所属品类】：${industry}
-【限定画布比例】：${size}
-【所选具体风格】：${styleName}
-【大白话描述】：${topic||'（见上传文件）'}${fileNotice}
+  const query=`主题内容：${topic||'见上传文件内容'}
+所属品类：${industry}
+画布比例：${size}
+视觉风格：${styleName}${fileNotice}
 
-【重要直通口令】：严禁触发多轮确认，必须在本轮直接按系统模板格式输出完整提示词。包含：知识点结构化、完整版英文提示词（1600字符以内，即梦可直接用）、精简版中文提示词、即梦参数设置、热门话题标签。直接出图。`;
+请直接输出完整生图提示词，按以下格式：
+📊【知识点结构化】
+🎨【完整版英文提示词】（1600字符以内，即梦直接用）
+📱【精简版中文提示词】
+⚙️即梦设置：模型·图片5.0 Lite｜尺寸·${size}｜强度·0
+📣【话题标签】`;
   try{
     const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query,file_ids:uploadedFileIds.length>0?uploadedFileIds:undefined})});
     const data=await res.json();
@@ -1090,7 +1107,14 @@ function copyById(id,name){
 }
 function copyAndGo(url){
   if(!cachedPrompt){alert('老哥，请先生成提示词！');return;}
-  navigator.clipboard.writeText(cachedPrompt).then(()=>{showToast();setTimeout(()=>window.open(url,'_blank'),800);});
+  navigator.clipboard.writeText(cachedPrompt).then(()=>{
+    // 轻量提示，不遮挡
+    const tip=document.createElement('div');
+    tip.textContent='✓ 提示词已复制，正在跳转…';
+    tip.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(243,175,66,0.95);color:#000;font-size:13px;font-weight:700;padding:10px 22px;border-radius:30px;z-index:99999;';
+    document.body.appendChild(tip);
+    setTimeout(()=>{tip.remove();window.open(url,'_blank');},600);
+  });
 }
 
 
