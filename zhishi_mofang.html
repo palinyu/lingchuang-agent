@@ -143,9 +143,9 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
 .rec-card{background:linear-gradient(145deg,#1a1b25,#0f1015);border:1.5px solid var(--gold);border-radius:16px;padding:24px;box-shadow:0 0 40px rgba(243,175,66,0.1);}
 .rec-badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:11px;font-weight:900;padding:4px 14px;border-radius:20px;margin-bottom:16px;}
 .rec-params{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
-.rec-param{background:rgba(243,175,66,0.06);border:1px solid rgba(243,175,66,0.15);border-radius:8px;padding:8px 14px;font-size:12px;}
-.rec-param-label{color:var(--tx3);font-size:10px;margin-bottom:2px;}
-.rec-param-value{color:var(--gold);font-weight:700;font-size:13px;}
+.rec-param{background:rgba(243,175,66,0.08);border:1px solid rgba(243,175,66,0.25);border-radius:8px;padding:10px 16px;font-size:12px;}
+.rec-param-label{color:rgba(255,255,255,0.5);font-size:10px;margin-bottom:4px;letter-spacing:.3px;}
+.rec-param-value{color:#f3af42;font-weight:800;font-size:14px;text-shadow:0 0 10px rgba(243,175,66,0.4);}
 .rec-actions{display:flex;gap:12px;}
 .btn-confirm-go{flex:1;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;}
 .btn-custom-go{flex:1;background:transparent;color:var(--gold);border:1.5px solid var(--bd-gold);border-radius:10px;padding:13px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
@@ -158,7 +158,7 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
 .custom-panel-title{font-size:13px;font-weight:700;color:var(--tx2);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
 .custom-panel-title span{color:var(--gold);}
 /* 三个可编辑参数 */
-.edit-params{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.edit-params{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;}
 .edit-param{background:#13141e;border:1px solid rgba(243,175,66,0.2);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;position:relative;}
 .edit-param:hover,.edit-param.open{border-color:var(--gold);background:var(--gold-dim);box-shadow:0 0 12px rgba(243,175,66,0.08);}
 .edit-param-label{font-size:10px;color:var(--tx2);margin-bottom:4px;letter-spacing:.3px;}
@@ -448,26 +448,7 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
       <div class="custom-panel-title">⚙️ 高定自定义参数 <span>（修改你不满意的，其余保持AI推荐）</span></div>
       <!-- 三个可编辑参数 -->
       <div class="edit-params">
-        <div class="edit-param" id="ep-category" onclick="toggleDropdown('dd-category')">
-          <div class="edit-param-label">📂 图像品类</div>
-          <div class="edit-param-value" id="epv-category">AI自动识别</div>
-          <div class="edit-param-arrow">▾</div>
-          <div class="edit-dropdown" id="dd-category">
-            <div class="dropdown-item" onclick="setParam('category','AI自动识别',event)">🤖 AI自动识别</div>
-            <div class="dropdown-item" onclick="setParam('category','营销海报',event)">📢 营销海报</div>
-            <div class="dropdown-item" onclick="setParam('category','知识图文',event)">📚 知识图文</div>
-            <div class="dropdown-item" onclick="setParam('category','菜谱美食',event)">🍳 菜谱美食</div>
-            <div class="dropdown-item" onclick="setParam('category','社交封面',event)">📱 社交封面</div>
-            <div class="dropdown-item" onclick="setParam('category','穿搭时尚',event)">👗 穿搭时尚</div>
-            <div class="dropdown-item" onclick="setParam('category','护肤美妆',event)">💄 护肤美妆</div>
-            <div class="dropdown-item" onclick="setParam('category','城市探店',event)">🌆 城市探店</div>
-            <div class="dropdown-item" onclick="setParam('category','儿童教育',event)">👶 儿童教育</div>
-            <div class="dropdown-item" onclick="setParam('category','健身减脂',event)">🏃 健身减脂</div>
-            <div class="dropdown-item" onclick="setParam('category','电商产品',event)">🛍️ 电商产品</div>
-            <div class="dropdown-item" onclick="setParam('category','财经理财',event)">💰 财经理财</div>
-            <div class="dropdown-item" onclick="setParam('category','室内家装',event)">🏠 室内家装</div>
-          </div>
-        </div>
+
         <div class="edit-param" id="ep-size" onclick="toggleDropdown('dd-size')">
           <div class="edit-param-label">📐 输出尺寸</div>
           <div class="edit-param-value" id="epv-size">9:16竖版</div>
@@ -487,18 +468,38 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
           <div class="edit-param-value" id="epv-style">AI联网匹配</div>
           <div class="edit-param-arrow">▾</div>
           <div class="edit-dropdown" id="dd-style">
-            <div class="dropdown-item active" onclick="setParam('style','AI联网匹配',event)">🎲 AI联网匹配最火风格</div>
+            <div class="dropdown-item active" onclick="setParam('style','AI联网匹配',event)">🎲 AI联网匹配最火风格（推荐）</div>
+            <div style="font-size:10px;color:var(--tx3);padding:4px 10px;margin-top:4px;">🔥 当下最火</div>
             <div class="dropdown-item" onclick="setParam('style','3D悬浮立体风',event)">🧊 3D悬浮立体风</div>
             <div class="dropdown-item" onclick="setParam('style','莫兰迪高级感',event)">🎨 莫兰迪高级感</div>
+            <div class="dropdown-item" onclick="setParam('style','镭射全息风',event)">💎 镭射全息风</div>
+            <div class="dropdown-item" onclick="setParam('style','奶油肌理风',event)">🍦 奶油肌理风</div>
+            <div class="dropdown-item" onclick="setParam('style','玻璃态透明风',event)">🔮 玻璃态透明风</div>
+            <div style="font-size:10px;color:var(--tx3);padding:4px 10px;margin-top:4px;">🎋 中式国风</div>
             <div class="dropdown-item" onclick="setParam('style','国风国潮',event)">🎋 国风国潮</div>
-            <div class="dropdown-item" onclick="setParam('style','极简白卡风',event)">⬜ 极简白卡风</div>
             <div class="dropdown-item" onclick="setParam('style','水墨古典风',event)">🖋️ 水墨古典风</div>
-            <div class="dropdown-item" onclick="setParam('style','赛博霓虹风',event)">⚡ 赛博霓虹风</div>
-            <div class="dropdown-item" onclick="setParam('style','马卡龙少女风',event)">🎀 马卡龙少女风</div>
-            <div class="dropdown-item" onclick="setParam('style','暖色插画风',event)">🍊 暖色插画风</div>
+            <div class="dropdown-item" onclick="setParam('style','四季浮雕纸雕风',event)">🌿 四季浮雕纸雕风</div>
+            <div class="dropdown-item" onclick="setParam('style','敦煌壁画风',event)">🏔️ 敦煌壁画风</div>
+            <div class="dropdown-item" onclick="setParam('style','青花瓷风',event)">🫖 青花瓷风</div>
+            <div style="font-size:10px;color:var(--tx3);padding:4px 10px;margin-top:4px;">📚 知识图解</div>
+            <div class="dropdown-item" onclick="setParam('style','极简白卡风',event)">⬜ 极简白卡风</div>
+            <div class="dropdown-item" onclick="setParam('style','扁平插画风',event)">📐 扁平插画风</div>
+            <div class="dropdown-item" onclick="setParam('style','数据可视化风',event)">📊 数据可视化风</div>
             <div class="dropdown-item" onclick="setParam('style','博物学手绘风',event)">🔬 博物学手绘风</div>
-            <div class="dropdown-item" onclick="setParam('style','杂志封面风',event)">📰 杂志封面风</div>
-            <div class="dropdown-item" onclick="setParam('style','自定义',event)">✍️ 自定义风格</div>
+            <div style="font-size:10px;color:var(--tx3);padding:4px 10px;margin-top:4px;">🌸 生活美食</div>
+            <div class="dropdown-item" onclick="setParam('style','暖色插画风',event)">🍊 暖色插画风</div>
+            <div class="dropdown-item" onclick="setParam('style','日系治愈风',event)">🍃 日系治愈风</div>
+            <div class="dropdown-item" onclick="setParam('style','手绘水彩风',event)">🖌️ 手绘水彩风</div>
+            <div style="font-size:10px;color:var(--tx3);padding:4px 10px;margin-top:4px;">💄 美妆时尚</div>
+            <div class="dropdown-item" onclick="setParam('style','马卡龙少女风',event)">🎀 马卡龙少女风</div>
+            <div class="dropdown-item" onclick="setParam('style','高级杂志风',event)">📰 高级杂志风</div>
+            <div class="dropdown-item" onclick="setParam('style','奢华黑金风',event)">🖤 奢华黑金风</div>
+            <div style="font-size:10px;color:var(--tx3);padding:4px 10px;margin-top:4px;">⚡ 科技游戏</div>
+            <div class="dropdown-item" onclick="setParam('style','赛博霓虹风',event)">⚡ 赛博霓虹风</div>
+            <div class="dropdown-item" onclick="setParam('style','商务深色风',event)">💼 商务深色风</div>
+            <div class="dropdown-item" onclick="setParam('style','星际宇宙风',event)">🌌 星际宇宙风</div>
+            <div style="font-size:10px;color:var(--tx3);padding:4px 10px;margin-top:4px;">✍️ 自定义</div>
+            <div class="dropdown-item" onclick="setParam('style','自定义',event)">✍️ 手打自定义风格</div>
           </div>
         </div>
       </div>
@@ -852,7 +853,6 @@ function showRecommendCard(category,size,style){
   const paramsEl=document.getElementById('rec-params');
   if(paramsEl){
     paramsEl.innerHTML=`
-      <div class="rec-param"><div class="rec-param-label">📂 图像品类</div><div class="rec-param-value">${category}</div></div>
       <div class="rec-param"><div class="rec-param-label">📐 输出尺寸</div><div class="rec-param-value">${size}</div></div>
       <div class="rec-param"><div class="rec-param-label">🎨 视觉风格</div><div class="rec-param-value">${style}</div></div>
       ${selectedBubbles.length>0?`<div class="rec-param"><div class="rec-param-label">✦ 追加方向</div><div class="rec-param-value">${selectedBubbles.join('·')}</div></div>`:''}
@@ -864,8 +864,6 @@ function showRecommendCard(category,size,style){
 // ===== 第5阶：高定面板 =====
 function openCustom(){
   document.getElementById('custom-stage').style.display='block';
-  // 同步当前AI推荐值到高定面板
-  setParamValue('category',aiParams.category);
   setParamValue('size',aiParams.size);
   setParamValue('style',aiParams.style);
   document.getElementById('custom-stage').scrollIntoView({behavior:'smooth'});
@@ -1038,10 +1036,9 @@ async function callCoze(styleName){
   const bubbleTags=selectedBubbles.length>0?`\n追加出图方向：${selectedBubbles.join('、')}`:'';
   const fileNotice=isFileAttached?'\n【多模态指令】：用户已上传参考图/文档，请优先识别内容并据此生成提示词。':'';
 
-  // 简洁query格式，匹配扣子智能体的输入协议
-  const query=`${topic||'请识别上传文件内容'}
+  // 最简query，完全匹配扣子智能体协议
+  const query=`${topic||'请识别上传文件内容作为主题'}
 
-【当前所属品类】：${category}
 【限定画布比例】：${size}
 【所选具体小流派】：${styleName}${bubbleTags?'\n【追加出图方向】：'+bubbleTags:''}${fileNotice}`;
 
