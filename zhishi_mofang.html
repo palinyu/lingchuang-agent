@@ -6,7 +6,15 @@
 <title>灵创星球 · AI出图引擎</title>
 <script>
 const CONFIG_URL = '/api/config';
-let CFG = null;
+// 立即初始化默认配置，不等网络
+let CFG = {
+  version:'v1',free_times:5,
+  cards:{
+    '次卡':{password:'LC次卡2026',times:50,price:'9.9',label:'50次体验卡'},
+    '月卡':{password:'LC月卡2026',days:30,price:'19.9',label:'30天无限卡'},
+    '永久卡':{password:'LC永久2026',price:'49.9',label:'永久畅享卡'}
+  }
+};
 let selectedCard = null;
 let currentPassword = null;
 </script>
@@ -778,16 +786,13 @@ function getCardType(){return localStorage.getItem(vk('cardtype'))||'';}
 function setUnlocked(ct){localStorage.setItem(vk('unlocked'),'true');localStorage.setItem(vk('cardtype'),ct);}
 
 // ===== 启动 =====
-// 默认配置，不依赖网络
-const DEFAULT_CFG={version:'v1',free_times:5,cards:{'次卡':{password:'LC次卡2026',times:50,price:'9.9',label:'50次体验卡'},'月卡':{password:'LC月卡2026',days:30,price:'19.9',label:'30天无限卡'},'永久卡':{password:'LC永久2026',price:'49.9',label:'永久畅享卡'}}};
-
 async function boot(){
-  updateCardUI();
-  try{initGallery();}catch(e){}
+  try{updateCardUI();}catch(e){console.log('updateCardUI err',e);}
+  try{initGallery();}catch(e){console.log('initGallery err',e);}
   currentIndustry='默认';
-  try{renderTopics();}catch(e){}
-  updateUsageBadge();
-  // 直接判断状态，无遮罩
+  try{renderTopics();}catch(e){console.log('renderTopics err',e);}
+  try{updateUsageBadge();}catch(e){}
+  // 判断是否需要锁定
   if(getCount()>=getFreeLimit()&&!isUnlocked()){showLock();}
 
   // 后台静默拉取远程配置，拉到了再更新
