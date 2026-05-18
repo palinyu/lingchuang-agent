@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script>
-const CONFIG_URL = '/api/api/config';
+const CONFIG_URL = '/api/config';
 let CFG = null;
 let selectedCard = null;
 let currentPassword = null;
@@ -662,9 +662,18 @@ function setUnlocked(ct) { localStorage.setItem(vkey('unlocked'), 'true'); local
 // ============ 启动 ============
 async function boot() {
   try {
-    const res = await fetch(CONFIG_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    // 3秒超时，避免COS网络慢导致长时间转圈
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3000);
+    const res = await fetch(CONFIG_URL + '?t=' + Date.now(), {
+      cache: 'no-store',
+      signal: controller.signal
+    });
+    clearTimeout(timer);
     if (res.ok) CFG = await res.json();
-  } catch(e) {}
+  } catch(e) {
+    // 超时或失败，用本地默认配置，不影响使用
+  }
   if (!CFG) CFG = { version:'v1', free_times:5, cards:{ '次卡':{password:'LC次卡2026',times:50,price:'9.9',label:'50次体验卡'}, '月卡':{password:'LC月卡2026',days:30,price:'19.9',label:'30天无限卡'}, '永久卡':{password:'LC永久2026',price:'49.9',label:'永久畅享卡'} } };
   const notice = CFG.notice;
   if (notice && notice.show !== false && notice.text) {
@@ -797,7 +806,7 @@ async function handleFileSelect(files) {
     statusEl.textContent=`⏳ 正在上传 ${file.name}...`;
     try{
       const base64=await fileToBase64(file);
-      const res=await fetch('/api/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze-upload',file_base64:base64,file_name:file.name,file_type:file.type||'application/octet-stream'})});
+      const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze-upload',file_base64:base64,file_name:file.name,file_type:file.type||'application/octet-stream'})});
       const data=await res.json();
       if(data.data?.id){
         uploadedFileIds.push(data.data.id);
@@ -860,7 +869,7 @@ ${style!=='AI自动匹配'?'风格偏好：'+style:''}
 然后等待用户选择。`;
 
   try{
-    const res=await fetch('/api/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query,file_ids:uploadedFileIds.length>0?uploadedFileIds:undefined})});
+    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query,file_ids:uploadedFileIds.length>0?uploadedFileIds:undefined})});
     const data=await res.json();
     if(data.code!==0)throw new Error(data.msg||'扣子API响应异常');
     globalConversationId=data.conversation_id;
@@ -960,7 +969,7 @@ async function lockStyle(optionNum,styleName){
   try{
     // 发送选项数字，符合扣子智能体的交互协议
     const query = `${optionNum}`;
-    const res=await fetch('/api/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query,conversation_id:globalConversationId})});
+    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query,conversation_id:globalConversationId})});
     const data=await res.json();
     if(data.code!==0)throw new Error(data.msg||'第二轮API异常');
     const msg=data.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
@@ -1038,7 +1047,7 @@ async function generateCopywrite(){
   addLog('🌐 [SEARCH] 联网搜索当前热门话题和爆款标题...',400);
 
   try{
-    const res=await fetch('/api/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query:'X',conversation_id:globalConversationId})});
+    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query:'X',conversation_id:globalConversationId})});
     const data=await res.json();
     if(data.code!==0)throw new Error(data.msg||'文案生成失败');
     const msg=data.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
