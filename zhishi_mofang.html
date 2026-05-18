@@ -88,9 +88,9 @@ body::after{content:"";position:fixed;width:700px;height:700px;background:radial
 .showcase-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:8px;}
 .showcase-scroll::-webkit-scrollbar{display:none;}
 .showcase-track{display:flex;gap:10px;width:max-content;}
-.showcase-card{width:140px;flex-shrink:0;cursor:pointer;transition:transform .2s;}
+.showcase-card{width:140px;flex-shrink:0;cursor:pointer;transition:transform .2s;user-select:none;}
 .showcase-card:hover{transform:translateY(-4px);}
-.showcase-img-wrap{width:140px;height:196px;border-radius:10px;overflow:hidden;position:relative;background:rgba(255,255,255,0.03);border:1px solid var(--bd);}
+.showcase-img-wrap{width:140px;height:196px;border-radius:10px;overflow:hidden;position:relative;background:rgba(255,255,255,0.03);border:1px solid var(--bd);flex-shrink:0;}
 .showcase-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
 .showcase-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.75));padding:16px 8px 8px;opacity:0;transition:opacity .2s;}
 .showcase-card:hover .showcase-overlay{opacity:1;}
@@ -252,9 +252,33 @@ textarea{resize:vertical;min-height:100px;line-height:1.7;}
         <p style="color:var(--tx2);font-size:13px;margin-bottom:12px;" id="pay-desc">请使用微信扫描下方二维码</p>
         <div class="pay-amount">¥<span id="pay-price">9.9</span></div>
         <div class="qr-box"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%BE%AE%E4%BF%A1%E6%94%B6%E6%AC%BE%E7%A0%81/%E6%94%B6%E6%AC%BE%E7%A0%81.jpg" alt="收款码"/></div>
-        <p class="pay-hint">💡 付款时请备注所选套餐名称</p>
-        <button class="btn-paid" onclick="onPaid()">✅ 我已付款，立即获取密码</button>
+        <p class="pay-hint">💡 付款时备注套餐名称，付完截图发给我确认</p>
+        <button class="btn-paid" onclick="onPaid()">✅ 已付款，去领取今日暗号</button>
         <button class="btn-back" onclick="backToSelect()">← 重新选择套餐</button>
+      </div>
+    </div>
+
+    <!-- 步骤二点五：引导关注服务号领暗号 -->
+    <div id="step-gzhguide" style="display:none;">
+      <div class="pay-card" style="border-color:rgba(245,196,74,0.4);">
+        <h3 style="color:var(--gold);">📮 关注服务号领取暗号</h3>
+        <p style="color:var(--tx2);font-size:13px;margin-bottom:16px;line-height:1.8;">
+          付款截图发给我确认后<br>我会私发给你<span style="color:var(--gold);font-weight:700;">今日专属暗号</span><br>然后按以下步骤领取密码：
+        </p>
+        <div style="background:rgba(245,196,74,0.06);border:1px solid rgba(245,196,74,0.15);border-radius:12px;padding:16px;margin-bottom:16px;text-align:left;">
+          <div style="font-size:13px;color:var(--tx);line-height:2;">
+            <div>① 扫码关注 <span style="color:var(--gold);font-weight:700;">灵创星球</span> 服务号</div>
+            <div>② 在对话框发送我给你的<span style="color:var(--gold);font-weight:700;">今日暗号</span></div>
+            <div>③ 服务号自动回复你的<span style="color:var(--gold);font-weight:700;">专属密码</span></div>
+            <div>④ 回到这里输入密码解锁 🎉</div>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:10px;width:160px;height:160px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+          <img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%BE%AE%E4%BF%A1%E6%94%B6%E6%AC%BE%E7%A0%81/%E5%85%AC%E4%BC%97%E5%8F%B7.jpg" style="width:100%;height:100%;object-fit:contain;">
+        </div>
+        <p style="font-size:11px;color:var(--tx3);margin-bottom:16px;">扫码关注后发送暗号即可获取密码</p>
+        <button class="btn-next" onclick="showStep('input')" style="margin-bottom:10px;">已拿到密码，去输入解锁 →</button>
+        <button class="btn-back" onclick="showStep('pay')">← 返回付款页</button>
       </div>
     </div>
     <div id="step-verify" style="text-align:center;padding:40px 20px;">
@@ -331,8 +355,8 @@ textarea{resize:vertical;min-height:100px;line-height:1.7;}
     <div class="showcase-header">
       <div><div class="showcase-title">✨ 真实出图效果</div><div class="showcase-sub">复制提示词 → 即梦粘贴 → 直接出图</div></div>
     </div>
-    <div class="showcase-scroll">
-      <div class="showcase-track">
+    <div class="showcase-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:8px;cursor:grab;">
+      <div class="showcase-track" style="display:flex;gap:10px;width:max-content;padding:0 4px;">
         <div class="showcase-card"><div class="showcase-img-wrap"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/3D%E8%8D%B7%E8%8A%B1.png" loading="lazy" onclick="zoomImg(this.src)" style="cursor:zoom-in;" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">3D悬浮立体风</span></div></div><div class="showcase-info">植物科普</div></div>
         <div class="showcase-card"><div class="showcase-img-wrap"><img onclick="zoomImg(this.src)" style="cursor:zoom-in;" src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E6%A1%82%E8%8A%B1.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">国风水彩</span></div></div><div class="showcase-info">植物科普</div></div>
         <div class="showcase-card"><div class="showcase-img-wrap"><img onclick="zoomImg(this.src)" style="cursor:zoom-in;" src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E8%8B%8F%E5%B7%9E3D.png" loading="lazy" onerror="this.parentElement.style.background='rgba(255,255,255,0.03)'"><div class="showcase-overlay"><span class="showcase-style">3D城市浮雕</span></div></div><div class="showcase-info">城市文化</div></div>
@@ -371,7 +395,8 @@ textarea{resize:vertical;min-height:100px;line-height:1.7;}
         <label>🔥 爆款选题（点击直接用）</label>
         <button onclick="switchTopicBatch()" style="font-size:11px;color:var(--gold);background:none;border:none;cursor:pointer;padding:0;">换一批 →</button>
       </div>
-      <div id="hot-topics" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      <div id="hot-topics" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;"></div>
+      <div id="topic-hint" style="font-size:11px;color:var(--tx3);margin-top:2px;">👆 先选择上方品类，选题库自动切换为对应内容</div>
     </div>
     <div style="margin-bottom:14px;">
       <label id="input-label">用大白话描述你想做的图（越详细越好）</label>
@@ -587,12 +612,25 @@ let uploadedFileIds = [];
 let currentCatPrefix = '';
 let topicBatch = 0;
 
-const HOT_TOPICS = [
-  ['光合作用原理','石斛麦冬功效','摩羯座性格','红烧肉做法','成都美食地图','烟酰胺护肤','深蹲标准姿势','基金定投入门'],
-  ['冬天的故宫','敏感肌护肤','时间管理四象限','重庆洪崖洞打卡','视黄醇抗衰','秋冬通勤穿搭','复利原理图解','光合作用知识卡'],
-  ['天蝎座恋爱','糖醋排骨步骤','北京胡同文化','平板支撑动作','黄芪补气食疗','简历写作要点','春天的西湖','烘焙戚风蛋糕'],
-  ['梨形身材穿搭','枸杞的功效','上海安福路探店','基金怎么买','儿童数字认知','职场PPT技巧','臀部训练动作','四六级高频词汇'],
-];
+// 品类对应的选题库
+const CAT_TOPICS = {
+  '默认': ['光合作用原理','石斛麦冬功效','摩羯座性格分析','红烧肉做法','成都美食地图','烟酰胺护肤','深蹲标准姿势','基金定投入门'],
+  '营销海报': ['新品上市海报','促销活动海报','品牌宣传图','节日营销海报','产品发布海报','双十一活动图','开业宣传海报','限时优惠海报'],
+  '知识图文': ['光合作用原理','人体血液循环','宇宙大爆炸理论','DNA双螺旋结构','量子力学入门','黑洞形成原理','地震是怎么发生的','火山喷发原理'],
+  '菜谱美食': ['红烧肉做法','糖醋排骨步骤','麻婆豆腐正宗','酸菜鱼家常版','蒜蓉虾的秘诀','番茄炒蛋升级','可乐鸡翅入味','土豆丝清脆技巧'],
+  '社交封面': ['减脂打卡封面','旅行vlog封面','美食探店封面','知识分享封面','穿搭日记封面','读书笔记封面','健身日记封面','生活记录封面'],
+  '穿搭时尚': ['秋冬通勤穿搭','梨形身材显瘦','小个子显高穿搭','黑白灰搭配法','法式穿搭公式','韩系清新穿搭','商务正装搭配','周末休闲穿搭'],
+  '护肤美妆': ['烟酰胺功效解析','视黄醇抗衰指南','玻尿酸补水原理','敏感肌护肤步骤','油皮控油方案','防晒成分对比','早C晚A使用法','干皮护肤攻略'],
+  '城市探店': ['成都太古里打卡','上海安福路探店','北京798艺术区','广州北京路漫游','重庆洪崖洞攻略','杭州西湖周边','深圳海岸城探店','南京夫子庙攻略'],
+  '儿童教育': ['儿童数字认知','字母ABC学习','加减法趣味图解','恐龙科普图鉴','植物生长过程','动物百科图解','四季认知卡片','交通工具认识'],
+  '健身减脂': ['平板支撑标准','深蹲正确姿势','臀部训练动作','腹肌撕裂计划','减脂饮食搭配','跑步入门指南','瑜伽基础体式','徒手胸肌训练'],
+  '电商产品': ['护肤品主图设计','食品详情页图','服装展示海报','电子产品海报','家居产品主图','母婴产品海报','运动器材展示','零食包装设计'],
+  '财经理财': ['基金定投入门','复利原理图解','信用卡使用技巧','理财入门知识','股票K线图解','保险配置指南','消费降级攻略','副业收入规划'],
+  '室内家装': ['北欧风客厅设计','新中式卧室效果','轻奢餐厅设计','工业风书房改造','小户型空间利用','儿童房布置方案','卫生间改造设计','阳台花园设计'],
+};
+
+let currentCatKey = '默认';
+let catTopicBatch = 0;
 
 // 风格卡背景映射
 const STYLE_VISUALS = {
@@ -635,7 +673,7 @@ async function boot() {
     bar.style.display = 'block';
   }
   updateCardUI();
-  renderHotTopics(0);
+  renderHotTopics('默认');
   document.getElementById('boot-mask').style.display = 'none';
   if (isUnlocked()) { showMain(); }
   else if (getCount() >= getFreeLimit()) { showLock(); }
@@ -657,25 +695,47 @@ function setCat(el, cat, prefix) {
   document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
   el.classList.add('active');
   currentCatPrefix = prefix;
+  currentCatKey = cat;
+
+  // 更新选题库
+  renderHotTopics(cat);
+
+  // 更新输入框
   const input = document.getElementById('topic-input');
-  if (!input.value || input.value.startsWith(currentCatPrefix) || document.querySelectorAll('.cat-chip.active').length === 1) {
-    input.value = prefix;
-    input.focus();
-    input.setSelectionRange(prefix.length, prefix.length);
-  }
+  input.value = prefix;
+  input.focus();
+  input.setSelectionRange(prefix.length, prefix.length);
   document.getElementById('input-label').textContent = cat + ' · 补充你的具体内容';
 }
 
 // ============ 选题库 ============
-function renderHotTopics(batch) {
+function renderHotTopics(catKey) {
   const container = document.getElementById('hot-topics');
-  const topics = HOT_TOPICS[batch % HOT_TOPICS.length];
+  const topics = CAT_TOPICS[catKey] || CAT_TOPICS['默认'];
+  const isDefault = catKey === '默认';
   container.innerHTML = topics.map(t =>
-    `<span onclick="useTopic('${t}')" style="padding:5px 11px;background:rgba(245,196,74,0.05);border:1px solid rgba(245,196,74,0.12);border-radius:16px;font-size:11px;color:var(--tx2);cursor:pointer;transition:all .2s;white-space:nowrap;" onmouseover="this.style.borderColor='rgba(245,196,74,0.4)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(245,196,74,0.12)';this.style.color='var(--tx2)'">🔥 ${t}</span>`
+    isDefault
+      ? `<span style="padding:5px 11px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:16px;font-size:11px;color:var(--tx3);cursor:default;white-space:nowrap;opacity:0.5;" title="请先选择上方品类">🔥 ${t}</span>`
+      : `<span onclick="useTopic('${t}')" style="padding:5px 11px;background:rgba(245,196,74,0.05);border:1px solid rgba(245,196,74,0.12);border-radius:16px;font-size:11px;color:var(--tx2);cursor:pointer;transition:all .2s;white-space:nowrap;" onmouseover="this.style.borderColor='rgba(245,196,74,0.4)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='rgba(245,196,74,0.12)';this.style.color='var(--tx2)'">🔥 ${t}</span>`
   ).join('');
+
+  // 提示文字
+  const hint = document.getElementById('topic-hint');
+  if (hint) {
+    hint.textContent = isDefault ? '👆 先选择上方品类，选题库自动切换为对应内容' : `已切换为「${catKey}」相关选题，点击直接填入`;
+    hint.style.color = isDefault ? 'var(--tx3)' : 'var(--gold)';
+  }
 }
-function switchTopicBatch() { topicBatch++; renderHotTopics(topicBatch); }
+
+function switchTopicBatch() {
+  // 在当前品类内换一批（暂时未实现，品类内topic固定8个）
+  if (currentCatKey !== '默认') {
+    renderHotTopics(currentCatKey);
+  }
+}
+
 function useTopic(t) {
+  if (currentCatKey === '默认') return; // 未选品类不可点
   document.getElementById('topic-input').value = currentCatPrefix ? currentCatPrefix + t : t;
   document.getElementById('topic-input').focus();
 }
@@ -683,12 +743,12 @@ function useTopic(t) {
 // ============ 锁定界面 ============
 function showLock() { document.getElementById('main-panel').style.display='none'; document.getElementById('lock-screen').style.display='flex'; showStep('select'); }
 function showMain() { document.getElementById('lock-screen').style.display='none'; document.getElementById('main-panel').style.display='block'; updateUsageBar(); }
-function showStep(s) { ['select','pay','verify','password','input'].forEach(x => document.getElementById('step-'+x).style.display='none'); document.getElementById('step-'+s).style.display='block'; }
+function showStep(s) { ['select','pay','verify','password','input','gzhguide'].forEach(x => { const el=document.getElementById('step-'+x); if(el)el.style.display='none'; }); const target=document.getElementById('step-'+s); if(target)target.style.display='block'; }
 function selectCard(name) { selectedCard=name; document.querySelectorAll('.card-item').forEach(el=>el.classList.remove('selected')); document.getElementById('card-'+name).classList.add('selected'); const btn=document.getElementById('btn-next'); btn.disabled=false; btn.textContent=`解锁 ${CFG.cards[name]?.label||name} →`; }
 function goToPay() { if(!selectedCard)return; const info=CFG.cards[selectedCard]; document.getElementById('pay-price').textContent=info.price; document.getElementById('pay-desc').textContent=`${info.label} · 付款后点击下方按钮获取密码`; showStep('pay'); }
 function backToSelect() { showStep('select'); }
 function showInputStep() { showStep('input'); }
-function onPaid() { showStep('verify'); setTimeout(()=>{ currentPassword=CFG.cards[selectedCard]?.password||''; document.getElementById('pwd-display').textContent=currentPassword; showStep('password'); },2000); }
+function onPaid() { showStep('gzhguide'); }
 function copyPassword() { if(!currentPassword)return; navigator.clipboard.writeText(currentPassword).then(()=>{ const btn=document.querySelector('.btn-copy-pwd'); btn.textContent='✅ 已复制！'; setTimeout(()=>btn.textContent='📋 一键复制密码',2000); }); }
 function goToInputStep() { document.getElementById('pwd-input').value=currentPassword||''; showStep('input'); }
 function doUnlock() {
@@ -1018,6 +1078,17 @@ function copyAndGo(e){
 }
 
 document.addEventListener('DOMContentLoaded', boot);
+
+// 展示墙拖拽滚动
+document.addEventListener('DOMContentLoaded', () => {
+  const scroll = document.querySelector('.showcase-scroll');
+  if (!scroll) return;
+  let isDown = false, startX, scrollLeft;
+  scroll.addEventListener('mousedown', e => { isDown=true; scroll.style.cursor='grabbing'; startX=e.pageX-scroll.offsetLeft; scrollLeft=scroll.scrollLeft; });
+  scroll.addEventListener('mouseleave', () => { isDown=false; scroll.style.cursor='grab'; });
+  scroll.addEventListener('mouseup', () => { isDown=false; scroll.style.cursor='grab'; });
+  scroll.addEventListener('mousemove', e => { if(!isDown)return; e.preventDefault(); const x=e.pageX-scroll.offsetLeft; scroll.scrollLeft=scrollLeft-(x-startX); });
+});
 </script>
 </body>
 </html>
