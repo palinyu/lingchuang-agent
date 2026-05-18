@@ -164,22 +164,23 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
 .style-card.selected-highlight{border-color:#f3af42!important;box-shadow:0 0 30px rgba(243,175,66,0.25)!important;transform:scale(1.02);}
 .style-card-badge{position:absolute;top:0;right:0;background:linear-gradient(135deg,#f3af42,#b87b14);color:#000;font-size:10px;font-weight:800;padding:3px 10px;border-radius:0 0 0 10px;z-index:3;}
 .style-card-visual{height:90px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;position:relative;overflow:hidden;}
-.style-card-visual::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(0,0,0,0.5));pointer-events:none;}
-.scv-emoji{font-size:26px;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.6));position:relative;z-index:1;}
-.scv-name{font-size:10px;color:rgba(255,255,255,0.7);font-weight:600;letter-spacing:.05em;text-shadow:0 1px 4px rgba(0,0,0,0.9);position:relative;z-index:1;}
+.style-card-visual::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 30%,rgba(255,255,255,0.06),transparent 70%);pointer-events:none;z-index:0;}
+.style-card-visual::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,0.6));pointer-events:none;z-index:0;}
+.scv-emoji{font-size:28px;filter:drop-shadow(0 0 12px rgba(255,255,255,0.4));position:relative;z-index:2;}
+.scv-name{font-size:10px;color:rgba(255,255,255,0.85);font-weight:700;letter-spacing:.06em;text-shadow:0 1px 6px rgba(0,0,0,1);position:relative;z-index:2;}
 /* 视觉背景 */
-.sv-3d{background:radial-gradient(ellipse at 30% 50%,rgba(80,130,255,0.35),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(150,80,255,0.25),transparent 60%),linear-gradient(135deg,#050520,#0d0d35,#1a1a50);}
-.sv-guochao{background:radial-gradient(ellipse at 50% 50%,rgba(220,60,30,0.35),transparent 65%),linear-gradient(135deg,#1a0505,#380e05,#550f0f);}
-.sv-shuimo{background:radial-gradient(ellipse at 50% 50%,rgba(100,80,60,0.3),transparent 70%),linear-gradient(135deg,#f0ebe0,#e5e0d5,#ddd8c8);}
-.sv-jianyi{background:radial-gradient(ellipse at 50% 30%,rgba(200,200,200,0.3),transparent 70%),linear-gradient(135deg,#f8f8f6,#f0f0ee,#e8e8e6);}
-.sv-bowu{background:radial-gradient(ellipse at 50% 50%,rgba(150,120,70,0.3),transparent 70%),linear-gradient(135deg,#15100a,#22180d,#302314);}
-.sv-saibo{background:radial-gradient(ellipse at 30% 50%,rgba(0,220,180,0.2),transparent 50%),radial-gradient(ellipse at 70% 50%,rgba(255,0,180,0.2),transparent 50%),linear-gradient(135deg,#020210,#080820,#101030);}
-.sv-makalong{background:radial-gradient(ellipse at 40% 50%,rgba(255,140,200,0.3),transparent 50%),radial-gradient(ellipse at 60% 50%,rgba(180,130,255,0.25),transparent 50%),linear-gradient(135deg,#1a0f20,#28153a,#201030);}
-.sv-zaji{background:radial-gradient(ellipse at 50% 30%,rgba(220,60,60,0.35),transparent 60%),linear-gradient(135deg,#0a0205,#18040a,#250508);}
-.sv-luxury{background:radial-gradient(ellipse at 50% 50%,rgba(180,140,50,0.25),transparent 65%),linear-gradient(145deg,#100d05,#1c1708,#14100a);}
-.sv-sport{background:radial-gradient(ellipse at 30% 50%,rgba(0,200,100,0.25),transparent 50%),linear-gradient(135deg,#030d20,#051830,#082040);}
-.sv-morandi{background:radial-gradient(ellipse at 50% 50%,rgba(180,170,160,0.3),transparent 70%),linear-gradient(135deg,#d8d0c8,#ccc4bc,#c0b8b0);}
-.sv-bohao{background:radial-gradient(ellipse at 50% 30%,rgba(100,160,220,0.3),transparent 60%),linear-gradient(135deg,#e8f0f8,#dce8f4,#d0e0ee);}
+.sv-3d{background:radial-gradient(circle at 25% 40%,rgba(120,180,255,0.5),transparent 50%),radial-gradient(circle at 75% 60%,rgba(180,80,255,0.4),transparent 50%),linear-gradient(135deg,#020215,#080830,#12124a);box-shadow:inset 0 0 30px rgba(100,150,255,0.08);}
+.sv-guochao{background:radial-gradient(circle at 50% 30%,rgba(255,80,30,0.5),transparent 55%),radial-gradient(circle at 80% 80%,rgba(200,140,0,0.3),transparent 45%),linear-gradient(145deg,#120303,#2a0808,#400a0a);}
+.sv-shuimo{background:radial-gradient(circle at 30% 60%,rgba(80,60,40,0.4),transparent 60%),linear-gradient(145deg,#e8e2d8,#ddd7cc,#d2ccc0);border-bottom:2px solid rgba(0,0,0,0.1);}
+.sv-jianyi{background:radial-gradient(circle at 50% 30%,rgba(255,255,255,0.8),transparent 60%),linear-gradient(145deg,#f5f5f3,#ededeb,#e5e5e3);border-bottom:2px solid rgba(0,0,0,0.05);}
+.sv-bowu{background:radial-gradient(circle at 40% 40%,rgba(180,140,70,0.35),transparent 55%),linear-gradient(145deg,#0e0a04,#1a1308,#261c0c);}
+.sv-saibo{background:radial-gradient(circle at 30% 50%,rgba(0,255,200,0.3),transparent 45%),radial-gradient(circle at 70% 50%,rgba(255,0,200,0.3),transparent 45%),linear-gradient(135deg,#010108,#060618,#0c0c28);}
+.sv-makalong{background:radial-gradient(circle at 35% 45%,rgba(255,160,220,0.5),transparent 50%),radial-gradient(circle at 65% 55%,rgba(200,140,255,0.4),transparent 50%),linear-gradient(135deg,#150a1a,#200f2a,#1a0e28);}
+.sv-zaji{background:radial-gradient(circle at 50% 30%,rgba(255,60,60,0.5),transparent 50%),radial-gradient(circle at 80% 70%,rgba(180,30,30,0.3),transparent 40%),linear-gradient(145deg,#080103,#140306,#1e0408);}
+.sv-luxury{background:radial-gradient(circle at 50% 40%,rgba(220,170,50,0.4),transparent 55%),linear-gradient(145deg,#0c0902,#181305,#201a08);border-top:1px solid rgba(220,170,50,0.2);}
+.sv-sport{background:radial-gradient(circle at 30% 50%,rgba(0,220,120,0.4),transparent 50%),radial-gradient(circle at 70% 50%,rgba(0,180,255,0.2),transparent 50%),linear-gradient(135deg,#020a18,#040f28,#061530);}
+.sv-morandi{background:radial-gradient(circle at 50% 40%,rgba(200,185,170,0.5),transparent 60%),linear-gradient(145deg,#cec6bc,#c2bab0,#b6aea4);}
+.sv-bohao{background:radial-gradient(circle at 40% 40%,rgba(120,180,240,0.4),transparent 55%),linear-gradient(145deg,#dce8f5,#d0dff0,#c4d6eb);}
 .style-card-body{padding:12px 13px 13px;}
 .style-card-title{font-size:12px;font-weight:700;color:#fff;margin-bottom:3px;}
 .style-card-rec .style-card-title{color:var(--gold);}
@@ -381,14 +382,14 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
   <!-- 展示墙 -->
   <div class="gallery-wall">
     <div class="gallery-header">
-      <div class="gallery-header-title">✨ 真实出图效果（复制提示词 ➔ 即梦粘贴 ➔ 直接出图）</div>
+      <div class="gallery-header-title">✨ 真实出图效果（复制提示词 ➔ 灵创星球/即梦粘贴 ➔ 直接出图）</div>
       <div class="gallery-header-sub">底层内置工业级高精光影参数，摒弃复杂咒语，完美锁死高溢价商业级调性</div>
     </div>
     <div class="gallery-track" id="gallery-track"></div>
   </div>
 
   <!-- 行业大类 -->
-  <div class="section-title">选择图像类型大类</div>
+  <div class="section-title">选择图像类型大类（可选，也可直接在输入框手打描述）</div>
   <div class="industry-grid">
     <div class="industry-pill active" onclick="selectIndustry(this,'营销海报')">📢 营销海报</div>
     <div class="industry-pill hot" onclick="selectIndustry(this,'知识图文')"><span class="pill-badge">👑 变现之王</span>📚 知识图文</div>
@@ -407,7 +408,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
   <!-- 选题面板 -->
   <div class="topics-panel">
     <div class="topics-header">
-      <div class="topics-label" id="topics-label">🔥 [营销海报] 当季爆款选题（点击直接套用）</div>
+      <div class="topics-label" id="topics-label">🔥 爆款选题快捷入口（选择上方类型后解锁，或直接在输入框手打）</div>
       <button class="btn-shuffle" onclick="shuffleTopics()">换一批 ➔</button>
     </div>
     <div class="chips-dock" id="chips-dock"></div>
@@ -418,7 +419,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
 
   <!-- 输入框 -->
   <div class="input-container">
-    <textarea id="topic-input" placeholder="请在这里用大白话描述你的画面内容，或点击上方爆款选题直接套用…&#10;&#10;💡 无需专业词汇，说清楚意思就行&#10;💡 可上传参考图/文档/手写稿，AI自动识别内容"></textarea>
+    <textarea id="topic-input" placeholder="请在这里用大白话描述你的画面内容，或点击上方爆款选题直接套用…&#10;&#10;💡 示例：做一张光合作用科普图 / 红烧肉步骤图 / 成都美食地图 / 梨形身材穿搭公式…&#10;💡 也可上传参考图/文档/手写稿，AI自动识别内容生成提示词&#10;💡 无需专业词汇，说清楚意思即可"></textarea>
     <div class="input-toolbar">
       <input type="file" id="file-input" style="display:none;" accept="image/*,.pdf,.doc,.docx" onchange="handleFileSelect(this)">
       <button class="btn-attach" onclick="document.getElementById('file-input').click()">📎 上传参考图 / 文档 / 手写稿</button>
@@ -1029,17 +1030,12 @@ async function callCoze(styleName){
   const size=document.getElementById('size-sel').value;
   const industry=currentIndustry;
   const fileNotice=isFileAttached?'\n【重要多模态指令】：用户已上传参考图/文档，请优先识别并解构图像内容，据此生成提示词。':'';
-  const query=`主题内容：${topic||'见上传文件内容'}
-所属品类：${industry}
-画布比例：${size}
-视觉风格：${styleName}${fileNotice}
+  // 完全对照扣子智能体系统提示词的输入格式
+const query=`${topic||'请识别上传文件内容作为主题'}
 
-请直接输出完整生图提示词，按以下格式：
-📊【知识点结构化】
-🎨【完整版英文提示词】（1600字符以内，即梦直接用）
-📱【精简版中文提示词】
-⚙️即梦设置：模型·图片5.0 Lite｜尺寸·${size}｜强度·0
-📣【话题标签】`;
+【当前所属品类】：${industry==='默认'?'AI自动识别':industry}
+【限定画布比例】：${size}
+【所选具体小流派】：${styleName}${fileNotice}`;
   try{
     const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query,file_ids:uploadedFileIds.length>0?uploadedFileIds:undefined})});
     const data=await res.json();
@@ -1065,8 +1061,18 @@ async function callCoze(styleName){
 }
 
 function extractPrompt(raw){
-  const m=raw.match(/完整版[（(]推荐[）)][\s\S]{0,30}：?\s*([\s\S]*?)(?=📱|精简版|⚙️|$)/);
-  return m?m[1].trim():raw;
+  // 尝试提取完整版英文提示词
+  const patterns=[
+    /完整版[（(]推荐[）)][^：:]*[：:]\s*([\s\S]*?)(?=📱|精简版|⚙️|即梦设置|$)/,
+    /📋\s*完整版[^：:]*[：:]\s*([\s\S]*?)(?=📱|精简版|⚙️|$)/,
+    /完整英文提示词[^：:]*[：:]\s*([\s\S]*?)(?=精简|中文|⚙️|$)/,
+  ];
+  for(const p of patterns){const m=raw.match(p);if(m&&m[1].trim().length>20)return m[1].trim();}
+  // 找最长的英文段落
+  const enBlocks=raw.match(/[A-Za-z][^，。
+]{100,}/g)||[];
+  if(enBlocks.length>0)return enBlocks.sort((a,b)=>b.length-a.length)[0];
+  return raw;
 }
 
 // ===== 渲染输出 =====
