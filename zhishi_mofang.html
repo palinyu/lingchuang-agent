@@ -783,20 +783,31 @@ function getCardType(){return localStorage.getItem(vk('cardtype'))||'';}
 function setUnlocked(ct){localStorage.setItem(vk('unlocked'),'true');localStorage.setItem(vk('cardtype'),ct);}
 
 // ===== 启动 =====
+// 默认配置，不依赖网络
+const DEFAULT_CFG={version:'v1',free_times:5,cards:{'次卡':{password:'LC次卡2026',times:50,price:'9.9',label:'50次体验卡'},'月卡':{password:'LC月卡2026',days:30,price:'19.9',label:'30天无限卡'},'永久卡':{password:'LC永久2026',price:'49.9',label:'永久畅享卡'}}};
+
 async function boot(){
-  try{
-    const ctrl=new AbortController();
-    const t=setTimeout(()=>ctrl.abort(),3000);
-    const res=await fetch(CONFIG_URL+'?t='+Date.now(),{cache:'no-store',signal:ctrl.signal});
-    clearTimeout(t);
-    if(res.ok)CFG=await res.json();
-  }catch(e){}
-  if(!CFG)CFG={version:'v1',free_times:5,cards:{'次卡':{password:'LC次卡2026',times:50,price:'9.9',label:'50次体验卡'},'月卡':{password:'LC月卡2026',days:30,price:'19.9',label:'30天无限卡'},'永久卡':{password:'LC永久2026',price:'49.9',label:'永久畅享卡'}}};
-  const notice=CFG.notice;
-  if(notice&&notice.show!==false&&notice.text){const bar=document.getElementById('notice-bar');bar.textContent='📢 '+notice.text;bar.style.display='block';}
+  // 先用默认配置立即显示页面，不等网络
+  CFG = {...DEFAULT_CFG};
   updateCardUI();initGallery();currentIndustry='默认';renderTopics();updateUsageBadge();
   document.getElementById('boot-mask').style.display='none';
   if(isUnlocked()){showMain();}else if(getCount()>=getFreeLimit()){showLock();}else{showMain();}
+
+  // 后台静默拉取远程配置，拉到了再更新
+  try{
+    const ctrl=new AbortController();
+    const t=setTimeout(()=>ctrl.abort(),1500);
+    const res=await fetch(CONFIG_URL+'?t='+Date.now(),{cache:'no-store',signal:ctrl.signal});
+    clearTimeout(t);
+    if(res.ok){
+      const remoteCFG=await res.json();
+      CFG=remoteCFG;
+      // 更新公告
+      const notice=CFG.notice;
+      if(notice&&notice.show!==false&&notice.text){const bar=document.getElementById('notice-bar');bar.textContent='📢 '+notice.text;bar.style.display='block';}
+      updateCardUI();updateUsageBadge();
+    }
+  }catch(e){/* 网络慢或失败，用默认配置继续 */}
 }
 
 function updateCardUI(){
