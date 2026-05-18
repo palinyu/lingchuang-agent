@@ -56,7 +56,6 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
 .free-tip-bar{background:rgba(243,175,66,0.04);border:1px solid var(--bd-gold);border-radius:8px;padding:10px 14px;text-align:center;font-size:13px;color:var(--tx2);margin-bottom:16px;}
 .free-tip-bar button{background:none;border:none;color:var(--gold);font-weight:700;cursor:pointer;font-size:13px;}
 .card-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
-.card-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
 .card-item{background:#13141a;border:1px solid var(--bd);border-radius:12px;padding:14px 18px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:space-between;}
 .card-item:hover,.card-item.selected{border-color:var(--gold);background:var(--gold-dim);box-shadow:0 0 15px rgba(243,175,66,0.08);}
 .card-info h3{font-size:14px;font-weight:700;color:var(--tx);margin-bottom:3px;}
@@ -120,7 +119,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
 .pill-badge{position:absolute;top:-8px;right:-2px;background:linear-gradient(135deg,#f3af42,#b87b14);color:#000;font-size:9px;font-weight:900;padding:1px 6px;border-radius:10px 10px 10px 0;letter-spacing:.2px;z-index:10;box-shadow:0 2px 6px rgba(0,0,0,0.5);}
 
 /* 选题面板 */
-.topics-panel{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:24px;}
+.topics-panel(background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:24px;}
 .topics-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
 .topics-label{font-size:13px;font-weight:700;color:#fff;}
 .btn-shuffle{background:transparent;border:none;color:var(--gold);font-size:12px;cursor:pointer;font-weight:700;}
@@ -128,7 +127,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
 .topic-chip{background:#191b24;border:1px solid rgba(255,255,255,0.03);border-radius:16px;padding:6px 13px;font-size:12px;color:var(--tx2);cursor:pointer;transition:all .2s;}
 .topic-chip:hover{background:#222533;color:#fff;border-color:rgba(243,175,66,0.2);}
 
-/* 输入区 */
+/* 配额 */
 .quota-bar{text-align:right;font-size:12px;color:var(--tx3);margin-bottom:10px;}
 .quota-bar span{color:var(--gold);font-weight:800;}
 .input-container{background:var(--input-bg);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:20px;transition:all .3s;}
@@ -211,7 +210,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
 .thinking-value span{color:var(--gold);}
 @keyframes spin-ring{to{transform:rotate(360deg)}}
 .atom-ring{width:44px;height:44px;border:3px solid rgba(243,175,66,0.08);border-top-color:var(--gold);border-right-color:var(--gold);border-radius:50%;box-shadow:0 0 20px var(--gold-glow);animation:spin-ring .9s linear infinite;}
-.thinking-status(color:#cbd5e1;font-size:12px;line-height:1.7;margin-top:28px;}
+.thinking-status{color:#cbd5e1;font-size:12px;line-height:1.7;margin-top:28px;}
 
 /* ===== 双栏输出 ===== */
 #output-section{display:none;margin-bottom:24px;}
@@ -245,7 +244,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
 .tag-gold{background:rgba(243,175,66,0.1);color:var(--gold);}
 .tag-green{background:rgba(34,197,94,0.1);color:#22c55e;}
 .hub-card{background:linear-gradient(145deg,#20222e,#0e0f14);border:1px solid var(--bd-gold);border-radius:14px;padding:24px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(243,175,66,0.06);}
-.hub-logo{width:42px;height:42px;background:var(--gold);border-radius50%;font-size:22px;color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;box-shadow:0 0 15px var(--gold-glow);margin-bottom:12px;}
+.hub-logo{width:42px;height:42px;background:var(--gold);border-radius:50%;font-size:22px;color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;box-shadow:0 0 15px var(--gold-glow);margin-bottom:12px;}
 .hub-title{font-size:15px;font-weight:900;color:#fff;margin-bottom:4px;}
 .hub-sub{font-size:11px;color:var(--tx3);margin-bottom:16px;}
 .btn-hub{width:100%;padding:11px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;text-decoration:none;display:block;}
@@ -293,7 +292,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
         <div class="card-list">
           <div class="card-item" onclick="selectCard('次卡')" id="card-次卡"><div class="card-info"><h3>⚡ 次卡</h3><p id="label-次卡">50次体验卡</p></div><div class="card-price">¥<span id="price-次卡">9.9</span></div></div>
           <div class="card-item" onclick="selectCard('月卡')" id="card-月卡"><div class="card-info"><h3>🌙 月卡</h3><p id="label-月卡">30天无限卡</p></div><div class="card-price">¥<span id="price-月卡">19.9</span></div></div>
-          <div class="card-item" onclick="selectCard('永久卡')" id="card-永久卡"><div class="card-info"><h3♾️ 永久卡</h3><p id="label-永久卡">永久畅享卡</p></div><div class="card-price">¥<span id="price-永久卡">49.9</span></div></div>
+          <div class="card-item" onclick="selectCard('永久卡')" id="card-永久卡"><div class="card-info"><h3>♾️ 永久卡</h3><p id="label-永久卡">永久畅享卡</p></div><div class="card-price">¥<span id="price-永久卡">49.9</span></div></div>
         </div>
         <button class="btn-next" id="btn-next" onclick="goToPay()" disabled>选择套餐后继续 →</button>
       </div>
@@ -455,7 +454,7 @@ body{background:var(--bg-dark);color:var(--tx);font-family:system-ui,-apple-syst
           <option value="3D悬浮立体风">🧊 3D悬浮立体风（玻璃质感+立体漂浮）</option>
           <option value="莫兰迪高级感">🎨 莫兰迪高级感（低饱和高级灰）</option>
           <option value="镭射全息风">💎 镭射全息风（彩虹光效+金属质感）</option>
-          <option value="奶油肌理风">🍦 奶油肌理风（米白细腻质感）</option>
+          <option value="奶油肌理风">🍦奶油肌理风（米白细腻质感）</option>
           <option value="玻璃态透明风">🔮 玻璃态透明风（毛玻璃+高级透明感）</option>
         </optgroup>
         <optgroup label="🎏 中式国风">
@@ -624,12 +623,12 @@ let lastStyleName = '';
 // ===== 品类数据 =====
 const INDUSTRY_DATA = {
   '默认':{formula:'',topics:['光合作用原理','红烧肉的做法','摩羯座性格分析','成都美食地图','烟酰胺护肤','深蹲标准姿势','基金定投入门','秋冬通勤穿搭']},
-  '营销海报':{formula:'帮我做一张高档商用营销海报图，主题是：[选题]，画面要有强烈视觉冲击力和大厂设计感，核心画面是：',topics:['感恩节促销海报','新店开业重工业海报','极简科技风招商海报','国潮大促盛典壁报','豪车品鉴高端海报','春季美妆上新宣传图','双十一活动图','限时优惠促销海报']},
+  '营销海报':{formula:'帮我做一张高档商用营销海报图，主题是：[选题]，画面要有强烈视觉冲击力和大厂设计感，核心画面 is：',topics:['感恩节促销海报','新店开业重工业海报','极简科技风招商海报','国潮大促盛典壁报','豪车品鉴高端海报','春季美妆上新宣传图','双十一活动图','限时优惠促销海报']},
   '知识图文':{formula:'帮我做一张适合知识图文解析的背景配图，主题是：[选题]，要求画面结构工整有科技感，核心内容是：',topics:['光合作用原理','商业大亨搞钱认知图解','高分子材料科技原理','极简风历史人物卡','DNA双螺旋结构','量子力学入门','宇宙大爆炸理论','人体血液循环原理']},
   '菜谱美食':{formula:'帮我做一张让人极度有食欲的高精美食宣传图，主题是：[选题]，采用高档商业棚拍光影，核心画面是：',topics:['麻辣小龙虾','顶奢黑金法式甜点','深夜食堂日系治愈居酒屋','传统佛跳墙','红烧肉家常版','酸菜鱼家常版','糖醋排骨步骤','戚风蛋糕烘焙']},
   '社交封面':{formula:'帮我做一张高点赞率的小红书/抖音图文封面图，主题是：[选题]，视觉风格要抓人眼球，核心画面是：',topics:['美食探店网红封面','穿搭博主每日OOTD','小说推文高燃封面','自律搞钱博主黑金封面','健身打卡封面','旅行vlog封面','读书笔记分享封面','生活记录日记封面']},
   '穿搭时尚':{formula:'帮我做一张高质感穿搭时尚图，主题是：[选题]，核心画面是：',topics:['秋冬通勤穿搭公式','梨形身材显瘦穿搭','小个子显高穿搭','黑白灰搭配法则','法式穿搭公式','韩系清新穿搭','商务正装搭配','周末休闲穿搭']},
-  '护肤美妆':{formula:'帮我做一张护肤美妆科普图，主题是：[选题]，核心内容是：',topics:['烟酰胺功效解析','视黄醇抗衰指南','敏感肌护肤步骤','油皮控油方案','防晒成分对比','早C晚A使用法','玻尿酸补水原理','干皮护肤全攻略']},
+  '护肤美妆':{formula:'帮我做一张护肤美妆科普图，主题是：[选题]，核心内容是：',topics:['烟酰胺功效解析','视黄醇抗衰指南','敏感肌护肤步骤','油皮控油方案','防晒成分对比','早C晚A使用法','玻浅酸补水原理','干皮护肤全攻略']},
   '城市探店':{formula:'帮我做一张城市探店/Citywalk攻略图，主题是：[选题]，核心内容是：',topics:['成都太古里打卡','上海安福路探店','北京798艺术区','广州北京路漫游','重庆洪崖洞攻略','杭州西湖周边','深圳海岸城探店','南京夫子庙攻略']},
   '儿童教育':{formula:'帮我做一张儿童教育知识图解，主题是：[选题]，要求画面生动有趣，核心内容是：',topics:['儿童数字认知','字母ABC学习','加减法趣味图解','恐龙科普图鉴','植物生长过程','动物百科图解','四季认知卡片','交通工具认识']},
   '健身减脂':{formula:'帮我做一张健身减脂科普图，主题是：[选题]，核心内容是：',topics:['平板支撑标准动作','深蹲正确姿势','臀部训练动作','腹肌撕裂计划','减脂饮食搭配','跑步入门指南','瑜伽基础体式','徒手胸肌训练']},
@@ -815,7 +814,7 @@ function selectIndustry(el,name){
 function renderTopics(){
   const dock=document.getElementById('chips-dock');dock.innerHTML='';
   const isDefault=currentIndustry==='默认';
-  const data=INDUSTRY_MAP[currentIndustry]||INDUSTRY_MAP['默认'];
+  const data=INDUSTRY_DATA[currentIndustry]||INDUSTRY_DATA['默认'];
   data.topics.forEach(t=>{
     const chip=document.createElement('div');
     if(isDefault){
