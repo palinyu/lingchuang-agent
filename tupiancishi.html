@@ -101,7 +101,7 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
 .analysis-card{background:linear-gradient(145deg,#1a1b25,#0f1015);border:1.5px solid var(--gold);border-radius:16px;padding:24px;box-shadow:0 0 40px rgba(243,175,66,0.1);}
 .analysis-badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:11px;font-weight:900;padding:4px 14px;border-radius:20px;margin-bottom:16px;}
 .analysis-grid{display:block;margin-bottom:16px;}
-.analysis-item{background:rgba(243,175,66,0.06);border:1px solid rgba(243,175,66,0.2);border-radius:10px;padding:10px 14px;flex:0 0 auto;width:calc(50% - 4px);min-width:110px;box-sizing:border-box;}
+.analysis-item{background:rgba(243,175,66,0.06);border:1px solid rgba(243,175,66,0.2);border-radius:10px;padding:10px 14px;}
 .analysis-item-label{font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px;letter-spacing:.3px;}
 .analysis-item-value{font-size:12px;font-weight:700;color:#f3af42;line-height:1.5;}
 /* 内容识别列表区 */
@@ -643,13 +643,28 @@ function showAnalysisCard(raw){
   if(!grid) return;
   grid.innerHTML='';
 
-  // === 左右两栏布局容器 ===
-  var row=document.createElement('div');
-  row.style.cssText='display:flex;gap:12px;margin-bottom:14px;align-items:flex-start;';
+  var fields=[
+    {keys:['品类判定'],icon:'📂',label:'目标品类锁定'},
+    {keys:['用户类型'],icon:'👤',label:'预设受众类型'},
+    {keys:['匹配手法'],icon:'🎯',label:'顶配出图手法'},
+    {keys:['本次随机风格','本次指定风格','随机风格','指定风格'],icon:'🎨',label:'AI出航风格'},
+    {keys:['推荐尺寸'],icon:'📐',label:'黄金画布尺寸'},
+  ];
 
-  // === 左栏：内容识别列表 ===
-  var leftCol=document.createElement('div');
-  leftCol.style.cssText='flex:0 0 200px;min-width:160px;';
+  // === 上部：5个字段横向排列（2行3列）===
+  var topRow=document.createElement('div');
+  topRow.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;';
+  fields.forEach(function(f){
+    var val=parseFieldFromRaw(raw,f.keys);
+    if(val&&val.length>1){
+      var item=document.createElement('div');item.className='analysis-item';
+      item.innerHTML='<div class="analysis-item-label">'+f.icon+' '+f.label+'</div><div class="analysis-item-value">'+val.substring(0,50)+'</div>';
+      topRow.appendChild(item);
+    }
+  });
+  if(topRow.children.length>0) grid.appendChild(topRow);
+
+  // === 下部：内容要点列表横向展示（每条一行，紧凑）===
   var contentItems=parseContentList(raw);
   if(contentItems.length===0){
     var sv=parseFieldFromRaw(raw,['内容识别']);
@@ -658,48 +673,24 @@ function showAnalysisCard(raw){
   if(contentItems.length>0){
     var block=document.createElement('div');
     block.className='analysis-content-block';
-    block.style.marginBottom='0';
     var title=document.createElement('div');title.className='acb-title';title.textContent='✅ 内容要点提炼';
     var ul=document.createElement('ul');ul.className='acb-list';
+    // 横向两列布局
+    ul.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:0 12px;';
     contentItems.forEach(function(txt,i){
       var li=document.createElement('li');
-      li.innerHTML='<span class="acb-num">'+(i+1)+'</span><span class="acb-txt">'+txt.substring(0,80)+'</span>';
+      li.innerHTML='<span class="acb-num">'+(i+1)+'</span><span class="acb-txt">'+txt.substring(0,60)+'</span>';
       ul.appendChild(li);
     });
     block.appendChild(title);block.appendChild(ul);
-    leftCol.appendChild(block);
+    grid.appendChild(block);
   }
-
-  // === 右栏：小卡片网格 ===
-  var rightCol=document.createElement('div');
-  rightCol.style.cssText='flex:1;display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;';
-  var fields=[
-    {keys:['品类判定'],icon:'📂',label:'目标品类锁定'},
-    {keys:['用户类型'],icon:'👤',label:'预设受众类型'},
-    {keys:['匹配手法'],icon:'🎯',label:'顶配出图手法'},
-    {keys:['本次随机风格','本次指定风格','随机风格','指定风格'],icon:'🎨',label:'AI出航风格'},
-    {keys:['推荐尺寸'],icon:'📐',label:'黄金画布尺寸'},
-  ];
-  fields.forEach(function(f){
-    var val=parseFieldFromRaw(raw,f.keys);
-    if(val&&val.length>1){
-      var item=document.createElement('div');item.className='analysis-item';
-      item.innerHTML='<div class="analysis-item-label">'+f.icon+' '+f.label+'</div><div class="analysis-item-value">'+val.substring(0,60)+'</div>';
-      rightCol.appendChild(item);
-    }
-  });
-
-  // 拼装
-  if(contentItems.length>0) row.appendChild(leftCol);
-  if(rightCol.children.length>0) row.appendChild(rightCol);
-  if(row.children.length>0) grid.appendChild(row);
 
   if(grid.children.length===0){
     var ra=document.getElementById('analysis-raw');
     if(ra){ra.textContent=raw;ra.style.display='block';}
   }
 
-  // === 提取推荐尺寸和风格 ===
   var sizeVal=parseFieldFromRaw(raw,['推荐尺寸']);
   var styleVal=parseFieldFromRaw(raw,['本次随机风格','本次指定风格','随机风格','指定风格']);
   aiRecSize=sizeVal||'AI推荐尺寸';
@@ -762,11 +753,16 @@ function showCustomPanel(){document.getElementById('custom-stage').style.display
 function handleCustomStyleChange(){var val=(document.getElementById('custom-style')||{}).value;var d=document.getElementById('custom-style-text');if(d)d.style.display=val==='custom_input'?'block':'none';}
 function launchCustom(){var sizeEl=document.getElementById('custom-size');var sizeVal=sizeEl?sizeEl.value:'A';var sizeTxt=sizeEl&&sizeEl.selectedOptions[0]?sizeEl.selectedOptions[0].text.split('·')[0].trim():sizeVal;var styleVal=(document.getElementById('custom-style')||{}).value||'custom_input';var styleText='';if(styleVal==='custom_input'){styleText=((document.getElementById('custom-style-text')||{}).value||'').trim();if(!styleText){alert('请输入你的专属风格词组！');return;}}else{styleText=styleVal;}userCustomSize=sizeTxt;userCustomStyle=styleText.substring(0,20);document.getElementById('custom-stage').style.display='none';var ts=document.getElementById('thinking-stage');ts.style.display='flex';var sz=document.getElementById('t-size');var sy=document.getElementById('t-style');if(sz)sz.textContent=userCustomSize;if(sy)sy.textContent=userCustomStyle;ts.scrollIntoView({behavior:'smooth'});callCoze('3',currentConvId,false).then(function(r){currentConvId=r.conversation_id||currentConvId;return callCoze(sizeVal,currentConvId,false);}).then(function(r){currentConvId=r.conversation_id||currentConvId;return callCoze('4',currentConvId,false);}).then(function(r){currentConvId=r.conversation_id||currentConvId;return callCoze(styleText,currentConvId,false);}).then(function(r){currentConvId=r.conversation_id||currentConvId;var msg=r.messages&&r.messages.filter(function(m){return m.role==='assistant'&&m.type==='answer';})[0];if(!msg)throw new Error('未获取到内容');var hasP=msg.content.indexOf('即梦生图提示词')>=0||msg.content.indexOf('完整版（推荐）')>=0||/[A-Za-z ,.\-]{80,}/.test(msg.content);showResult(msg.content);}).catch(function(e){var s=document.getElementById('t-status');if(s){s.style.color='#ef4444';s.textContent='❌ 失败：'+e.message;}setTimeout(function(){document.getElementById('thinking-stage').style.display='none';},2000);}); }
 function isAnalysisRound(raw){
-  // 检测是否是分析轮（不是提示词轮）
   var analysisMarkers=['建议回复选项','换一套风格','我要换尺寸','我要自定义风格','用这套风格','确认后直接出图','推荐尺寸：','本次随机风格','本次指定风格','品类判定','匹配手法','用户类型'];
   var hitCount=0;
   analysisMarkers.forEach(function(m){if(raw.indexOf(m)!==-1)hitCount++;});
-  return hitCount>=2;
+  if(hitCount>=2) return true;
+  // 额外判断：含有占位模板文字
+  var placeholders=['待你提供具体主题','待您提供具体主题','提供具体主题后','生成对应完整英文','生成对应中文精简'];
+  for(var pi=0;pi!==placeholders.length;pi++){
+    if(raw.indexOf(placeholders[pi])!==-1) return true;
+  }
+  return false;
 }
 function extractPrompt(raw){
   // 如果是分析轮内容，不提取（返回空让调用方重试）
