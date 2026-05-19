@@ -100,7 +100,7 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
 #analysis-stage{display:none;margin-bottom:20px;}
 .analysis-card{background:linear-gradient(145deg,#1a1b25,#0f1015);border:1.5px solid var(--gold);border-radius:16px;padding:24px;box-shadow:0 0 40px rgba(243,175,66,0.1);}
 .analysis-badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:11px;font-weight:900;padding:4px 14px;border-radius:20px;margin-bottom:16px;}
-.analysis-grid{display:block;margin-bottom:16px;}
+.analysis-grid{margin-bottom:14px;}
 .analysis-item{background:rgba(243,175,66,0.06);border:1px solid rgba(243,175,66,0.2);border-radius:10px;padding:10px 14px;}
 .analysis-item-label{font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px;letter-spacing:.3px;}
 .analysis-item-value{font-size:12px;font-weight:700;color:#f3af42;line-height:1.5;}
@@ -643,63 +643,59 @@ function showAnalysisCard(raw){
   if(!grid) return;
   grid.innerHTML='';
 
+  // 字段卡片区（横向排列）
   var fields=[
-    {keys:['品类判定'],icon:'📂',label:'目标品类锁定'},
-    {keys:['用户类型'],icon:'👤',label:'预设受众类型'},
-    {keys:['匹配手法'],icon:'🎯',label:'顶配出图手法'},
-    {keys:['本次随机风格','本次指定风格','随机风格','指定风格'],icon:'🎨',label:'AI出航风格'},
-    {keys:['推荐尺寸'],icon:'📐',label:'黄金画布尺寸'},
+    {keys:['品类判定'],icon:'📂',label:'目标品类'},
+    {keys:['用户类型'],icon:'👤',label:'受众类型'},
+    {keys:['匹配手法'],icon:'🎯',label:'出图手法'},
+    {keys:['本次随机风格','本次指定风格','随机风格','指定风格'],icon:'🎨',label:'AI风格'},
+    {keys:['推荐尺寸'],icon:'📐',label:'推荐尺寸'},
   ];
-
-  // === 上部：5个字段横向排列（2行3列）===
-  var topRow=document.createElement('div');
-  topRow.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;';
+  var cardRow=document.createElement('div');
+  cardRow.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;';
   fields.forEach(function(f){
     var val=parseFieldFromRaw(raw,f.keys);
     if(val&&val.length>1){
-      var item=document.createElement('div');item.className='analysis-item';
-      item.innerHTML='<div class="analysis-item-label">'+f.icon+' '+f.label+'</div><div class="analysis-item-value">'+val.substring(0,50)+'</div>';
-      topRow.appendChild(item);
+      var item=document.createElement('div');
+      item.style.cssText='background:rgba(243,175,66,0.07);border:1px solid rgba(243,175,66,0.2);border-radius:10px;padding:10px 14px;flex:1;min-width:120px;max-width:220px;';
+      item.innerHTML='<div style="font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:4px;">'+f.icon+' '+f.label+'</div><div style="font-size:13px;font-weight:700;color:#f3af42;line-height:1.4;">'+val.substring(0,50)+'</div>';
+      cardRow.appendChild(item);
     }
   });
-  if(topRow.children.length>0) grid.appendChild(topRow);
+  if(cardRow.children.length>0) grid.appendChild(cardRow);
 
-  // === 下部：内容要点列表横向展示（每条一行，紧凑）===
+  // 内容要点区（全宽列表）
   var contentItems=parseContentList(raw);
-  if(contentItems.length===0){
-    var sv=parseFieldFromRaw(raw,['内容识别']);
-    if(sv) contentItems=[sv];
-  }
+  if(contentItems.length===0){var sv=parseFieldFromRaw(raw,['内容识别']);if(sv)contentItems=[sv];}
   if(contentItems.length>0){
     var block=document.createElement('div');
-    block.className='analysis-content-block';
-    var title=document.createElement('div');title.className='acb-title';title.textContent='✅ 内容要点提炼';
-    var ul=document.createElement('ul');ul.className='acb-list';
-    // 横向两列布局
-    ul.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:0 12px;';
+    block.style.cssText='background:#07080f;border:1px solid rgba(243,175,66,0.15);border-radius:10px;padding:12px 14px;';
+    var ttl=document.createElement('div');
+    ttl.style.cssText='font-size:10px;color:rgba(255,255,255,0.4);font-weight:700;margin-bottom:8px;letter-spacing:.5px;';
+    ttl.textContent='✅ 内容要点提炼';
+    var ul=document.createElement('ul');
+    ul.style.cssText='list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:0 16px;';
     contentItems.forEach(function(txt,i){
       var li=document.createElement('li');
-      li.innerHTML='<span class="acb-num">'+(i+1)+'</span><span class="acb-txt">'+txt.substring(0,60)+'</span>';
+      li.style.cssText='display:flex;gap:7px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px;color:#f1f5f9;line-height:1.5;';
+      var num=document.createElement('span');
+      num.style.cssText='flex-shrink:0;width:17px;height:17px;background:rgba(243,175,66,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#f3af42;margin-top:1px;';
+      num.textContent=i+1;
+      var tx=document.createElement('span');tx.textContent=txt.substring(0,60);
+      li.appendChild(num);li.appendChild(tx);
       ul.appendChild(li);
     });
-    block.appendChild(title);block.appendChild(ul);
+    block.appendChild(ttl);block.appendChild(ul);
     grid.appendChild(block);
   }
 
-  if(grid.children.length===0){
-    var ra=document.getElementById('analysis-raw');
-    if(ra){ra.textContent=raw;ra.style.display='block';}
-  }
+  if(grid.children.length===0){var ra=document.getElementById('analysis-raw');if(ra){ra.textContent=raw;ra.style.display='block';}}
 
   var sizeVal=parseFieldFromRaw(raw,['推荐尺寸']);
   var styleVal=parseFieldFromRaw(raw,['本次随机风格','本次指定风格','随机风格','指定风格']);
-  aiRecSize=sizeVal||'AI推荐尺寸';
-  aiRecStyle=styleVal||'AI推荐风格';
-  var stEl=document.getElementById('rec-size-tag');
-  var syEl=document.getElementById('rec-style-tag');
-  if(stEl) stEl.textContent='📐 '+aiRecSize;
-  if(syEl) syEl.textContent='🎨 '+aiRecStyle;
-
+  aiRecSize=sizeVal||'AI推荐尺寸';aiRecStyle=styleVal||'AI推荐风格';
+  var stEl=document.getElementById('rec-size-tag');var syEl=document.getElementById('rec-style-tag');
+  if(stEl)stEl.textContent='📐 '+aiRecSize;if(syEl)syEl.textContent='🎨 '+aiRecStyle;
   document.getElementById('analysis-stage').style.display='block';
   document.getElementById('analysis-stage').scrollIntoView({behavior:'smooth'});
 }
