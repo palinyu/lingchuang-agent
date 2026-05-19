@@ -866,17 +866,10 @@ function showEcommerceHint(){
   if(!hint){
     hint=document.createElement('div');hint.id='ecom-hint';
     hint.style.cssText='margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;';
-    hint.innerHTML=`
-      <span style="font-size:11px;color:var(--tx3);">检测到图片上传，快捷填入：</span>
-      <span onclick="fillEcom('帮我做这个产品的海报')" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">📢 做海报</span>
-      <span onclick="fillEcom('帮我做这个产品的详情页')" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">🛍️ 做详情页</span>
-      <span onclick="fillEcom('参考这张图的风格，帮我做知识图文')" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">🔄 复刻风格</span>
-      <span onclick="fillEcom('识别这张图的内容，帮我做知识图文提示词')" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">📝 识别内容</span>
-    `;
-    document.getElementById('input-stage')?.appendChild(hint);
+    hint.innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;"><span style="font-size:11px;color:var(--tx3);">检测到图片，快捷选择：</span><span onclick="fillEcom(this)" data-val="帮我做这个产品的海报" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">📢 做海报</span><span onclick="fillEcom(this)" data-val="帮我做这个产品的详情页" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">🛍️ 做详情页</span><span onclick="fillEcom(this)" data-val="参考这张图风格帮我做知识图文" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">🔄 复刻风格</span><span onclick="fillEcom(this)" data-val="识别这张图的内容帮我做知识图文提示词" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">📝 识别内容</span></div>';   document.getElementById('input-stage')?.appendChild(hint);
   }else{hint.style.display='flex';}
 }
-function fillEcom(text){
+function fillEcom(el){const text=el.dataset?el.dataset.val:el;
   const ta=document.getElementById('main-textarea');if(ta)ta.value=text;
   const hint=document.getElementById('ecom-hint');if(hint)hint.style.display='none';
 }
@@ -1077,12 +1070,7 @@ function showSizeChoice(content){
   }
   const actions=document.querySelector('.analysis-actions');
   if(actions){
-    actions.innerHTML=`
-      <button class="btn-action btn-action-primary" onclick="sendChoice('A')">A · 9:16竖版</button>
-      <button class="btn-action btn-action-secondary" onclick="sendChoice('B')">B · 16:9横版</button>
-      <button class="btn-action btn-action-ghost" onclick="sendChoice('C')">C · 1:1方版</button>
-      <button class="btn-action btn-action-ghost" onclick="sendChoice('D')">D · 3:4竖版</button>
-    `;
+    actions.innerHTML='<button class="btn-action btn-action-primary" onclick="sendChoice(\'A\')">A · 9:16竖版</button><button class="btn-action btn-action-secondary" onclick="sendChoice(\'B\')">B · 16:9横版</button><button class="btn-action btn-action-ghost" onclick="sendChoice(\'C\')">C · 1:1方版</button><button class="btn-action btn-action-ghost" onclick="sendChoice(\'D\')">D · 3:4竖版</button>';
   }
   document.getElementById('analysis-stage').style.display='block';
   document.getElementById('analysis-stage').scrollIntoView({behavior:'smooth'});
