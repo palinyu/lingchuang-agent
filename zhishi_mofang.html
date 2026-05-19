@@ -958,8 +958,7 @@ async function runEngine(){
       qLog("❌ ERROR · "+e.message,null,0);
       setTimeout(()=>{
         document.getElementById('quantum-stage').style.display='none';
-        alert('生成失败：'+e.message+'
-请检查网络后重试');
+        alert('生成失败，请检查网络后重试');
       },800);
     }finally{
       if(btn){btn.disabled=false;btn.textContent='🔮 启动大脑 · 开始全行业智能生图充能';}
