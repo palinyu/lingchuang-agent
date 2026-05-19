@@ -744,16 +744,41 @@ function confirmAI(){
 function showCustomPanel(){document.getElementById('custom-stage').style.display='block';document.getElementById('custom-stage').scrollIntoView({behavior:'smooth'});}
 function handleCustomStyleChange(){var val=(document.getElementById('custom-style')||{}).value;var d=document.getElementById('custom-style-text');if(d)d.style.display=val==='custom_input'?'block':'none';}
 function launchCustom(){var sizeEl=document.getElementById('custom-size');var sizeVal=sizeEl?sizeEl.value:'A';var sizeTxt=sizeEl&&sizeEl.selectedOptions[0]?sizeEl.selectedOptions[0].text.split('·')[0].trim():sizeVal;var styleVal=(document.getElementById('custom-style')||{}).value||'custom_input';var styleText='';if(styleVal==='custom_input'){styleText=((document.getElementById('custom-style-text')||{}).value||'').trim();if(!styleText){alert('请输入你的专属风格词组！');return;}}else{styleText=styleVal;}userCustomSize=sizeTxt;userCustomStyle=styleText.substring(0,20);document.getElementById('custom-stage').style.display='none';var ts=document.getElementById('thinking-stage');ts.style.display='flex';var sz=document.getElementById('t-size');var sy=document.getElementById('t-style');if(sz)sz.textContent=userCustomSize;if(sy)sy.textContent=userCustomStyle;ts.scrollIntoView({behavior:'smooth'});callCoze('3',currentConvId,false).then(function(r){currentConvId=r.conversation_id||currentConvId;return callCoze(sizeVal,currentConvId,false);}).then(function(r){currentConvId=r.conversation_id||currentConvId;return callCoze('4',currentConvId,false);}).then(function(r){currentConvId=r.conversation_id||currentConvId;return callCoze(styleText,currentConvId,false);}).then(function(r){currentConvId=r.conversation_id||currentConvId;var msg=r.messages&&r.messages.filter(function(m){return m.role==='assistant'&&m.type==='answer';})[0];if(!msg)throw new Error('未获取到内容');var hasP=msg.content.indexOf('即梦生图提示词')>=0||msg.content.indexOf('完整版（推荐）')>=0||/[A-Za-z ,.\-]{80,}/.test(msg.content);showResult(msg.content);}).catch(function(e){var s=document.getElementById('t-status');if(s){s.style.color='#ef4444';s.textContent='❌ 失败：'+e.message;}setTimeout(function(){document.getElementById('thinking-stage').style.display='none';},2000);}); }
+function isAnalysisRound(raw){
+  // 检测是否是分析轮（不是提示词轮）
+  var analysisMarkers=['建议回复选项','换一套风格','我要换尺寸','我要自定义风格','用这套风格','确认后直接出图','推荐尺寸：','本次随机风格','本次指定风格','品类判定','匹配手法','用户类型'];
+  var hitCount=0;
+  analysisMarkers.forEach(function(m){if(raw.indexOf(m)!==-1)hitCount++;});
+  return hitCount>=2;
+}
 function extractPrompt(raw){
+  // 如果是分析轮内容，不提取（返回空让调用方重试）
+  if(isAnalysisRound(raw)) return '';
   // 尝试提取提示词部分：从关键标记词开始截取
-  var markers=['即梦生图提示词','Midjourney提示词','SD提示词','可灵提示词','剪映提示词','【完整提示词','【提示词','生图提示词：','Prompt:','prompt:'];
-  var _mlen=markers.length;for(var i=0;i!==_mlen;i++){var idx=raw.indexOf(markers[i]);if(idx!=-1){// 找到标记，从这里往后截取到结尾
-    return raw.substring(idx).trim();}}
-  // 没找到标记，检查是否有大段英文（提示词特征）
-  if(/[A-Za-z ,.\-:]{100,}/.test(raw))return raw;
-  // 兜底：返回全量内容
-  return raw;}
-function showResult(raw){if(isWelcome(raw)){document.getElementById('thinking-stage').style.display='none';document.getElementById('analysis-stage').style.display='block';alert('AI响应异常，请重新点击「确定，按AI推荐出图」');return;}var extracted=extractPrompt(raw);cachedPrompt=extracted;var ring=document.getElementById('t-ring');if(ring){ring.style.animation='none';ring.style.borderColor='#f3af42';ring.innerHTML='<span style="color:#f3af42;font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;height:100%;">✓</span>';}var s=document.getElementById('t-status');if(s){s.style.color='#f3af42';s.textContent='✨ 提示词已全量生成！';}setTimeout(function(){document.getElementById('thinking-stage').style.display='none';document.getElementById('out-prompt').textContent=extracted;document.getElementById('output-section').style.display='block';document.getElementById('copywrite-ask').style.display='block';document.getElementById('output-section').scrollIntoView({behavior:'smooth'});},800);}
+  var markers=['即梦生图提示词','Midjourney提示词','SD提示词','可灵提示词','剪映提示词','【完整提示词','【提示词','生图提示词','Prompt:','prompt:','**提示词','生图参数'];
+  var _mlen=markers.length;for(var i=0;i!==_mlen;i++){var idx=raw.indexOf(markers[i]);if(idx!==-1){return raw.substring(idx).trim();}}
+  // 没找到标记，检查是否有大段英文（提示词特征：100字符以上连续英文）
+  if(/[A-Za-z ,.\-:;]{100,}/.test(raw))return raw;
+  // 兜底：返回空（让调用方知道没拿到提示词）
+  return '';}
+function showResult(raw,retryCount){
+  retryCount = retryCount||0;
+  if(isWelcome(raw)){document.getElementById('thinking-stage').style.display='none';document.getElementById('analysis-stage').style.display='block';return;}
+  var extracted=extractPrompt(raw);
+  // 如果提取为空（分析轮内容），自动再发一次 '1'
+  if(!extracted&&retryCount===0&&currentConvId){
+    var tStatus=document.getElementById('t-status');
+    if(tStatus) tStatus.innerHTML='🔄 获取提示词中…';
+    callCoze('1',currentConvId,false).then(function(res){
+      var answers=res.messages&&res.messages.filter(function(m){return m.role==='assistant'&&m.type==='answer';});
+      var msg=answers&&answers[answers.length-1];
+      if(msg&&msg.content) showResult(msg.content,1);
+      else{var s=document.getElementById('t-status');if(s){s.style.color='#ef4444';s.textContent='❌ 未获取到提示词，请重试';}}
+    }).catch(function(e){var s=document.getElementById('t-status');if(s){s.style.color='#ef4444';s.textContent='❌ '+e.message;}});
+    return;
+  }
+  if(!extracted) extracted=raw; // 最终兜底
+  cachedPrompt=extracted;var ring=document.getElementById('t-ring');if(ring){ring.style.animation='none';ring.style.borderColor='#f3af42';ring.innerHTML='<span style="color:#f3af42;font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;height:100%;">✓</span>';}var s=document.getElementById('t-status');if(s){s.style.color='#f3af42';s.textContent='✨ 提示词已全量生成！';}setTimeout(function(){document.getElementById('thinking-stage').style.display='none';document.getElementById('out-prompt').textContent=extracted;document.getElementById('output-section').style.display='block';document.getElementById('copywrite-ask').style.display='block';document.getElementById('output-section').scrollIntoView({behavior:'smooth'});},800);}
 function getCopywrite(){if(!currentConvId){alert('请先生成提示词！');return;}var lockedId=currentConvId;document.getElementById('copywrite-ask').style.display='none';var loading=document.createElement('div');loading.id='copywrite-loading';loading.style.cssText='text-align:center;padding:20px;color:var(--tx2);font-size:13px;';loading.textContent='✍️ AI正在生成配套爆款文案…';document.getElementById('output-section').appendChild(loading);callCoze('X',lockedId,false).then(function(res){var msg=res.messages&&res.messages.filter(function(m){return m.role==='assistant'&&m.type==='answer';})[0];var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();if(msg&&msg.content&&!isWelcome(msg.content)){var mpIdx=Math.max(msg.content.indexOf('📘【公众号'),msg.content.indexOf('【公众号'));if(mpIdx>0){document.getElementById('out-xhs').textContent=msg.content.substring(0,mpIdx).trim();document.getElementById('out-mp').textContent=msg.content.substring(mpIdx).trim();}else{document.getElementById('out-xhs').textContent=msg.content;document.getElementById('out-mp').textContent='';}document.getElementById('copywrite-section').style.display='block';document.getElementById('copywrite-section').scrollIntoView({behavior:'smooth'});}else{document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败，请重试');}}).catch(function(e){var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败：'+e.message);});}
 function showToast(){var t=document.getElementById('clip-toast');if(!t)return;t.style.display='block';setTimeout(function(){t.style.display='none';},1200);}
 function copyBlock(id){var el=document.getElementById(id);if(!el||!el.textContent.trim()){alert('内容为空，请先生成！');return;}navigator.clipboard.writeText(el.textContent).then(function(){showToast();});}
