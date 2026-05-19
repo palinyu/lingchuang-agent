@@ -79,6 +79,16 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
 .btn-generate{width:100%;padding:16px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:12px;color:#000;font-weight:800;font-size:16px;cursor:pointer;letter-spacing:1.5px;box-shadow:0 6px 25px rgba(243,175,66,0.25);transition:all .3s;margin-bottom:20px;}
 .btn-generate:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px);}
 .btn-generate:disabled{background:#1f2029;color:var(--tx3);cursor:not-allowed;box-shadow:none;transform:none;}
+/* 暗黑科技风 · 金色 Loading */
+@keyframes lux-gold-pulse{0%,100%{box-shadow:0 0 12px rgba(243,175,66,0.15),inset 0 0 0 1px rgba(243,175,66,0.12);}50%{box-shadow:0 0 28px rgba(243,175,66,0.45),inset 0 0 0 1px rgba(243,175,66,0.35);}}
+@keyframes lux-shimmer{0%{background-position:200% center;}100%{background-position:-200% center;}}
+body.api-lux-loading .input-stage{border-color:rgba(243,175,66,0.55);animation:lux-gold-pulse 1.6s ease-in-out infinite;position:relative;overflow:hidden;}
+body.api-lux-loading .input-stage::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(243,175,66,0.07) 50%,transparent 60%);background-size:200% 100%;animation:lux-shimmer 2s linear infinite;pointer-events:none;}
+body.api-lux-loading #main-textarea{color:rgba(243,175,66,0.85);}
+body.api-lux-loading .btn-generate{background:linear-gradient(135deg,#1a1408,#2a1f08);color:var(--gold);border:1px solid rgba(243,175,66,0.45);box-shadow:0 0 24px rgba(243,175,66,0.2);animation:lux-gold-pulse 1.2s ease-in-out infinite;cursor:wait;letter-spacing:2px;}
+body.api-lux-loading .btn-attach{opacity:0.45;pointer-events:none;}
+body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:none;opacity:0.5;}
+#api-status-toast{display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:99998;background:rgba(15,16,22,0.95);border:1px solid rgba(243,175,66,0.35);color:var(--gold);font-size:12px;font-weight:700;padding:8px 18px;border-radius:24px;backdrop-filter:blur(8px);}
 /* fix9: 量子扫描 左日志+右可视化 */
 #quantum-stage{display:none;margin-bottom:20px;}
 .quantum-box{background:#03040a;border:1px solid rgba(243,175,66,0.12);border-radius:14px;padding:20px;font-family:'Menlo','Monaco',monospace;font-size:12px;position:relative;min-height:160px;display:grid;grid-template-columns:1fr 1fr;gap:16px;}
@@ -499,7 +509,9 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
 </div>
 <script src="https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js"></script>
 <script>
-var uploadedFileIds=[],isFileAttached=false,cachedPrompt='',selectedBubbles=[],currentConvId=null;
+var API_BASE='http://localhost:3000';
+var _apiLoadingCount=0;
+var uploadedFileIds=[],isFileAttached=false,cachedPrompt='',selectedBubbles=[],currentConversationId=null,currentChatId=null;
 var aiRecSize='',aiRecStyle='',userCustomSize='',userCustomStyle='';
 var docTextContent='';
 var WELCOME_KW=['支持四种输入方式','发送任意内容，自动启动','我是灵创星球','专注把知识变成','直接输入主题','上传文档（PDF','上传图片（截图','告诉我你想做','自动启动生图链路','灵创星球·知识图文魔方','四种输入方式','欢迎使用'];
@@ -577,15 +589,25 @@ function parsePDF(ab,file,pds){
 
 function showEcomHint(){var hint=document.getElementById('ecom-hint');if(hint){hint.style.display='flex';return;}hint=document.createElement('div');hint.id='ecom-hint';hint.style.cssText='margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;';var items=[['帮我做这个产品的海报','📢 做海报'],['帮我做这个产品的详情页','🛍️ 做详情页'],['参考这张图风格帮我做知识图文','🔄 复刻风格'],['识别这张图的内容帮我做知识图文提示词','📝 识别内容']];var html='<span style="font-size:11px;color:var(--tx3);">检测到图片：</span>';items.forEach(function(it){html+='<span onclick="fillEcom(\''+it[0]+'\')" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">'+it[1]+'</span>';});hint.innerHTML=html;document.getElementById('input-stage').appendChild(hint);}
 function fillEcom(text){var ta=document.getElementById('main-textarea');if(ta)ta.value=text;var hint=document.getElementById('ecom-hint');if(hint)hint.style.display='none';}
-function uploadFile(file){fileToBase64(file).then(function(b64){return fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze-upload',file_base64:b64,file_name:file.name,file_type:file.type||'application/octet-stream'})});}).then(function(r){return r.json();}).then(function(data){if(data.data&&data.data.id)uploadedFileIds.push(data.data.id);}).catch(function(e){console.log('上传失败',e);});}
+function uploadFile(file){fileToBase64(file).then(function(b64){return fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze-upload',file_base64:b64,file_name:file.name,file_type:file.type||'application/octet-stream'})});}).then(function(r){return r.json();}).then(function(data){if(data && data.code === 0 && data.data && data.data.id){uploadedFileIds.push(data.data.id);}else{console.warn('文件上传未返回有效文件ID',data);}}).catch(function(e){console.log('上传失败',e);});}
 function removeFile(){document.getElementById('file-input').value='';document.getElementById('img-preview-area').style.display='none';document.getElementById('preview-img').src='';isFileAttached=false;uploadedFileIds=[];docTextContent='';var hint=document.getElementById('ecom-hint');if(hint)hint.style.display='none';}
 function fileToBase64(file){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(e){res(e.target.result.split(',')[1]);};r.onerror=rej;r.readAsDataURL(file);});}
 function qLog(text,cls,delay){setTimeout(function(){var log=document.getElementById('quantum-log');if(!log)return;var line=document.createElement('div');line.className='q-line'+(cls?' '+cls:'');line.innerHTML=text;log.appendChild(line);log.scrollTop=log.scrollHeight;},delay);}
 function setVisTxt(t){var el=document.getElementById('q-vis-txt');if(el)el.innerHTML=t;}
 function runQuantumScan(topic){var log=document.getElementById('quantum-log');if(log)log.innerHTML='';document.getElementById('quantum-stage').style.display='block';setVisTxt('AI大脑<br>启动中…');var dn=Math.floor(Math.random()*5000+1000).toLocaleString();var pn=(Math.random()*5+0.5).toFixed(1);qLog('⚡ <span class="q-gold">SYSTEM</span> · 灵创AI出图引擎激活…',null,0);qLog('🛰️ <span class="q-blue">INPUT</span> · 主题：<span class="q-gold">'+topic.substring(0,20)+'</span>',null,250);qLog('🌐 <span class="q-gold">NETWORK</span> · 联网穿透大盘语义网络…',null,500);qLog('📊 <span class="q-dim">DATA</span> · 检索到 <span class="q-gold">'+dn+'</span> 条爆款数据',null,800);qLog('🔥 <span class="q-dim">TREND</span> · 话题播放量 <span class="q-gold">'+pn+'亿</span> ↑',null,1100);qLog('🔮 <span class="q-blue">AI</span> · 三层判定：品类→手法→风格…',null,1400);setTimeout(function(){setVisTxt('联网分析<br>进行中…');},800);qLog('✅ <span class="q-gold">READY</span> · 解析完成',null,1800);}
+function getCurrentSession(){
+  if(currentChatId) return {chat_id: currentChatId, conversation_id: currentConversationId};
+  if(currentConversationId) return {conversation_id: currentConversationId};
+  return null;
+}
 function callCoze(query,convId,withFiles){
   var body={mode:'coze',query:query};
-  if(convId) body.conversation_id=convId;
+  if(typeof convId==='string' && convId){
+    body.chat_id = convId;
+  } else if(convId && typeof convId==='object'){
+    if(convId.chat_id) body.chat_id = convId.chat_id;
+    if(convId.conversation_id) body.conversation_id = convId.conversation_id;
+  }
   if(withFiles&&uploadedFileIds.length>0) body.file_ids=uploadedFileIds;
   return fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
     .then(function(r){return r.json();})
@@ -603,8 +625,8 @@ function callCoze(query,convId,withFiles){
     });
 }
 function isWelcome(content){if(!content)return true;var hasW=WELCOME_KW.some(function(kw){return content.indexOf(kw)>=0;});var hasR=content.indexOf('品类判定')>=0||content.indexOf('内容识别')>=0||content.indexOf('匹配手法')>=0||content.indexOf('推荐尺寸')>=0||/[A-Za-z ,.\-]{60,}/.test(content);return hasW&&!hasR;}
-function resetState(){currentConvId=null;cachedPrompt='';aiRecSize='';aiRecStyle='';userCustomSize='';userCustomStyle='';['analysis-stage','custom-stage','thinking-stage','output-section','copywrite-ask','copywrite-section'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});var ring=document.getElementById('t-ring');if(ring){ring.style.animation='spin-ring .9s linear infinite';ring.style.borderColor='';ring.innerHTML='';}var s=document.getElementById('t-status');if(s){s.style.color='#cbd5e1';s.textContent='AI大脑联网搜索爆款参数中…\n完整提示词生成中…';}var sz=document.getElementById('t-size');if(sz)sz.textContent='--';var st=document.getElementById('t-style');if(st)st.textContent='--';}
-function runEngine(){var topic=(document.getElementById('main-textarea')||{}).value;topic=(topic||'').trim();if(!topic&&!isFileAttached){alert('请先输入你想做什么图，或者上传参考文件！');return;}resetState();var btn=document.getElementById('gen-btn');if(btn){btn.disabled=true;btn.textContent='⚡ AI大脑启动中…';}runQuantumScan(topic||'上传文件');var bubbleStr=selectedBubbles.length>0?'\n追加排版方向：'+selectedBubbles.join('、'):'';var docStr=docTextContent?'\n\n【文档内容】：\n'+docTextContent:'';var fileNotice=(isFileAttached&&uploadedFileIds.length>0)?'\n【已上传文件，请识别内容】':'';var query=(topic||'请识别上传文件内容')+bubbleStr+docStr+fileNotice;setTimeout(function(){qLog('📡 <span class="q-gold">CALLING</span> · 呼叫扣子AI…',null,0);qLog('⏳ <span class="q-dim">WAIT</span> · 联网分析中…',null,300);setVisTxt('等待AI<br>响应…');callCoze(query,null,true).then(function(res){currentConvId=res.conversation_id;var msg=res.messages&&res.messages.filter(function(m){return m.role==='assistant'&&m.type==='answer';})[0];if(!msg)throw new Error('未获取到响应');if(isWelcome(msg.content)){document.getElementById('quantum-stage').style.display='none';if(btn){btn.disabled=false;btn.textContent='🔮 启动大脑 · 开始全行业智能生图充能';}alert('AI未识别到有效内容，请在输入框输入主题后重试！');return;}qLog('✅ <span class="q-gold">SUCCESS</span> · 识别完成',null,0);setVisTxt('完成✓');setTimeout(function(){document.getElementById('quantum-stage').style.display='none';showAnalysisCard(msg.content);},500);}).catch(function(e){document.getElementById('quantum-stage').style.display='none';alert('生成失败：'+e.message);}).then(function(){if(btn){btn.disabled=false;btn.textContent='🔮 启动大脑 · 开始全行业智能生图充能';}});},2100);}
+function resetState(){currentConversationId=null;currentChatId=null;cachedPrompt='';aiRecSize='';aiRecStyle='';userCustomSize='';userCustomStyle='';['analysis-stage','custom-stage','thinking-stage','output-section','copywrite-ask','copywrite-section'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});var ring=document.getElementById('t-ring');if(ring){ring.style.animation='spin-ring .9s linear infinite';ring.style.borderColor='';ring.innerHTML='';}var s=document.getElementById('t-status');if(s){s.style.color='#cbd5e1';s.textContent='AI大脑联网搜索爆款参数中…\n完整提示词生成中…';}var sz=document.getElementById('t-size');if(sz)sz.textContent='--';var st=document.getElementById('t-style');if(st)st.textContent='--';}
+function runEngine(){var topic=(document.getElementById('main-textarea')||{}).value;topic=(topic||'').trim();if(!topic&&!isFileAttached){alert('请先输入你想做什么图，或者上传参考文件！');return;}resetState();var btn=document.getElementById('gen-btn');if(btn){btn.disabled=true;btn.textContent='⚡ AI大脑启动中…';}runQuantumScan(topic||'上传文件');var bubbleStr=selectedBubbles.length>0?'\n追加排版方向：'+selectedBubbles.join('、'):'';var docStr=docTextContent?'\n\n【文档内容】：\n'+docTextContent:'';var fileNotice=(isFileAttached&&uploadedFileIds.length>0)?'\n【已上传文件，请识别内容】':'';var query=(topic||'请识别上传文件内容')+bubbleStr+docStr+fileNotice;setTimeout(function(){qLog('📡 <span class="q-gold">CALLING</span> · 呼叫扣子AI…',null,0);qLog('⏳ <span class="q-dim">WAIT</span> · 联网分析中…',null,300);setVisTxt('等待AI<br>响应…');callCoze(query,null,true).then(function(res){currentConversationId=res.conversation_id||currentConversationId;currentChatId=res.chat_id||currentChatId;var msg=res.messages&&res.messages.filter(function(m){return m.role==='assistant'&&m.type==='answer';})[0];if(!msg)throw new Error('未获取到响应');if(isWelcome(msg.content)){document.getElementById('quantum-stage').style.display='none';if(btn){btn.disabled=false;btn.textContent='🔮 启动大脑 · 开始全行业智能生图充能';}alert('AI未识别到有效内容，请在输入框输入主题后重试！');return;}qLog('✅ <span class="q-gold">SUCCESS</span> · 识别完成',null,0);setVisTxt('完成✓');setTimeout(function(){document.getElementById('quantum-stage').style.display='none';showAnalysisCard(msg.content);},500);}).catch(function(e){document.getElementById('quantum-stage').style.display='none';alert('生成失败：'+e.message);}).then(function(){if(btn){btn.disabled=false;btn.textContent='🔮 启动大脑 · 开始全行业智能生图充能';}});},2100);}
 function parseFieldFromRaw(raw, keys){
   var lines = raw.split('\n');
   var keyArr = Array.isArray(keys)?keys:[keys];
@@ -724,33 +746,30 @@ function confirmAI(){
   ts.style.display='flex';
   var sz=document.getElementById('t-size');
   var sy=document.getElementById('t-style');
-  // 修复5: 显示AI实际推荐的尺寸和风格（不是通用占位符）
   if(sz) sz.textContent = aiRecSize && aiRecSize!=='AI推荐尺寸' ? aiRecSize : (aiRecSize||'AI推荐');
   if(sy) sy.textContent = aiRecStyle && aiRecStyle!=='AI推荐风格' ? aiRecStyle : (aiRecStyle||'AI推荐');
   ts.scrollIntoView({behavior:'smooth'});
-  // 重置思考卡状态
   var ring=document.getElementById('t-ring');
   if(ring){ring.style.cssText='';ring.innerHTML='';}
   var tStatus=document.getElementById('t-status');
   if(tStatus){tStatus.style.color='#cbd5e1';tStatus.textContent='AI大脑联网搜索爆款参数中… 完整提示词生成中…';}
-  // 用 setTimeout 确保 DOM 渲染后再发请求（修复交互画面闪过问题）
   setTimeout(function(){
-    if(!currentConvId){
+    var session = getCurrentSession();
+    if(!session){
       var s=document.getElementById('t-status');
       if(s){s.style.color='#ef4444';s.textContent='❌ 会话ID丢失，请重新生成主题分析';}
       setTimeout(function(){ts.style.display='none';document.getElementById('analysis-stage').style.display='block';},2500);
       return;
     }
-    callCoze('1',currentConvId,false).then(function(res){
-      currentConvId=res.conversation_id||currentConvId;
-      // 兼容多种消息结构
+    callCoze('1',session,false).then(function(res){
+      currentConversationId = res.conversation_id || currentConversationId;
+      currentChatId = res.chat_id || currentChatId;
       var allMsgs=res.messages||[];
       var answers=allMsgs.filter(function(m){return m.role==='assistant'&&(m.type==='answer'||m.type==='text');});
       if(answers.length===0) answers=allMsgs.filter(function(m){return m.role==='assistant';});
       var msg=answers.length>0?answers[answers.length-1]:null;
       var content=msg&&(msg.content||msg.text||'');
       if(!content){
-        // 尝试从 answer 字段取
         if(res.answer) content=res.answer;
         else throw new Error('响应为空，请重试');
       }
@@ -765,7 +784,7 @@ function confirmAI(){
 
 function showCustomPanel(){document.getElementById('custom-stage').style.display='block';document.getElementById('custom-stage').scrollIntoView({behavior:'smooth'});}
 function handleCustomStyleChange(){var val=(document.getElementById('custom-style')||{}).value;var d=document.getElementById('custom-style-text');if(d)d.style.display=val==='custom_input'?'block':'none';}
-function launchCustom(){var sizeEl=document.getElementById('custom-size');var sizeVal=sizeEl?sizeEl.value:'A';var sizeTxt=sizeEl&&sizeEl.selectedOptions[0]?sizeEl.selectedOptions[0].text.split('·')[0].trim():sizeVal;var styleVal=(document.getElementById('custom-style')||{}).value||'custom_input';var styleText='';if(styleVal==='custom_input'){styleText=((document.getElementById('custom-style-text')||{}).value||'').trim();if(!styleText){alert('请输入你的专属风格词组！');return;}}else{styleText=styleVal;}userCustomSize=sizeTxt;userCustomStyle=styleText.substring(0,20);document.getElementById('custom-stage').style.display='none';var ts=document.getElementById('thinking-stage');ts.style.display='flex';var sz=document.getElementById('t-size');var sy=document.getElementById('t-style');if(sz)sz.textContent=userCustomSize;if(sy)sy.textContent=userCustomStyle;ts.scrollIntoView({behavior:'smooth'});callCoze('3',currentConvId,false).then(function(r){currentConvId=r.conversation_id||currentConvId;return callCoze(sizeVal,currentConvId,false);}).then(function(r){currentConvId=r.conversation_id||currentConvId;return callCoze('4',currentConvId,false);}).then(function(r){currentConvId=r.conversation_id||currentConvId;return callCoze(styleText,currentConvId,false);}).then(function(r){currentConvId=r.conversation_id||currentConvId;var msg=r.messages&&r.messages.filter(function(m){return m.role==='assistant'&&m.type==='answer';})[0];if(!msg)throw new Error('未获取到内容');var hasP=msg.content.indexOf('即梦生图提示词')>=0||msg.content.indexOf('完整版（推荐）')>=0||/[A-Za-z ,.\-]{80,}/.test(msg.content);showResult(msg.content);}).catch(function(e){var s=document.getElementById('t-status');if(s){s.style.color='#ef4444';s.textContent='❌ 失败：'+e.message;}setTimeout(function(){document.getElementById('thinking-stage').style.display='none';},2000);}); }
+function launchCustom(){var sizeEl=document.getElementById('custom-size');var sizeVal=sizeEl?sizeEl.value:'A';var sizeTxt=sizeEl&&sizeEl.selectedOptions[0]?sizeEl.selectedOptions[0].text.split('·')[0].trim():sizeVal;var styleVal=(document.getElementById('custom-style')||{}).value||'custom_input';var styleText='';if(styleVal==='custom_input'){styleText=((document.getElementById('custom-style-text')||{}).value||'').trim();if(!styleText){alert('请输入你的专属风格词组！');return;}}else{styleText=styleVal;}userCustomSize=sizeTxt;userCustomStyle=styleText.substring(0,20);document.getElementById('custom-stage').style.display='none';var ts=document.getElementById('thinking-stage');ts.style.display='flex';var sz=document.getElementById('t-size');var sy=document.getElementById('t-style');if(sz)sz.textContent=userCustomSize;if(sy)sy.textContent=userCustomStyle;ts.scrollIntoView({behavior:'smooth'});var session=getCurrentSession();if(!session){alert('请先生成主题分析');document.getElementById('thinking-stage').style.display='none';return;}callCoze('3',session,false).then(function(r){currentConversationId=r.conversation_id||currentConversationId;currentChatId=r.chat_id||currentChatId;return callCoze(sizeVal,getCurrentSession(),false);}).then(function(r){currentConversationId=r.conversation_id||currentConversationId;currentChatId=r.chat_id||currentChatId;return callCoze('4',getCurrentSession(),false);}).then(function(r){currentConversationId=r.conversation_id||currentConversationId;currentChatId=r.chat_id||currentChatId;return callCoze(styleText,getCurrentSession(),false);}).then(function(r){currentConversationId=r.conversation_id||currentConversationId;currentChatId=r.chat_id||currentChatId;var msg=r.messages&&r.messages.filter(function(m){return m.role==='assistant'&&m.type==='answer';})[0];if(!msg)throw new Error('未获取到内容');var hasP=msg.content.indexOf('即梦生图提示词')>=0||msg.content.indexOf('完整版（推荐）')>=0||/[A-Za-z ,.\-]{80,}/.test(msg.content);showResult(msg.content);}).catch(function(e){var s=document.getElementById('t-status');if(s){s.style.color='#ef4444';s.textContent='❌ 失败：'+e.message;}setTimeout(function(){document.getElementById('thinking-stage').style.display='none';},2000);}); }
 function isAnalysisRound(raw){
   var analysisMarkers=['建议回复选项','换一套风格','我要换尺寸','我要自定义风格','用这套风格','确认后直接出图','推荐尺寸：','本次随机风格','本次指定风格','品类判定','匹配手法','用户类型'];
   var hitCount=0;
@@ -793,20 +812,25 @@ function showResult(raw,retryCount){
   if(isWelcome(raw)){document.getElementById('thinking-stage').style.display='none';document.getElementById('analysis-stage').style.display='block';return;}
   var extracted=extractPrompt(raw);
   // 如果提取为空（分析轮内容），自动再发一次 '1'
-  if(!extracted&&retryCount===0&&currentConvId){
-    var tStatus=document.getElementById('t-status');
-    if(tStatus) tStatus.innerHTML='🔄 获取提示词中…';
-    callCoze('1',currentConvId,false).then(function(res){
-      var answers=res.messages&&res.messages.filter(function(m){return m.role==='assistant'&&m.type==='answer';});
-      var msg=answers&&answers[answers.length-1];
-      if(msg&&msg.content) showResult(msg.content,1);
-      else{var s=document.getElementById('t-status');if(s){s.style.color='#ef4444';s.textContent='❌ 未获取到提示词，请重试';}}
-    }).catch(function(e){var s=document.getElementById('t-status');if(s){s.style.color='#ef4444';s.textContent='❌ '+e.message;}});
-    return;
+  if(!extracted&&retryCount===0){
+    var session = getCurrentSession();
+    if(session){
+      var tStatus=document.getElementById('t-status');
+      if(tStatus) tStatus.innerHTML='🔄 获取提示词中…';
+      callCoze('1',session,false).then(function(res){
+        currentConversationId=res.conversation_id||currentConversationId;
+        currentChatId=res.chat_id||currentChatId;
+        var answers=res.messages&&res.messages.filter(function(m){return m.role==='assistant'&&m.type==='answer';});
+        var msg=answers&&answers[answers.length-1];
+        if(msg&&msg.content) showResult(msg.content,1);
+        else{var s=document.getElementById('t-status');if(s){s.style.color='#ef4444';s.textContent='❌ 未获取到提示词，请重试';}}
+      }).catch(function(e){var s=document.getElementById('t-status');if(s){s.style.color='#ef4444';s.textContent='❌ '+e.message;}});
+      return;
+    }
   }
   if(!extracted) extracted=raw; // 最终兜底
   cachedPrompt=extracted;var ring=document.getElementById('t-ring');if(ring){ring.style.animation='none';ring.style.borderColor='#f3af42';ring.innerHTML='<span style="color:#f3af42;font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;height:100%;">✓</span>';}var s=document.getElementById('t-status');if(s){s.style.color='#f3af42';s.textContent='✨ 提示词已全量生成！';}setTimeout(function(){document.getElementById('thinking-stage').style.display='none';document.getElementById('out-prompt').textContent=extracted;document.getElementById('output-section').style.display='block';document.getElementById('copywrite-ask').style.display='block';document.getElementById('output-section').scrollIntoView({behavior:'smooth'});},800);}
-function getCopywrite(){if(!currentConvId){alert('请先生成提示词！');return;}var lockedId=currentConvId;document.getElementById('copywrite-ask').style.display='none';var loading=document.createElement('div');loading.id='copywrite-loading';loading.style.cssText='text-align:center;padding:20px;color:var(--tx2);font-size:13px;';loading.textContent='✍️ AI正在生成配套爆款文案…';document.getElementById('output-section').appendChild(loading);callCoze('X',lockedId,false).then(function(res){var msg=res.messages&&res.messages.filter(function(m){return m.role==='assistant'&&m.type==='answer';})[0];var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();if(msg&&msg.content&&!isWelcome(msg.content)){var mpIdx=Math.max(msg.content.indexOf('📘【公众号'),msg.content.indexOf('【公众号'));if(mpIdx>0){document.getElementById('out-xhs').textContent=msg.content.substring(0,mpIdx).trim();document.getElementById('out-mp').textContent=msg.content.substring(mpIdx).trim();}else{document.getElementById('out-xhs').textContent=msg.content;document.getElementById('out-mp').textContent='';}document.getElementById('copywrite-section').style.display='block';document.getElementById('copywrite-section').scrollIntoView({behavior:'smooth'});}else{document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败，请重试');}}).catch(function(e){var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败：'+e.message);});}
+function getCopywrite(){var session = getCurrentSession();if(!session){alert('请先生成提示词！');return;}document.getElementById('copywrite-ask').style.display='none';var loading=document.createElement('div');loading.id='copywrite-loading';loading.style.cssText='text-align:center;padding:20px;color:var(--tx2);font-size:13px;';loading.textContent='✍️ AI正在生成配套爆款文案…';document.getElementById('output-section').appendChild(loading);callCoze('X',session,false).then(function(res){currentConversationId=res.conversation_id||currentConversationId;currentChatId=res.chat_id||currentChatId;var msg=res.messages&&res.messages.filter(function(m){return m.role==='assistant'&&m.type==='answer';})[0];var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();if(msg&&msg.content&&!isWelcome(msg.content)){var mpIdx=Math.max(msg.content.indexOf('📘【公众号'),msg.content.indexOf('【公众号'));if(mpIdx>0){document.getElementById('out-xhs').textContent=msg.content.substring(0,mpIdx).trim();document.getElementById('out-mp').textContent=msg.content.substring(mpIdx).trim();}else{document.getElementById('out-xhs').textContent=msg.content;document.getElementById('out-mp').textContent='';}document.getElementById('copywrite-section').style.display='block';document.getElementById('copywrite-section').scrollIntoView({behavior:'smooth'});}else{document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败，请重试');}}).catch(function(e){var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败：'+e.message);});}
 function showToast(){var t=document.getElementById('clip-toast');if(!t)return;t.style.display='block';setTimeout(function(){t.style.display='none';},1200);}
 function copyBlock(id){var el=document.getElementById(id);if(!el||!el.textContent.trim()){alert('内容为空，请先生成！');return;}navigator.clipboard.writeText(el.textContent).then(function(){showToast();});}
 function copyAndGo(url){if(!cachedPrompt){alert('请先生成提示词！');return;}// 静默复制+直接跳转，不弹阻断弹窗
