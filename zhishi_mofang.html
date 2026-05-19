@@ -14,20 +14,17 @@ let selectedCard=null,currentPassword=null;
   --bg:#09090d;--panel:#111218;--input-bg:#0b0c10;
   --gold:#f3af42;--gold2:#b87b14;--gold-glow:rgba(243,175,66,0.35);--gold-dim:rgba(243,175,66,0.08);
   --tx:#f1f5f9;--tx2:#94a3b8;--tx3:#475569;
-  --bd:rgba(255,255,255,0.06);--bd-gold:rgba(243,175,66,0.3);
-  --r:12px;--card-bg:linear-gradient(145deg,#2d2f39,#14151b,#22242d);
+  --bd:rgba(255,255,255,0.06);--bd-gold:rgba(243,175,66,0.3);--r:12px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'PingFang SC',sans-serif;min-height:100vh;overflow-x:hidden;background-image:radial-gradient(circle at 50% 0%,#1c1d26,#09090d 70%);}
-
-/* 公告 */
 #notice-bar{display:none;background:linear-gradient(90deg,#1a1228,#231520);color:var(--gold);font-size:13px;font-weight:700;text-align:center;padding:10px;border-bottom:1px solid var(--bd-gold);}
 
-/* ===== 锁定页 ===== */
+/* 锁定页 */
 #lock-screen{display:none;position:fixed;inset:0;background:rgba(9,9,13,0.97);z-index:9998;align-items:flex-start;justify-content:center;overflow-y:auto;padding:32px 16px 60px;backdrop-filter:blur(8px);}
 .lock-wrap{max-width:460px;width:100%;margin:0 auto;}
 #step-select,#step-pay,#step-gzhguide,#step-input{display:none;}
-.lock-card{background:#0f1015;border:1px solid var(--bd-gold);border-radius:20px;padding:28px;text-align:center;box-shadow:0 0 60px rgba(243,175,66,0.08);}
+.lock-card{background:#0f1015;border:1px solid var(--bd-gold);border-radius:20px;padding:28px;text-align:center;}
 .lock-card h2{font-size:20px;font-weight:900;color:var(--gold);margin-bottom:10px;}
 .lock-card p{color:var(--tx2);font-size:13px;line-height:1.8;margin-bottom:20px;}
 .free-tip-bar{background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--tx2);margin-bottom:16px;}
@@ -50,7 +47,7 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
 .gzh-steps{background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:16px;text-align:left;}
 .gzh-steps div{font-size:13px;color:var(--tx);line-height:2.2;}
 
-/* ===== 礼包弹窗 ===== */
+/* 礼包 */
 #gift-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:99999;align-items:center;justify-content:center;}
 .gift-card{background:#0f1015;border:1.5px solid var(--gold);border-radius:20px;padding:2.5rem;text-align:center;max-width:380px;width:90%;}
 .gift-card h2{color:var(--gold);font-size:20px;margin-bottom:10px;}
@@ -58,19 +55,19 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
 .gift-btn{display:block;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-weight:900;font-size:14px;padding:12px;border-radius:10px;text-decoration:none;margin-bottom:8px;}
 .gift-close{background:transparent;border:none;color:var(--tx3);font-size:12px;cursor:pointer;}
 
-/* ===== 图片放大 ===== */
+/* 图片放大 */
 #img-zoom{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.93);z-index:99999;align-items:center;justify-content:center;cursor:zoom-out;}
 #img-zoom img{max-width:90vw;max-height:90vh;border-radius:12px;}
 
-/* ===== Toast ===== */
+/* Toast */
 #clip-toast{display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(243,175,66,0.95);color:#000;font-size:13px;font-weight:700;padding:10px 22px;border-radius:30px;z-index:99999;}
 
-/* ===== 主体 ===== */
+/* 主体 */
 .shell{max-width:1040px;margin:0 auto;padding:40px 20px 80px;}
 
 /* Hero */
 .hero{text-align:center;margin-bottom:28px;}
-.brand-badge{display:inline-flex;align-items:center;gap:8px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:30px;padding:5px 16px;font-size:12px;color:var(--gold);font-weight:700;margin-bottom:14px;letter-spacing:.5px;}
+.brand-badge{display:inline-flex;align-items:center;gap:8px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:30px;padding:5px 16px;font-size:12px;color:var(--gold);font-weight:700;margin-bottom:14px;}
 .hero h1{font-size:34px;font-weight:900;letter-spacing:3px;color:#fff;margin-bottom:10px;text-shadow:0 4px 20px rgba(0,0,0,0.6);}
 .hero h1 span{color:var(--gold);text-shadow:0 0 20px var(--gold-glow);}
 .hero-sub{color:#cbd5e1;font-size:14px;margin-bottom:6px;}
@@ -91,144 +88,95 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
 .g-img:hover img{transform:scale(1.06);}
 .g-label{font-size:11px;color:var(--tx2);margin-top:7px;display:block;text-align:center;font-weight:600;}
 
-/* ===== 第1阶：万能输入黑洞 ===== */
+/* 快捷关键词 */
+.keywords-section{margin-bottom:20px;}
+.keywords-label{font-size:12px;color:var(--tx2);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.keywords-label::after{content:"";flex:1;height:1px;background:var(--bd);}
+.keywords-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.kw-tab{padding:5px 12px;background:#13141a;border:1px solid var(--bd);border-radius:16px;font-size:11px;color:var(--tx2);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.kw-tab:hover,.kw-tab.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold);}
+.keywords-chips{display:flex;gap:8px;flex-wrap:wrap;min-height:36px;}
+.kw-chip{padding:6px 12px;background:#0f1015;border:1px solid var(--bd);border-radius:20px;font-size:12px;color:var(--tx2);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.kw-chip:hover{border-color:rgba(243,175,66,0.3);color:var(--tx);}
+.kw-special{border-color:rgba(243,175,66,0.2);color:rgba(243,175,66,0.8);}
+
+/* 输入区 */
 .input-stage{background:var(--panel);border:1px solid var(--bd);border-radius:16px;padding:20px;margin-bottom:16px;transition:all .3s;}
 .input-stage:focus-within{border-color:var(--gold);box-shadow:0 0 30px rgba(243,175,66,0.08);}
-.quota-row{display:flex;justify-content:flex-end;align-items:center;margin-bottom:10px;}
+.quota-row{display:flex;justify-content:flex-end;margin-bottom:10px;}
 .quota-txt{font-size:12px;color:var(--tx3);}
 .quota-txt span{color:var(--gold);font-weight:800;}
-/* 输入框 + AI追加词 */
-.input-wrap{position:relative;margin-bottom:14px;}
-#main-textarea{width:100%;min-height:90px;background:transparent;border:none;color:var(--tx);font-size:15px;resize:none;outline:none;line-height:1.7;font-family:inherit;}
-.ai-append-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(243,175,66,0.1);border:1px solid rgba(243,175,66,0.3);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--gold);margin-left:6px;cursor:pointer;transition:all .2s;white-space:nowrap;}
-.ai-append-tag:hover{background:rgba(243,175,66,0.2);}
-.ai-append-tag .remove-tag{margin-left:4px;color:var(--tx3);font-size:11px;}
-/* 工具栏 */
-.input-toolbar{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,0.03);padding-top:12px;}
+#main-textarea{width:100%;min-height:100px;background:transparent;border:none;color:var(--tx);font-size:15px;resize:none;outline:none;line-height:1.7;font-family:inherit;}
+.input-toolbar{display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,0.03);padding-top:12px;margin-top:8px;}
 .btn-attach{background:rgba(243,175,66,0.03);border:1px dashed rgba(243,175,66,0.2);color:var(--gold);font-size:12px;font-weight:700;padding:6px 13px;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s;}
 .btn-attach:hover{background:var(--gold-dim);border-color:var(--gold);}
 .file-badge{display:none;align-items:center;gap:6px;background:#151720;border:1px solid rgba(243,175,66,0.2);padding:4px 10px;border-radius:6px;font-size:11px;color:#cbd5e1;}
 .file-badge img{width:18px;height:18px;object-fit:cover;border-radius:3px;}
 .btn-rm-file{color:#ef4444;cursor:pointer;background:none;border:none;font-size:12px;font-weight:900;}
 
-/* ===== 第2阶：气泡芯片 ===== */
-.bubble-stage{margin-bottom:16px;min-height:60px;}
-.bubble-label{font-size:12px;color:var(--tx3);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+/* 气泡联想 */
+.bubble-stage{margin-bottom:16px;min-height:0;}
+.bubble-label{font-size:12px;color:var(--tx3);margin-bottom:8px;display:none;align-items:center;gap:6px;}
 .bubble-label::before{content:"✦";color:var(--gold);font-size:10px;}
-.bubbles-wrap{display:flex;flex-wrap:wrap;gap:8px;min-height:36px;}
-.bubble-chip{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;background:#13141a;border:1px solid var(--bd);border-radius:20px;font-size:12px;color:var(--tx2);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.bubbles-wrap{display:flex;flex-wrap:wrap;gap:8px;}
+.bubble-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:#13141a;border:1px solid var(--bd);border-radius:20px;font-size:12px;color:var(--tx2);cursor:pointer;transition:all .2s;}
 .bubble-chip:hover{border-color:rgba(243,175,66,0.3);color:var(--tx);}
 .bubble-chip.selected{background:var(--gold-dim);border-color:var(--gold);color:var(--gold);}
-.bubble-hint{font-size:11px;color:var(--tx3);margin-top:8px;}
+.bubble-hint{font-size:11px;color:var(--tx3);margin-top:6px;display:none;}
 .bubble-hint span{color:var(--gold);}
 
 /* 生成按钮 */
 .btn-generate{width:100%;padding:16px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:12px;color:#000;font-weight:800;font-size:16px;cursor:pointer;letter-spacing:1.5px;box-shadow:0 6px 25px rgba(243,175,66,0.25);transition:all .3s;margin-bottom:20px;}
-.btn-generate:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 8px 30px rgba(243,175,66,0.38);}
+.btn-generate:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px);}
 .btn-generate:disabled{background:#1f2029;color:var(--tx3);cursor:not-allowed;box-shadow:none;transform:none;}
 
-/* ===== 第3阶：量子扫描日志 ===== */
+/* 量子扫描 */
 #quantum-stage{display:none;margin-bottom:20px;}
-.quantum-box{background:#03040a;border:1px solid rgba(243,175,66,0.12);border-radius:14px;padding:20px;font-family:'Menlo','Monaco',monospace;font-size:12px;position:relative;overflow:hidden;min-height:120px;}
+.quantum-box{background:#03040a;border:1px solid rgba(243,175,66,0.12);border-radius:14px;padding:20px;font-family:'Menlo','Monaco',monospace;font-size:12px;position:relative;min-height:130px;}
 .quantum-box::before{content:"● ● ●";position:absolute;top:12px;left:16px;font-size:10px;color:rgba(255,255,255,0.12);letter-spacing:5px;}
-#quantum-log{margin-top:28px;color:#4ade80;line-height:2;}
+#quantum-log{margin-top:28px;color:#4ade80;line-height:2.2;}
 .q-line{animation:q-in .25s ease;}
 @keyframes q-in{from{opacity:0;transform:translateX(-6px);}to{opacity:1;transform:translateX(0);}}
 .q-gold{color:var(--gold);}
 .q-blue{color:#60a5fa;}
 .q-dim{color:var(--tx3);}
 
-/* ===== 第4阶：AI推荐参数卡 ===== */
-#recommend-stage{display:none;margin-bottom:20px;}
-.rec-card{background:linear-gradient(145deg,#1a1b25,#0f1015);border:1.5px solid var(--gold);border-radius:16px;padding:24px;box-shadow:0 0 40px rgba(243,175,66,0.1);}
-.rec-badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:11px;font-weight:900;padding:4px 14px;border-radius:20px;margin-bottom:16px;}
-.rec-params{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
-.rec-param{background:rgba(243,175,66,0.08);border:1px solid rgba(243,175,66,0.25);border-radius:8px;padding:10px 16px;font-size:12px;}
-.rec-param-label{color:rgba(255,255,255,0.5);font-size:10px;margin-bottom:4px;letter-spacing:.3px;}
-.rec-param-value{color:#f3af42;font-weight:800;font-size:14px;text-shadow:0 0 10px rgba(243,175,66,0.4);}
-.rec-actions{display:flex;gap:12px;}
-.btn-confirm-go{flex:1;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;}
-.btn-custom-go{flex:1;background:transparent;color:var(--gold);border:1.5px solid var(--bd-gold);border-radius:10px;padding:13px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
-.btn-custom-go:hover{background:var(--gold-dim);}
+/* AI识别卡（第一轮结果） */
+#analysis-stage{display:none;margin-bottom:20px;}
+.analysis-card{background:linear-gradient(145deg,#1a1b25,#0f1015);border:1.5px solid var(--gold);border-radius:16px;padding:24px;box-shadow:0 0 40px rgba(243,175,66,0.1);}
+.analysis-badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:11px;font-weight:900;padding:4px 14px;border-radius:20px;margin-bottom:16px;}
+.analysis-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:20px;}
+.analysis-item{background:rgba(243,175,66,0.06);border:1px solid rgba(243,175,66,0.2);border-radius:10px;padding:10px 14px;}
+.analysis-item-label{font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px;letter-spacing:.3px;}
+.analysis-item-value{font-size:13px;font-weight:800;color:#f3af42;line-height:1.4;}
+.analysis-raw{background:#07080b;border:1px solid rgba(255,255,255,0.04);border-radius:10px;padding:14px;font-size:12px;color:var(--tx2);line-height:1.8;margin-bottom:16px;max-height:200px;overflow-y:auto;white-space:pre-wrap;}
+.analysis-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.btn-action{border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
+.btn-action-primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;}
+.btn-action-primary:hover{filter:brightness(1.08);}
+.btn-action-secondary{background:rgba(243,175,66,0.08);color:var(--gold);border:1px solid rgba(243,175,66,0.25);}
+.btn-action-secondary:hover{background:rgba(243,175,66,0.15);}
+.btn-action-ghost{background:transparent;color:var(--tx2);border:1px solid var(--bd);}
+.btn-action-ghost:hover{border-color:rgba(243,175,66,0.3);color:var(--tx);}
 
-/* ===== 第5阶：高定面板（折叠） ===== */
-#custom-stage{display:none;margin-bottom:20px;animation:slide-open .35s ease;}
-@keyframes slide-open{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
-.custom-panel{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:20px;}
-.custom-panel-title{font-size:13px;font-weight:700;color:var(--tx2);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-.custom-panel-title span{color:var(--gold);}
-/* 三个可编辑参数 */
-.edit-params{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;}
-.edit-param{background:#13141e;border:1px solid rgba(243,175,66,0.2);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;position:relative;}
-.edit-param:hover,.edit-param.open{border-color:var(--gold);background:var(--gold-dim);box-shadow:0 0 12px rgba(243,175,66,0.08);}
-.edit-param-label{font-size:10px;color:var(--tx2);margin-bottom:4px;letter-spacing:.3px;}
-.edit-param-value{font-size:13px;font-weight:800;color:var(--gold);text-shadow:0 0 8px rgba(243,175,66,0.3);}
-.edit-param-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:11px;}
-/* 下拉选项 */
-.edit-dropdown{display:none;position:absolute;top:100%;left:0;right:0;background:#0f1015;border:1px solid var(--bd-gold);border-radius:10px;padding:8px;z-index:100;margin-top:4px;box-shadow:0 8px 24px rgba(0,0,0,0.6);max-height:220px;overflow-y:auto;}
-.edit-dropdown.show{display:block;}
-.dropdown-item{padding:8px 10px;border-radius:6px;font-size:12px;color:var(--tx2);cursor:pointer;transition:all .15s;}
-.dropdown-item:hover,.dropdown-item.active{background:var(--gold-dim);color:var(--gold);}
-/* 行业药丸（折叠区） */
-.industry-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px;}
-.ipill{position:relative;background:#13141a;border:1px solid var(--bd);border-radius:22px;padding:10px 6px;text-align:center;color:#cbd5e1;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
-.ipill:hover{border-color:var(--bd-gold);}
-.ipill.active{background:var(--gold-dim);border-color:var(--gold);color:var(--gold);}
-@keyframes pill-pulse{0%,100%{box-shadow:0 0 0 rgba(243,175,66,0);}50%{box-shadow:0 0 12px rgba(243,175,66,0.15);}}
-.ipill.hot{border-color:rgba(243,175,66,0.2);animation:pill-pulse 3s infinite;}
-.pill-badge{position:absolute;top:-7px;right:0;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:8px;font-weight:900;padding:1px 5px;border-radius:8px 8px 8px 0;z-index:2;}
-/* 选题芯片 */
-.topics-area{background:#0f1015;border-radius:10px;padding:12px;margin-bottom:14px;}
-.topics-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-.topics-label-txt{font-size:12px;color:var(--tx2);font-weight:700;}
-.btn-shuffle{background:none;border:none;color:var(--gold);font-size:11px;cursor:pointer;font-weight:700;}
-.chips-dock{display:flex;flex-wrap:wrap;gap:7px;}
-.topic-chip{background:#13141a;border:1px solid rgba(255,255,255,0.03);border-radius:14px;padding:5px 12px;font-size:11px;color:var(--tx2);cursor:pointer;transition:all .2s;}
-.topic-chip:hover{color:#fff;border-color:rgba(243,175,66,0.2);}
-/* 自定义风格输入 */
-.custom-style-dock{display:none;margin-top:12px;}
-.custom-style-input{width:100%;padding:12px 16px;background:var(--input-bg);border:1px solid var(--bd-gold);border-radius:10px;color:#fff;font-size:14px;outline:none;}
+/* 自定义面板 */
+#custom-stage{display:none;margin-bottom:20px;animation:slide-open .3s ease;}
+@keyframes slide-open{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+.custom-panel{background:var(--panel);border:1px solid var(--bd-gold);border-radius:14px;padding:20px;}
+.custom-title{font-size:13px;font-weight:700;color:var(--tx2);margin-bottom:14px;}
+.custom-title span{color:var(--gold);}
+.custom-selects{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.custom-sel-wrap{position:relative;}
+.custom-sel-label{font-size:10px;color:var(--tx2);margin-bottom:6px;display:block;letter-spacing:.3px;font-weight:700;}
+.custom-sel{width:100%;background:#13141e;border:1.5px solid rgba(243,175,66,0.25);border-radius:10px;padding:11px 14px;color:#f3af42;font-size:13px;font-weight:700;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;transition:all .2s;}
+.custom-sel:focus{border-color:var(--gold);box-shadow:0 0 12px rgba(243,175,66,0.1);}
+.custom-sel option{background:#13141e;color:#cbd5e1;font-weight:400;}
+.custom-sel optgroup{background:#0f1015;color:var(--gold);font-weight:700;}
+.custom-style-input{width:100%;padding:11px 14px;background:var(--input-bg);border:1px solid var(--bd-gold);border-radius:10px;color:#fff;font-size:13px;outline:none;margin-bottom:12px;display:none;}
 .custom-style-input:focus{border-color:var(--gold);}
 .btn-custom-launch{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:900;cursor:pointer;}
 
-/* ===== 风格卡片 ===== */
-#style-stage{display:none;margin-bottom:20px;}
-.style-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px;}
-.style-header h3{font-size:16px;font-weight:800;color:#fff;}
-.style-header p{font-size:12px;color:var(--tx3);}
-.btn-rebatch{background:var(--gold-dim);border:1px solid rgba(243,175,66,0.2);color:var(--gold);padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
-.btn-rebatch:hover{background:rgba(243,175,66,0.14);}
-.style-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
-.sc{background:var(--card-bg);border:1px solid var(--bd);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .25s;position:relative;}
-.sc:hover{border-color:rgba(243,175,66,0.4);transform:translateY(-2px);box-shadow:0 12px 35px rgba(0,0,0,0.5);}
-.sc-rec{border-color:var(--gold)!important;box-shadow:0 0 25px rgba(243,175,66,0.15)!important;}
-.sc-badge{position:absolute;top:0;right:0;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:10px;font-weight:800;padding:3px 10px;border-radius:0 0 0 10px;z-index:3;}
-.sc-visual{height:90px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;position:relative;overflow:hidden;}
-.sc-visual::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 30%,rgba(255,255,255,0.06),transparent 70%);z-index:0;}
-.sc-visual::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,0.65));z-index:0;}
-.sc-emoji{font-size:28px;filter:drop-shadow(0 0 12px rgba(255,255,255,0.35));position:relative;z-index:2;}
-.sc-name{font-size:10px;color:rgba(255,255,255,0.85);font-weight:700;text-shadow:0 1px 6px #000;position:relative;z-index:2;}
-.sc-body{padding:11px 12px 13px;}
-.sc-title{font-size:12px;font-weight:700;color:#fff;margin-bottom:3px;}
-.sc-rec .sc-title{color:var(--gold);}
-.sc-desc{font-size:11px;color:var(--tx2);line-height:1.5;margin-bottom:10px;}
-.sc-btn{width:100%;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
-.scb-p{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;}
-.scb-s{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(243,175,66,0.2)!important;}
-.scb-s:hover{background:rgba(243,175,66,0.14);}
-/* 风格背景 */
-.sv-3d{background:radial-gradient(circle at 25% 40%,rgba(120,180,255,0.5),transparent 50%),radial-gradient(circle at 75% 60%,rgba(180,80,255,0.4),transparent 50%),linear-gradient(135deg,#020215,#080830,#12124a);}
-.sv-guochao{background:radial-gradient(circle at 50% 30%,rgba(255,80,30,0.5),transparent 55%),radial-gradient(circle at 80% 80%,rgba(200,140,0,0.3),transparent 45%),linear-gradient(145deg,#120303,#2a0808,#400a0a);}
-.sv-shuimo{background:radial-gradient(circle at 30% 60%,rgba(80,60,40,0.4),transparent 60%),linear-gradient(145deg,#e8e2d8,#ddd7cc,#d2ccc0);}
-.sv-jianyi{background:radial-gradient(circle at 50% 30%,rgba(255,255,255,0.8),transparent 60%),linear-gradient(145deg,#f5f5f3,#ededeb,#e5e5e3);}
-.sv-bowu{background:radial-gradient(circle at 40% 40%,rgba(180,140,70,0.35),transparent 55%),linear-gradient(145deg,#0e0a04,#1a1308,#261c0c);}
-.sv-saibo{background:radial-gradient(circle at 30% 50%,rgba(0,255,200,0.3),transparent 45%),radial-gradient(circle at 70% 50%,rgba(255,0,200,0.3),transparent 45%),linear-gradient(135deg,#010108,#060618,#0c0c28);}
-.sv-makalong{background:radial-gradient(circle at 35% 45%,rgba(255,160,220,0.5),transparent 50%),radial-gradient(circle at 65% 55%,rgba(200,140,255,0.4),transparent 50%),linear-gradient(135deg,#150a1a,#200f2a,#1a0e28);}
-.sv-zaji{background:radial-gradient(circle at 50% 30%,rgba(255,60,60,0.5),transparent 50%),linear-gradient(145deg,#080103,#140306,#1e0408);}
-.sv-luxury{background:radial-gradient(circle at 50% 40%,rgba(220,170,50,0.4),transparent 55%),linear-gradient(145deg,#0c0902,#181305,#201a08);}
-.sv-morandi{background:radial-gradient(circle at 50% 40%,rgba(200,185,170,0.5),transparent 60%),linear-gradient(145deg,#cec6bc,#c2bab0,#b6aea4);}
-
-/* ===== 思考单卡 ===== */
+/* 思考单卡 */
 #thinking-stage{display:none;justify-content:center;margin-bottom:20px;}
 .thinking-wrap{position:relative;width:340px;height:400px;display:flex;justify-content:center;align-items:center;}
 .t-wing{position:absolute;width:260px;height:320px;border-radius:20px;opacity:0.55;filter:blur(14px);z-index:1;}
@@ -243,26 +191,30 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
 .atom-ring{width:44px;height:44px;border:3px solid rgba(243,175,66,0.08);border-top-color:var(--gold);border-right-color:var(--gold);border-radius:50%;box-shadow:0 0 20px var(--gold-glow);animation:spin-ring .9s linear infinite;}
 .t-status{color:#cbd5e1;font-size:12px;line-height:1.7;margin-top:28px;}
 
-/* ===== 输出区 ===== */
+/* 输出区 */
 #output-section{display:none;margin-bottom:24px;}
-.dual-board{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;}
-.e-wing{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:16px;}
-.wing-title{font-size:12px;font-weight:800;color:var(--tx2);letter-spacing:.5px;border-left:3px solid var(--gold);padding-left:8px;margin-bottom:2px;}
-.prompt-box{width:100%;height:120px;background:#07080b;border-radius:8px;padding:12px;color:#cbd5e1;font-family:'Menlo',monospace;font-size:12px;overflow-y:auto;white-space:pre-wrap;line-height:1.6;border:1px solid rgba(255,255,255,0.02);}
-.text-box{width:100%;height:120px;background:#07080b;border-radius:8px;padding:12px;color:var(--tx);font-size:12px;overflow-y:auto;white-space:pre-wrap;line-height:1.6;border:1px solid rgba(255,255,255,0.02);}
-.video-box{width:100%;height:260px;background:#07080b;border-radius:8px;padding:12px;color:var(--gold);font-size:12px;overflow-y:auto;white-space:pre-wrap;line-height:1.7;border:1px solid rgba(243,175,66,0.03);}
-.btn-copy-row{width:100%;padding:9px;background:var(--gold-dim);border:1px solid rgba(243,175,66,0.14);color:var(--gold);border-radius:6px;font-weight:800;font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:-6px;}
-.btn-copy-row:hover{background:rgba(243,175,66,0.14);border-color:var(--gold);}
-.legal-note{font-size:11px;color:#475569;line-height:1.5;border-top:1px dashed rgba(255,255,255,0.04);padding-top:10px;}
-.radar-area{display:flex;flex-direction:column;gap:10px;}
-.radar-item{background:#171922;border:1px solid rgba(255,255,255,0.02);border-radius:8px;padding:11px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;text-decoration:none;transition:all .2s;}
-.radar-item:hover{background:#1f2230;border-color:rgba(243,175,66,0.2);}
-.radar-tag{font-size:9px;font-weight:800;color:#000;background:var(--gold);padding:1px 5px;border-radius:3px;}
-.radar-text{font-size:11px;color:#e2e8f0;font-weight:600;margin-top:3px;line-height:1.4;}
-.radar-go{font-size:11px;color:var(--gold);font-weight:700;}
+.prompt-block{background:var(--panel);border:1px solid var(--bd);border-radius:14px;margin-bottom:16px;overflow:hidden;}
+.block-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd);background:rgba(15,15,22,0.9);}
+.block-head-left{display:flex;align-items:center;gap:8px;}
+.block-icon{width:28px;height:28px;border-radius:8px;background:var(--gold-dim);display:flex;align-items:center;justify-content:center;font-size:14px;}
+.block-title{font-size:13px;font-weight:700;color:var(--tx);}
+.block-sub{font-size:11px;color:var(--tx3);margin-top:1px;}
+.btn-copy{padding:5px 13px;border:1px solid rgba(243,175,66,0.3);border-radius:7px;background:var(--gold-dim);font-size:12px;color:var(--gold);font-weight:700;cursor:pointer;transition:all .2s;}
+.btn-copy:hover{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border-color:var(--gold);}
+.block-body{padding:16px;font-size:13px;color:var(--tx2);line-height:1.9;white-space:pre-wrap;word-break:break-word;max-height:320px;overflow-y:auto;}
+.block-body.prompt-style{font-family:'Menlo','Monaco',monospace;font-size:12px;color:#c8a95a;background:#020204;max-height:280px;}
+
+/* 文案申请区 */
+#copywrite-ask{display:none;margin-bottom:16px;}
+.copywrite-ask-card{background:linear-gradient(135deg,rgba(79,142,247,0.06),rgba(243,175,66,0.04));border:1px solid rgba(243,175,66,0.2);border-radius:14px;padding:20px;text-align:center;}
+.copywrite-ask-card h3{font-size:15px;font-weight:800;color:var(--tx);margin-bottom:6px;}
+.copywrite-ask-card p{font-size:12px;color:var(--tx2);margin-bottom:16px;}
+.copywrite-btns{display:flex;gap:10px;justify-content:center;}
+.btn-copywrite-yes{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:10px;padding:11px 24px;font-size:14px;font-weight:900;cursor:pointer;}
+.btn-copywrite-no{background:transparent;border:1px solid var(--bd);color:var(--tx3);border-radius:10px;padding:11px 20px;font-size:13px;cursor:pointer;}
+
 /* 平台区 */
-.platform-row{grid-column:1/-1;display:grid;grid-template-columns:2.2fr 1fr;gap:20px;margin-top:6px;}
-.platform-wing{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:20px;}
+.platform-block{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:20px;margin-bottom:16px;}
 .platform-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px;}
 .platform-card{background:#17181e;border:1px solid rgba(255,255,255,0.03);border-radius:12px;padding:18px 12px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
 .platform-card:hover{border-color:rgba(243,175,66,0.2);background:#1e202a;transform:translateY(-2px);}
@@ -273,13 +225,9 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
 .p-tag{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;display:inline-block;}
 .tag-gold{background:rgba(243,175,66,0.1);color:var(--gold);}
 .tag-green{background:rgba(34,197,94,0.1);color:#22c55e;}
-.hub-card{background:linear-gradient(145deg,#20222e,#0e0f14);border:1px solid var(--bd-gold);border-radius:14px;padding:24px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.hub-logo{width:42px;height:42px;background:var(--gold);border-radius:50%;font-size:22px;color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;box-shadow:0 0 15px var(--gold-glow);margin-bottom:12px;}
-.hub-title{font-size:15px;font-weight:900;color:#fff;margin-bottom:4px;}
-.hub-sub{font-size:11px;color:var(--tx3);margin-bottom:16px;}
-.btn-hub{width:100%;padding:11px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;text-decoration:none;display:block;}
-/* 微信 */
-.wechat-banner{grid-column:1/-1;background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:20px;display:flex;align-items:center;gap:20px;margin-top:6px;}
+
+/* 微信Banner */
+.wechat-banner{background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:20px;display:flex;align-items:center;gap:20px;margin-bottom:16px;}
 .wechat-qr{width:72px;height:72px;background:#fff;border-radius:8px;padding:4px;flex-shrink:0;}
 .wechat-qr img{width:100%;height:100%;object-fit:contain;}
 .wechat-meta h3{font-size:14px;font-weight:800;color:#fff;margin-bottom:5px;}
@@ -287,14 +235,8 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
 .wechat-id{color:var(--gold);font-family:monospace;font-weight:700;}
 
 /* 响应式 */
-@media(max-width:900px){.dual-board,.platform-row{grid-template-columns:1fr;}.style-grid{grid-template-columns:repeat(2,1fr);}.edit-params{grid-template-columns:1fr;}}
-@media(max-width:600px){.industry-grid{grid-template-columns:repeat(3,1fr);}.shell{padding:20px 14px 80px;}.hero h1{font-size:24px;letter-spacing:1px;}.rec-params{flex-direction:column;}.rec-actions{flex-direction:column;}}
-
-/* 光圈等待 */
-@keyframes ring-glow{0%,100%{box-shadow:0 0 20px rgba(243,175,66,0.3);}50%{box-shadow:0 0 50px rgba(243,175,66,0.7);}}
-.card-waiting-overlay{position:absolute;inset:0;border-radius:14px;border:2px solid var(--gold);animation:ring-glow 1.2s ease-in-out infinite;background:rgba(9,9,13,0.94);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;z-index:10;}
-.card-waiting-overlay .atom-ring{width:36px;height:36px;}
-.card-waiting-overlay p{font-size:12px;color:var(--tx2);text-align:center;}
+@media(max-width:768px){.analysis-grid{grid-template-columns:1fr 1fr;}.platform-grid{grid-template-columns:repeat(2,1fr);}.custom-selects{grid-template-columns:1fr;}}
+@media(max-width:480px){.analysis-grid{grid-template-columns:1fr;}.analysis-actions{grid-template-columns:1fr;}.shell{padding:20px 14px 80px;}.hero h1{font-size:24px;letter-spacing:1px;}}
 </style>
 </head>
 <body>
@@ -355,7 +297,7 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
   </div>
 </div>
 
-<!-- 礼包弹窗 -->
+<!-- 礼包 -->
 <div id="gift-modal">
   <div class="gift-card">
     <div style="font-size:44px;margin-bottom:14px;">🎁</div>
@@ -366,10 +308,7 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
   </div>
 </div>
 
-<!-- 图片放大 -->
 <div id="img-zoom" onclick="this.style.display='none'"><img id="img-zoom-src" src=""></div>
-
-<!-- Toast -->
 <div id="clip-toast">✓ 已复制到剪贴板</div>
 
 <!-- 主面板 -->
@@ -380,7 +319,7 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
   <div class="hero">
     <div class="brand-badge">🌐 灵创星球 · AI出图引擎</div>
     <h1>心有所想，<span>一键出图</span></h1>
-    <p class="hero-sub">大白话描述你的想法 ➔ AI自动匹配风格 ➔ 复制提示词去即梦生图</p>
+    <p class="hero-sub">大白话描述你的想法 ➔ AI联网分析 ➔ 完整提示词直接生图</p>
     <p class="hero-feat">全品类覆盖<span>•</span>联网搜爆款<span>•</span>傻瓜式操作</p>
     <div class="usage-badge" id="usage-badge">⚡ 免费剩余：5 次</div>
   </div>
@@ -389,22 +328,27 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
   <div class="gallery-wall">
     <div class="gallery-header">
       <div class="gallery-title">✨ 真实出图效果（复制提示词 ➔ 灵创星球/即梦粘贴 ➔ 直接出图）</div>
-      <div class="gallery-sub">底层内置工业级高精光影参数，摒弃复杂咒语，完美锁死高溢价商业级调性</div>
+      <div class="gallery-sub">底层内置工业级高精光影参数，44种专业手法，全品类自动匹配</div>
     </div>
     <div class="gallery-track" id="gallery-track"></div>
   </div>
 
-  <!-- 第1阶：万能输入黑洞 -->
+  <!-- 快捷关键词 -->
+  <div class="keywords-section">
+    <div class="keywords-label">💡 快捷关键词（点击直接填入，或自己手打大白话）</div>
+    <div class="keywords-tabs" id="kw-tabs"></div>
+    <div class="keywords-chips" id="kw-chips"></div>
+  </div>
+
+  <!-- 输入区 -->
   <div class="input-stage">
     <div class="quota-row">
       <div class="quota-txt">💡 今日算力余量：<span id="quota-num">∞</span></div>
     </div>
-    <div class="input-wrap">
-      <textarea id="main-textarea" placeholder="直接说你想做什么图…&#10;&#10;例如：红烧肉的做法 / 成都美食地图 / 光合作用原理 / 秋冬通勤穿搭公式&#10;也可以上传参考图/文档，AI自动识别内容"></textarea>
-      <div id="ai-tags-wrap" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:0;"></div>
-    </div>
+    <textarea id="main-textarea"
+      placeholder="直接说你想做什么图，用大白话就行…&#10;&#10;📝 例：红烧肉的做法 / 苏州旅游攻略 / 光合作用 / 天蝎座性格分析&#10;🌿 加季节词触发浮雕风：秋天的故宫 / 冬天的西湖&#10;📄 上传图片做电商海报，上传文档自动提取知识点&#10;🃏 批量系列：输入「批量生成10张XX系列卡」"></textarea>
     <div class="input-toolbar">
-      <input type="file" id="file-input" style="display:none;" accept="image/*,.pdf,.doc,.docx" onchange="handleFile(this)">
+      <input type="file" id="file-input" style="display:none;" accept="image/*,.pdf,.doc,.docx" multiple onchange="handleFile(this)">
       <button class="btn-attach" onclick="document.getElementById('file-input').click()">📎 上传参考图 / 文档 / 手写稿</button>
       <div id="file-badge" class="file-badge">
         <img id="badge-img" src="" alt=""><span id="badge-name"></span>
@@ -413,110 +357,176 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
     </div>
   </div>
 
-  <!-- 第2阶：气泡芯片 -->
+  <!-- 气泡联想 -->
   <div class="bubble-stage" id="bubble-stage">
-    <div class="bubble-label" id="bubble-label" style="display:none;">智能联想高赞排版容器（选择后自动追加，不影响你的思法主体）：</div>
+    <div class="bubble-label" id="bubble-label">✦ 智能联想排版容器（选择后追加，不影响你的思法主体）：</div>
     <div class="bubbles-wrap" id="bubbles-wrap"></div>
-    <div class="bubble-hint" id="bubble-hint" style="display:none;">💡 提示：标签支持<span>多选叠加</span>！同时追加排版格式与光影色调，叠加选择不会降低最终出图质量。</div>
+    <div class="bubble-hint" id="bubble-hint">💡 支持<span>多选叠加</span>，叠加选择不会降低最终出图质量</div>
   </div>
 
-  <!-- 生成按钮 -->
   <button id="gen-btn" class="btn-generate" onclick="runEngine()">🔮 启动大脑 · 开始全行业智能生图充能</button>
 
-  <!-- 第3阶：量子扫描 -->
+  <!-- 量子扫描 -->
   <div id="quantum-stage">
-    <div class="quantum-box">
-      <div id="quantum-log"></div>
-    </div>
+    <div class="quantum-box"><div id="quantum-log"></div></div>
   </div>
 
-  <!-- 第4阶：AI推荐参数卡 -->
-  <div id="recommend-stage">
-    <div class="rec-card">
-      <div class="rec-badge">🏅 AI为你智能锁定方案</div>
-      <div class="rec-params" id="rec-params"></div>
-      <div class="rec-actions">
-        <button class="btn-confirm-go" onclick="goDirectly()">✅ 确定，直接出图</button>
-        <button class="btn-custom-go" onclick="openCustom()">⚙️ 我要高定自定义</button>
+  <!-- AI识别结果卡（第一轮） -->
+  <div id="analysis-stage">
+    <div class="analysis-card">
+      <div class="analysis-badge">🏅 AI内容解析全息汇总卡</div>
+      <div class="analysis-grid" id="analysis-grid"></div>
+      <div class="analysis-raw" id="analysis-raw" style="display:none;"></div>
+      <div class="analysis-actions">
+        <button class="btn-action btn-action-primary" onclick="sendChoice('1')">✅ 确定出图 →</button>
+        <button class="btn-action btn-action-secondary" onclick="sendChoice('2')">🎲 换一套风格</button>
+        <button class="btn-action btn-action-ghost" onclick="openCustom()">⚙️ 我要高定自定义</button>
+        <button class="btn-action btn-action-ghost" onclick="sendChoice('3')">📐 我要换尺寸</button>
       </div>
     </div>
   </div>
 
-  <!-- 第5阶：高定面板 -->
+  <!-- 自定义面板 -->
   <div id="custom-stage">
     <div class="custom-panel">
-      <div class="custom-panel-title">⚙️ 高定自定义参数 <span>（修改你不满意的，其余保持AI推荐）</span></div>
-      <!-- 三个可编辑参数 -->
-      <div class="edit-params">
-
-        <div class="edit-param" id="ep-size" onclick="toggleDropdown('dd-size')">
-          <div class="edit-param-label">📐 输出尺寸</div>
-          <div class="edit-param-value" id="epv-size">9:16竖版</div>
-          <div class="edit-param-arrow">▾</div>
-          <div class="edit-dropdown" id="dd-size">
-            <div class="dropdown-item" onclick="setParam('size','AI自动推荐',event)">🤖 AI自动推荐</div>
-            <div class="dropdown-item active" onclick="setParam('size','9:16竖版',event)">9:16 竖版（刷屏首选）</div>
-            <div class="dropdown-item" onclick="setParam('size','3:4竖版',event)">3:4 竖版（小红书封面）</div>
-            <div class="dropdown-item" onclick="setParam('size','2:3竖版',event)">2:3 竖版（小红书多图）</div>
-            <div class="dropdown-item" onclick="setParam('size','1:1方版',event)">1:1 方版（朋友圈）</div>
-            <div class="dropdown-item" onclick="setParam('size','16:9横版',event)">16:9 横版（PPT）</div>
-            <div class="dropdown-item" onclick="setParam('size','4:3横版',event)">4:3 横版（公众号头图）</div>
-          </div>
+      <div class="custom-title">⚙️ 高定自定义参数 <span>（修改你不满意的，其余保持AI推荐）</span></div>
+      <div class="custom-selects">
+        <div class="custom-sel-wrap">
+          <label class="custom-sel-label">📐 输出尺寸</label>
+          <select id="custom-size" class="custom-sel">
+            <option value="A">A · 9:16竖版（刷屏传播首选）</option>
+            <option value="B">B · 16:9横版（场景叙事/PPT首选）</option>
+            <option value="C">C · 1:1方版（朋友圈/社交首选）</option>
+            <option value="D">D · 3:4竖版（小红书封面首选）</option>
+          </select>
         </div>
-        <div class="edit-param" id="ep-style" onclick="toggleDropdown('dd-style')">
-          <div class="edit-param-label">🎨 视觉风格</div>
-          <div class="edit-param-value" id="epv-style">AI联网匹配</div>
-          <div class="edit-param-arrow">▾</div>
-          <div class="edit-dropdown" id="dd-style">
-            <div class="dropdown-item active" onclick="setParam('style','AI联网匹配',event)">🎲 AI联网匹配最火风格（推荐）</div>
-            <div class="dropdown-item" onclick="setParam('style','自定义',event)" style="color:var(--gold);border:1px dashed rgba(243,175,66,0.2);margin:4px 0;border-radius:6px;">✍️ 手打自定义专属风格</div>
-            <div style="font-size:10px;color:var(--tx3);padding:4px 10px;margin-top:4px;">🔥 当下最火</div>
-            <div class="dropdown-item" onclick="setParam('style','3D悬浮立体风',event)">🧊 3D悬浮立体风</div>
-            <div class="dropdown-item" onclick="setParam('style','莫兰迪高级感',event)">🎨 莫兰迪高级感</div>
-            <div class="dropdown-item" onclick="setParam('style','镭射全息风',event)">💎 镭射全息风</div>
-            <div class="dropdown-item" onclick="setParam('style','奶油肌理风',event)">🍦 奶油肌理风</div>
-            <div class="dropdown-item" onclick="setParam('style','玻璃态透明风',event)">🔮 玻璃态透明风</div>
-            <div style="font-size:10px;color:var(--tx3);padding:4px 10px;margin-top:4px;">🎋 中式国风</div>
-            <div class="dropdown-item" onclick="setParam('style','国风国潮',event)">🎋 国风国潮</div>
-            <div class="dropdown-item" onclick="setParam('style','水墨古典风',event)">🖋️ 水墨古典风</div>
-            <div class="dropdown-item" onclick="setParam('style','四季浮雕纸雕风',event)">🌿 四季浮雕纸雕风</div>
-            <div class="dropdown-item" onclick="setParam('style','敦煌壁画风',event)">🏔️ 敦煌壁画风</div>
-            <div class="dropdown-item" onclick="setParam('style','青花瓷风',event)">🫖 青花瓷风</div>
-            <div style="font-size:10px;color:var(--tx3);padding:4px 10px;margin-top:4px;">📚 知识图解</div>
-            <div class="dropdown-item" onclick="setParam('style','极简白卡风',event)">⬜ 极简白卡风</div>
-            <div class="dropdown-item" onclick="setParam('style','扁平插画风',event)">📐 扁平插画风</div>
-            <div class="dropdown-item" onclick="setParam('style','数据可视化风',event)">📊 数据可视化风</div>
-            <div class="dropdown-item" onclick="setParam('style','博物学手绘风',event)">🔬 博物学手绘风</div>
-            <div style="font-size:10px;color:var(--tx3);padding:4px 10px;margin-top:4px;">🌸 生活美食</div>
-            <div class="dropdown-item" onclick="setParam('style','暖色插画风',event)">🍊 暖色插画风</div>
-            <div class="dropdown-item" onclick="setParam('style','日系治愈风',event)">🍃 日系治愈风</div>
-            <div class="dropdown-item" onclick="setParam('style','手绘水彩风',event)">🖌️ 手绘水彩风</div>
-            <div style="font-size:10px;color:var(--tx3);padding:4px 10px;margin-top:4px;">💄 美妆时尚</div>
-            <div class="dropdown-item" onclick="setParam('style','马卡龙少女风',event)">🎀 马卡龙少女风</div>
-            <div class="dropdown-item" onclick="setParam('style','高级杂志风',event)">📰 高级杂志风</div>
-            <div class="dropdown-item" onclick="setParam('style','奢华黑金风',event)">🖤 奢华黑金风</div>
-            <div style="font-size:10px;color:var(--tx3);padding:4px 10px;margin-top:4px;">⚡ 科技游戏</div>
-            <div class="dropdown-item" onclick="setParam('style','赛博霓虹风',event)">⚡ 赛博霓虹风</div>
-            <div class="dropdown-item" onclick="setParam('style','商务深色风',event)">💼 商务深色风</div>
-            <div class="dropdown-item" onclick="setParam('style','星际宇宙风',event)">🌌 星际宇宙风</div>
-
-          </div>
+        <div class="custom-sel-wrap">
+          <label class="custom-sel-label">🎨 视觉风格</label>
+          <select id="custom-style" class="custom-sel" onchange="handleCustomStyleChange()">
+            <option value="4">✍️ 手打自定义专属风格（输入框输入）</option>
+            <optgroup label="🔥 当下最火">
+              <option value="3D悬浮立体风（玻璃质感+漂浮效果）">🧊 3D悬浮立体风（玻璃质感+漂浮）</option>
+              <option value="莫兰迪高级感（低饱和高级灰）">🎨 莫兰迪高级感（低饱和高级灰）</option>
+              <option value="镭射全息风（彩虹光效+金属质感）">💎 镭射全息风（彩虹光效+金属质感）</option>
+              <option value="奶油肌理风（米白细腻质感）">🍦 奶油肌理风（米白细腻质感）</option>
+              <option value="赛博朋克城市风（深色+霓虹线条+科技感）">⚡ 赛博朋克城市风</option>
+              <option value="日系治愈插画风（奶油色+细线条+小清新）">🍃 日系治愈插画风</option>
+              <option value="国潮撞色风（朱红+靛蓝+金色）">🌆 国潮撞色风</option>
+            </optgroup>
+            <optgroup label="🎋 中式国风">
+              <option value="国风国潮风（朱红+金色+中式纹样）">🎋 国风国潮风</option>
+              <option value="水墨古典风（宣纸+墨色+古典印章）">🖋️ 水墨古典风</option>
+              <option value="四季浮雕纸雕风（米白3D微缩立体场景）">🌿 四季浮雕纸雕风</option>
+              <option value="民国复古手绘风（做旧米黄+水墨插画）">🏮 民国复古手绘风</option>
+              <option value="敦煌壁画风（朱砂+石青+飞天纹样）">🏔️ 敦煌壁画风</option>
+              <option value="青花瓷风（白底+靛蓝+瓷器纹样）">🫖 青花瓷风</option>
+              <option value="中式宫廷金色风（暖金+米白+宫廷纹饰）">👑 中式宫廷金色风</option>
+            </optgroup>
+            <optgroup label="📚 知识图解">
+              <option value="极简白卡风（纯白底+黑字+留白美学）">⬜ 极简白卡风</option>
+              <option value="扁平插画风（几何色块+简洁图形）">📐 扁平插画风</option>
+              <option value="数据可视化风（图表+信息图+数字突出）">📊 数据可视化风</option>
+              <option value="博物学手绘风（精细线稿+科学标注）">🔬 博物学手绘风</option>
+              <option value="教材插画风（清晰图解+色块分区）">📖 教材插画风</option>
+              <option value="思维导图风（发散结构+色彩分区）">🗺️ 思维导图风</option>
+              <option value="超高密度三板块教材级知识卡风">📚 超高密度教材级知识卡</option>
+            </optgroup>
+            <optgroup label="🌸 生活美食">
+              <option value="暖色插画风（橙红+奶白+卡通食材）">🍊 暖色插画风</option>
+              <option value="日式手账风（牛皮纸底+手写体+胶带）">📓 日式手账风</option>
+              <option value="手绘水彩风（透明感水彩晕染+柔和配色）">🖌️ 手绘水彩风</option>
+              <option value="复古美食杂志风（深色背景+金色标题）">🍷 复古美食杂志风</option>
+              <option value="潮流扁平风（高饱和色块+粗线条）">🎨 潮流扁平风</option>
+            </optgroup>
+            <optgroup label="⭐ 星座情感">
+              <option value="古风金色宫廷风（暖金+米白+星座符号）">✨ 古风金色宫廷风</option>
+              <option value="赛博星云风（深空紫+霓虹蓝+星点）">🌌 赛博星云风</option>
+              <option value="马卡龙少女风（粉+紫+奶白+爱心）">🎀 马卡龙少女风</option>
+              <option value="复古欧式插画风（做旧米色+线稿人物）">🏛️ 复古欧式插画风</option>
+              <option value="极简黑白对比风（纯黑底+白字+金色点缀）">🖤 极简黑白对比风</option>
+            </optgroup>
+            <optgroup label="💄 美妆时尚">
+              <option value="实验室科技风（白底+分子结构图+数据感）">🔬 实验室科技风</option>
+              <option value="日系清透风（白底+粉色+樱花+细线条）">🌸 日系清透风</option>
+              <option value="高级感杂志风（深色底+金色标题+奢华感）">📰 高级感杂志风</option>
+              <option value="可爱插画风（马卡龙色+卡通人物+圆润图标）">🎨 可爱插画风</option>
+              <option value="时尚杂志封面风（大字标题+高对比色块）">👗 时尚杂志封面风</option>
+              <option value="穿搭公式视觉拆解风（单品展示+颜色公式）">👔 穿搭公式视觉拆解风</option>
+            </optgroup>
+            <optgroup label="🏃 健身运动">
+              <option value="运动科技风（深蓝+荧光绿+几何线条）">⚡ 运动科技风</option>
+              <option value="清新活力风（天蓝+白+橙色点缀）">🌤️ 清新活力风</option>
+              <option value="极简白卡人体线稿风（白底+黑色人体线稿+数字标注）">⬜ 极简白卡人体线稿风</option>
+              <option value="国潮运动风（朱红+黑+汉字大字）">🎌 国潮运动风</option>
+              <option value="医疗科普风（白底+绿色+人体解剖插图）">🏥 医疗科普风</option>
+            </optgroup>
+            <optgroup label="💰 财经职场">
+              <option value="商务深色风（深蓝+金色+数据图表）">💼 商务深色风</option>
+              <option value="极简白卡数据风（白底+黑字+彩色图表）">📊 极简白卡数据风</option>
+              <option value="杂志封面风（大字标题+高对比色块）">📰 杂志封面风</option>
+              <option value="扁平职场插画风（天蓝+明黄+薄荷绿+卡通人物）">📐 扁平职场插画风</option>
+              <option value="手账便签风（牛皮纸底+胶带+手写体+便利贴）">📝 手账便签风</option>
+              <option value="报纸新闻风（做旧纸色+黑体标题+新闻版式）">📄 报纸新闻风</option>
+            </optgroup>
+            <optgroup label="🌿 中药本草">
+              <option value="国潮手绘温暖风（暖红+金黄+做旧纸色）">🏮 国潮手绘温暖风</option>
+              <option value="博物学古典风（米白+橄榄绿+棕色）">📜 博物学古典风</option>
+              <option value="中式水墨山水风（淡墨+朱红印章）">🖋️ 中式水墨山水风</option>
+              <option value="高级感暗调风（深棕+暗金+烛光场景）">🕯️ 高级感暗调风</option>
+              <option value="四季浮雕本草图鉴风（米白浮雕+3D药材微缩场景）">🌿 四季浮雕本草图鉴风</option>
+            </optgroup>
+            <optgroup label="🏙️ 城市文化">
+              <option value="民国复古手绘风（做旧米黄+水墨插画）">🏮 民国复古手绘风</option>
+              <option value="清新水彩旅游风（天蓝+草绿+粉橙）">🎨 清新水彩旅游风</option>
+              <option value="四季浮雕立体地图风（米白浮雕+3D微缩建筑地标）">🏯 四季浮雕立体地图风</option>
+              <option value="国潮撞色风（朱红+靛蓝+金色）">🌆 国潮撞色风</option>
+              <option value="国风水墨地图风（宣纸白+水墨线条+朱红印章）">🗺️ 国风水墨地图风</option>
+            </optgroup>
+            <optgroup label="🎓 教育早教">
+              <option value="清新扁平插画风（天蓝+明黄+薄荷绿）">🌈 清新扁平插画风</option>
+              <option value="暖黄手账牛皮纸风（胶带+手写体+可爱吉祥物）">📓 暖黄手账牛皮纸风</option>
+              <option value="高饱和活力风（珊瑚+紫+亮黄+圆角卡片）">🎨 高饱和活力风</option>
+              <option value="卡通故事绘本风（柔和色调+大卡通插图）">📚 卡通故事绘本风</option>
+              <option value="四季浮雕儿童立体图鉴风（米白浮雕+卡通3D微缩知识场景）">🏯 四季浮雕儿童立体图鉴风</option>
+              <option value="马卡龙绘本风（粉蓝黄柔和色+大圆润卡通）">🎀 马卡龙绘本风</option>
+              <option value="科学启蒙风（天蓝+明黄+简洁图表+可爱实验图标）">🔬 科学启蒙风</option>
+            </optgroup>
+            <optgroup label="🌺 花卉植物">
+              <option value="水彩植物插画风（透明感+柔和植物色）">🖌️ 水彩植物插画风</option>
+              <option value="博物学手绘风（米白+精细线稿+标注）">🔬 博物学手绘风</option>
+              <option value="中式国画风（宣纸白+墨绿+朱红印章）">🖋️ 中式国画风</option>
+              <option value="莫兰迪高级感风（低饱和灰调+精致排版）">🎨 莫兰迪高级感风</option>
+              <option value="四季浮雕植物图鉴风（米白浮雕+3D立体植株）">🌿 四季浮雕植物图鉴风</option>
+            </optgroup>
+            <optgroup label="🏠 室内家装">
+              <option value="现代简约风（白色+原木色+灰色+极简家具）">⬜ 现代简约风</option>
+              <option value="北欧清新风（浅色系+绿植+原木+棉麻质感）">🌱 北欧清新风</option>
+              <option value="新中式风（深木色+水墨元素+中式家具+禅意）">🎋 新中式风</option>
+              <option value="轻奢现代风（大理石+金属线条+高级灰）">✨ 轻奢现代风</option>
+              <option value="工业复古风（裸砖+铁艺+深色+工业灯具）">⚙️ 工业复古风</option>
+            </optgroup>
+            <optgroup label="🛍️ 电商产品">
+              <option value="极简白底主图风（白底+产品实物+极简排版）">⬜ 极简白底主图风</option>
+              <option value="3D产品漂浮风（产品3D漂浮+镭射光效）">🧊 3D产品漂浮风</option>
+              <option value="暗调奢华风（深色背景+金色元素+高端感）">🖤 暗调奢华风</option>
+              <option value="促销撞色风（高饱和撞色+大字+强促销感）">🔥 促销撞色风</option>
+              <option value="ins清新种草风（白底+柔和阴影+精致感）">📸 ins清新种草风</option>
+            </optgroup>
+            <optgroup label="🎭 特殊风格">
+              <option value="四季浮雕立体风（春：樱花粉+嫩绿+米白）">🌸 四季浮雕·春</option>
+              <option value="四季浮雕立体风（夏：青绿+水蓝+浅金）">☀️ 四季浮雕·夏</option>
+              <option value="四季浮雕立体风（秋：暖橙+棕金+米白）">🍂 四季浮雕·秋</option>
+              <option value="四季浮雕立体风（冬：冷灰白+淡蓝+米白）">❄️ 四季浮雕·冬</option>
+              <option value="超现实主义风（梦境+扭曲+奇异感）">🌀 超现实主义风</option>
+              <option value="废土蒸汽朋克风（铁锈+齿轮+蒸汽）">⚙️ 废土蒸汽朋克风</option>
+              <option value="星际宇宙风（深空+星云+科幻感）">🌌 星际宇宙风</option>
+            </optgroup>
+          </select>
         </div>
       </div>
-      <div id="custom-style-dock" class="custom-style-dock">
-        <input type="text" class="custom-style-input" id="custom-style-input" placeholder="输入你的专属风格词组（如：法式复古香奈儿白、重工业暗黑废土…）">
-      </div>
+      <input type="text" id="custom-style-text" class="custom-style-input" placeholder="输入你的专属风格词组（如：法式复古香奈儿白、重工业暗黑废土…）">
       <button class="btn-custom-launch" onclick="launchCustom()">🚀 按我的方案出图</button>
     </div>
-  </div>
-
-  <!-- 风格卡片 -->
-  <div id="style-stage">
-    <div class="style-header">
-      <div><h3>🎲 AI推荐风格方案</h3><p>选择一套，AI立即生成完整提示词与配套文案</p></div>
-      <button class="btn-rebatch" onclick="switchBatch()">🔀 换一批</button>
-    </div>
-    <div class="style-grid" id="style-grid"></div>
   </div>
 
   <!-- 思考单卡 -->
@@ -539,40 +549,60 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
 
   <!-- 输出区 -->
   <div id="output-section">
-    <div class="dual-board">
-      <div class="e-wing">
-        <div><div class="wing-title">🔮 ①提示词：工业级生图提示词（直接去即梦/MJ生图）</div><div class="prompt-box" id="out-prompt"></div><button class="btn-copy-row" onclick="copyById('out-prompt')">📋 一键复制提示词</button></div>
-        <div><div class="wing-title">📕 ②某书笔记：独家垂直高赞引流笔记</div><div class="text-box" id="out-xhs"></div><button class="btn-copy-row" onclick="copyById('out-xhs')">📝 一键复制某书笔记</button></div>
-        <div><div class="wing-title">🟢 ③公众号：微信公众号深度商业文章</div><div class="text-box" id="out-mp"></div><button class="btn-copy-row" onclick="copyById('out-mp')">📰 一键复制公众号文章</button></div>
-        <div class="legal-note">⚠️ <b>法律合规声明</b>：本工具生成内容均由AI联网检索后自动生成，内容纯属创作参考。商业使用请自行核实合规性，遵守相关法律法规，自主规避侵权风险。本内容不构成任何法律、医疗、投资建议。</div>
+    <div class="prompt-block">
+      <div class="block-head">
+        <div class="block-head-left"><div class="block-icon">🔮</div><div><div class="block-title">①提示词：工业级生图提示词</div><div class="block-sub">复制 → 打开即梦/灵创星球 → 文生图 → 粘贴生成</div></div></div>
+        <button class="btn-copy" onclick="copyBlock('out-prompt')">复制</button>
       </div>
-      <div class="e-wing">
-        <div><div class="wing-title">🎬 ④短视频：爆款标题、话题标签 &amp; 评论区截流话术</div><div class="video-box" id="out-video"></div><button class="btn-copy-row" onclick="copyById('out-video')">⚡ 一键复制截流话术</button></div>
-        <div><div class="wing-title">🎁 ⑤变现雷达：灵创星球专属会员福利</div><div class="radar-area" id="radar-area"></div></div>
-      </div>
-      <div class="platform-row">
-        <div class="platform-wing">
-          <div class="wing-title">🚀 选择生图平台 <span style="font-size:11px;color:var(--tx3);font-weight:normal;margin-left:6px;">点击自动复制提示词并跳转</span></div>
-          <div class="platform-grid">
-            <div class="platform-card rec-p" onclick="copyAndGo('https://lc.wazgz.com/')"><span class="p-icon">🌐</span><span class="p-name">灵创星球</span><span class="p-tag tag-gold">推荐·全模型</span></div>
-            <div class="platform-card" onclick="copyAndGo('https://jimeng.jianying.com/')"><span class="p-icon">✨</span><span class="p-name">即梦 AI</span><span class="p-tag tag-green">免费可用</span></div>
-            <div class="platform-card" onclick="copyAndGo('https://www.doubao.com/')"><span class="p-icon">🤖</span><span class="p-name">豆包</span><span class="p-tag tag-green">免费可用</span></div>
-            <div class="platform-card" onclick="copyAndGo('https://tongyi.aliyun.com/wanxiang')"><span class="p-icon">🍊</span><span class="p-name">通义万相</span><span class="p-tag tag-green">免费可用</span></div>
-            <div class="platform-card" onclick="copyAndGo('https://klingai.com/')"><span class="p-icon">⚡</span><span class="p-name">可灵 AI</span><span class="p-tag tag-gold">付费·国产</span></div>
-            <div class="platform-card" onclick="copyAndGo('https://www.midjourney.com/')"><span class="p-icon">🎨</span><span class="p-name">Midjourney</span><span class="p-tag tag-gold">付费·顶级</span></div>
-          </div>
-        </div>
-        <div class="hub-card">
-          <div class="hub-logo">🌐</div>
-          <div class="hub-title">灵创星球</div>
-          <div class="hub-sub">AI独立高精生图/生视频聚合平台</div>
-          <a href="https://lc.wazgz.com/" target="_blank" class="btn-hub">点击进入 ➔</a>
+      <div class="block-body prompt-style" id="out-prompt"></div>
+    </div>
+
+    <!-- 文案申请 -->
+    <div id="copywrite-ask">
+      <div class="copywrite-ask-card">
+        <h3>✍️ 需要配套爆款文案吗？</h3>
+        <p>一键生成社交平台爆款笔记 + 首评钩子 + 公众号完整文章</p>
+        <div class="copywrite-btns">
+          <button class="btn-copywrite-yes" onclick="getCopywrite()">✍️ 生成配套文案</button>
+          <button class="btn-copywrite-no" onclick="document.getElementById('copywrite-ask').style.display='none'">不需要，跳过</button>
         </div>
       </div>
-      <div class="wechat-banner">
-        <div class="wechat-qr"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87%E4%BA%8C%E7%BB%B4%E7%A0%81_20260515141550_400_2.jpg" alt="微信"></div>
-        <div class="wechat-meta"><h3>💬 觉得好用？扫码加微信</h3><p>获取更多AI出图技巧、爆款案例和合伙人专属变现玩法。微信号：<span class="wechat-id">palinyu</span></p></div>
+    </div>
+
+    <!-- 文案输出 -->
+    <div id="copywrite-section" style="display:none;">
+      <div class="prompt-block">
+        <div class="block-head">
+          <div class="block-head-left"><div class="block-icon">📕</div><div><div class="block-title">②社交平台爆款笔记</div><div class="block-sub">某书笔记 + 首评钩子</div></div></div>
+          <button class="btn-copy" onclick="copyBlock('out-xhs')">复制</button>
+        </div>
+        <div class="block-body" id="out-xhs"></div>
       </div>
+      <div class="prompt-block">
+        <div class="block-head">
+          <div class="block-head-left"><div class="block-icon">🟢</div><div><div class="block-title">③公众号爆款文章</div><div class="block-sub">完整公众号文章骨架</div></div></div>
+          <button class="btn-copy" onclick="copyBlock('out-mp')">复制</button>
+        </div>
+        <div class="block-body" id="out-mp"></div>
+      </div>
+    </div>
+
+    <!-- 平台区 -->
+    <div class="platform-block">
+      <div class="wing-title" style="font-size:13px;font-weight:800;color:var(--tx2);border-left:3px solid var(--gold);padding-left:8px;">🚀 选择生图平台 <span style="font-size:11px;color:var(--tx3);font-weight:normal;margin-left:6px;">点击自动复制提示词并跳转</span></div>
+      <div class="platform-grid">
+        <div class="platform-card rec-p" onclick="copyAndGo('https://lc.wazgz.com/')"><span class="p-icon">🌐</span><span class="p-name">灵创星球</span><span class="p-tag tag-gold">推荐·全模型</span></div>
+        <div class="platform-card" onclick="copyAndGo('https://jimeng.jianying.com/')"><span class="p-icon">✨</span><span class="p-name">即梦 AI</span><span class="p-tag tag-green">免费可用</span></div>
+        <div class="platform-card" onclick="copyAndGo('https://www.doubao.com/')"><span class="p-icon">🤖</span><span class="p-name">豆包</span><span class="p-tag tag-green">免费可用</span></div>
+        <div class="platform-card" onclick="copyAndGo('https://tongyi.aliyun.com/wanxiang')"><span class="p-icon">🍊</span><span class="p-name">通义万相</span><span class="p-tag tag-green">免费可用</span></div>
+        <div class="platform-card" onclick="copyAndGo('https://klingai.com/')"><span class="p-icon">⚡</span><span class="p-name">可灵 AI</span><span class="p-tag tag-gold">付费·国产</span></div>
+        <div class="platform-card" onclick="copyAndGo('https://www.midjourney.com/')"><span class="p-icon">🎨</span><span class="p-name">Midjourney</span><span class="p-tag tag-gold">付费·顶级</span></div>
+      </div>
+    </div>
+
+    <div class="wechat-banner">
+      <div class="wechat-qr"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87%E4%BA%8C%E7%BB%B4%E7%A0%81_20260515141550_400_2.jpg" alt="微信"></div>
+      <div class="wechat-meta"><h3>💬 觉得好用？扫码加微信</h3><p>获取更多AI出图技巧、爆款案例和合伙人专属变现玩法。微信号：<span class="wechat-id">palinyu</span></p></div>
     </div>
   </div>
 
@@ -584,66 +614,47 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
 let uploadedFileIds=[];
 let isFileAttached=false;
 let cachedPrompt='';
-let lastStyleName='';
-let styleBatch={};
-let aiParams={category:'AI自动识别',size:'9:16竖版',style:'AI联网匹配'};
 let selectedBubbles=[];
+let currentConvId=null;
+let currentRound=0; // 追踪当前对话轮次
 
-// ===== 语义匹配库 =====
-const SEMANTIC_MAP=[
-  {keys:['美食','菜谱','做法','食材','烹饪','红烧','炒','炖','烤','蒸','料理','饮食'],
-   bubbles:[{e:'🍳',t:'食欲棚拍特写'},{e:'📋',t:'步骤分栏流'},{e:'🔥',t:'暗调烟火感'},{e:'📸',t:'白卡工序图'},{e:'🌿',t:'日系治愈手账'}]},
-  {keys:['旅游','攻略','打卡','城市','景点','出行','自驾','探店','Citywalk'],
-   bubbles:[{e:'🗺️',t:'旅游画册封面'},{e:'📮',t:'路线明信片白卡'},{e:'🏙️',t:'城市插画地图'},{e:'📷',t:'实拍摄影大片'},{e:'🎨',t:'手绘风景插画'}]},
-  {keys:['穿搭','outfit','显瘦','搭配','时尚','服装','衣服','风格'],
-   bubbles:[{e:'👗',t:'穿搭公式对比图'},{e:'⬜',t:'白卡单品拆解'},{e:'📰',t:'杂志封面风'},{e:'🎨',t:'莫兰迪高级感'},{e:'✨',t:'ins清新风'}]},
-  {keys:['知识','科普','原理','图解','学习','教育','认知','百科'],
-   bubbles:[{e:'📊',t:'知识卡片竖版'},{e:'🗺️',t:'思维导图风'},{e:'⬜',t:'极简白卡图解'},{e:'🔬',t:'博物学手绘'},{e:'📐',t:'扁平几何色块'}]},
-  {keys:['儿童','宝宝','小朋友','亲子','绘本','卡通','幼儿'],
-   bubbles:[{e:'🎨',t:'卡通绘本风'},{e:'🌈',t:'彩虹活力插画'},{e:'🐱',t:'萌系Q版'},{e:'📚',t:'故事场景图'},{e:'🎀',t:'马卡龙色调'}]},
-  {keys:['护肤','美妆','成分','肌肤','面霜','精华','防晒','美白'],
-   bubbles:[{e:'🔬',t:'成分解析图'},{e:'⬜',t:'产品白底图'},{e:'💄',t:'美妆教程对比'},{e:'🌸',t:'日系清透风'},{e:'💎',t:'奢华品牌感'}]},
-  {keys:['健身','减脂','运动','瘦身','训练','锻炼','动作','肌肉'],
-   bubbles:[{e:'💪',t:'动作示意图'},{e:'📊',t:'训练计划表'},{e:'⚡',t:'运动科技风'},{e:'⬜',t:'极简对比图'},{e:'🔥',t:'热血激励感'}]},
-  {keys:['产品','电商','主图','详情','商品','购物','店铺'],
-   bubbles:[{e:'⬜',t:'产品白底主图'},{e:'🎨',t:'场景氛围图'},{e:'💎',t:'高端品牌感'},{e:'🔥',t:'促销撞色风'},{e:'📸',t:'细节特写图'}]},
-  {keys:['财经','理财','基金','股票','投资','金融','收益','副业'],
-   bubbles:[{e:'📊',t:'数据可视化图'},{e:'💰',t:'金融信息图'},{e:'📰',t:'商务深色风'},{e:'⬜',t:'极简白卡风'},{e:'🔮',t:'科技感图表'}]},
-  {keys:['家装','室内','装修','设计','家居','卧室','客厅','空间'],
-   bubbles:[{e:'🏠',t:'效果图展示'},{e:'⬜',t:'极简北欧风'},{e:'✨',t:'轻奢现代感'},{e:'🖋️',t:'新中式风格'},{e:'📐',t:'平面布局图'}]},
+// ===== 快捷关键词库（完整版）=====
+const KW_CATEGORIES=[
+  {name:'古诗图解',icon:'📜',words:['静夜思图解','春晓古诗解析','望庐山瀑布知识卡','将进酒逐句解析','床前明月光做成图','帮我做一张古诗图']},
+  {name:'菜谱教程',icon:'🍳',words:['红烧肉的做法','糖醋排骨步骤图','蛋糕烘焙教程','麻辣香锅做法','帮我做红烧肉菜谱图','戚风蛋糕做法做成图']},
+  {name:'中药本草',icon:'🌿',words:['枸杞的功效','当归中药科普','黄芪本草图鉴','陈皮食药同源','枸杞有什么用做成图','石斛麦冬功效']},
+  {name:'城市文化',icon:'🏙️',words:['成都必打卡地标','北京胡同文化地图','上海外滩漫游攻略','广州美食地图','成都有哪些好玩的做成图']},
+  {name:'星座情感',icon:'⭐',words:['天蝎座性格分析','双鱼座人格报告','星座配对排行','狮子座优缺点','天蝎座是什么性格做成图']},
+  {name:'教育学科',icon:'📚',words:['光合作用知识卡','初中物理电路知识','英语四级高频词汇','幼儿早教数字认知','光合作用做成图']},
+  {name:'护肤美妆',icon:'💄',words:['烟酰胺护肤成分科普','视黄醇功效图解','油皮护肤步骤','敏感肌成分避雷','烟酰胺是什么做成图']},
+  {name:'健身减脂',icon:'🏃',words:['平板支撑动作分解','臀部训练动作图解','减脂饮食计划','深蹲标准姿势','平板支撑怎么做做成图']},
+  {name:'财经理财',icon:'💰',words:['基金定投入门','复利原理图解','信用卡使用技巧','理财入门知识','基金怎么买做成图']},
+  {name:'Citywalk',icon:'🗺️',words:['成都太古里打卡攻略','上海安福路探店','广州北京路Citywalk','重庆洪崖洞打卡路线']},
+  {name:'职场技能',icon:'💼',words:['时间管理四象限法则','高效开会技巧','简历写作要点','职场沟通技巧']},
+  {name:'时尚搭配',icon:'👗',words:['秋冬通勤搭配公式','梨形身材穿搭技巧','黑白灰搭配法则','小个子显高穿搭']},
+  {name:'四季浮雕',icon:'🏯',words:['秋天的故宫','冬天的西湖','春天的成都','夏天的广州美食地图','冬天的北京胡同'],special:true},
+  {name:'系列卡片',icon:'🃏',words:['批量生成10张星座系列卡','做一套光合作用系列图','做10张成都地标系列图'],special:true},
+  {name:'平台封面',icon:'📱',words:['做小红书封面，主题是减脂打卡','做抖音封面，古诗词主题','做视频号封面，城市探店主题'],special:true},
+  {name:'电商产品',icon:'🛍️',words:['帮我做这个产品的海报','做详情页','做电商主图','做宣传图','帮我做产品海报，小红书风格'],special:true},
+  {name:'模板复刻',icon:'🔄',words:['参考这个风格帮我做','按这个模板做','复刻这张图的风格','按这个排版做'],special:true},
+  {name:'批量系列',icon:'🃏',words:['批量生成10张星座系列卡','做一套光合作用系列图（10张）','批量生成成都地标系列卡','做10张红楼梦人物系列卡'],special:true},
 ];
 
-// ===== 风格池 =====
-const STYLE_POOLS={
-  'AI联网匹配':[
-    {n:'3D悬浮立体风',d:'玻璃质感+立体漂浮，当下最火',cls:'sv-3d',e:'🧊'},
-    {n:'莫兰迪高级感',d:'低饱和高级灰，精致优雅',cls:'sv-morandi',e:'🎨'},
-    {n:'极简白卡风',d:'纯白+黑字+留白，清爽高级',cls:'sv-jianyi',e:'⬜'},
-    {n:'国风国潮',d:'朱红+金色+中式纹样',cls:'sv-guochao',e:'🎋'},
-    {n:'赛博霓虹风',d:'深色+荧光+未来感强',cls:'sv-saibo',e:'⚡'},
-    {n:'马卡龙少女风',d:'粉紫奶白+甜美装饰',cls:'sv-makalong',e:'🎀'},
-    {n:'四季浮雕纸雕风',d:'米白3D微缩立体场景',cls:'sv-bowu',e:'🌿'},
-    {n:'杂志封面风',d:'大字+高对比，视觉冲击',cls:'sv-zaji',e:'📰'},
-  ],
-  '3D悬浮立体风':[
-    {n:'玻璃悬浮风',d:'透明玻璃质感+元素3D漂浮',cls:'sv-3d',e:'🧊'},
-    {n:'镭射全息风',d:'彩虹光效+金属质感',cls:'sv-3d',e:'💎'},
-    {n:'奶油肌理风',d:'米白细腻质感+温柔色调',cls:'sv-makalong',e:'🍦'},
-    {n:'赛博科技风',d:'深色+霓虹+未来感',cls:'sv-saibo',e:'🔮'},
-  ],
-  '国风国潮':[
-    {n:'国风国潮',d:'朱红+金色+中式纹样',cls:'sv-guochao',e:'🎋'},
-    {n:'水墨古典风',d:'宣纸+墨色+古典印章',cls:'sv-shuimo',e:'🖋️'},
-    {n:'四季浮雕纸雕风',d:'3D微缩立体场景',cls:'sv-bowu',e:'🌿'},
-    {n:'敦煌壁画风',d:'朱砂+石青+飞天纹样',cls:'sv-guochao',e:'🏔️'},
-  ],
-  '极简白卡风':[
-    {n:'极简白卡风',d:'纯白+黑字+留白美学',cls:'sv-jianyi',e:'⬜'},
-    {n:'扁平插画风',d:'几何色块+简洁图形',cls:'sv-saibo',e:'📐'},
-    {n:'数据可视化风',d:'图表+信息图+数字',cls:'sv-saibo',e:'📊'},
-    {n:'博物学手绘风',d:'精细线稿+科学标注',cls:'sv-bowu',e:'🔬'},
-  ],
-};
+// ===== 语义气泡库 =====
+const BUBBLE_MAP=[
+  {keys:['红烧','糖醋','炒','炖','烤','蒸','菜谱','做法','食材','美食','料理'],bubbles:[{e:'🍳',t:'食欲棚拍特写'},{e:'📋',t:'步骤分栏流'},{e:'🔥',t:'暗调烟火感'},{e:'📸',t:'白卡工序图'},{e:'🌿',t:'日系治愈手账'}]},
+  {keys:['旅游','攻略','打卡','城市','景点','出行','Citywalk','探店','漫游'],bubbles:[{e:'🗺️',t:'旅游画册封面'},{e:'📮',t:'路线明信片白卡'},{e:'🏙️',t:'城市插画地图'},{e:'📷',t:'实拍摄影大片'},{e:'🎨',t:'手绘风景插画'}]},
+  {keys:['穿搭','显瘦','搭配','时尚','服装','outfit'],bubbles:[{e:'👗',t:'穿搭公式对比图'},{e:'⬜',t:'白卡单品拆解'},{e:'📰',t:'杂志封面风'},{e:'🎨',t:'莫兰迪高级感'}]},
+  {keys:['知识','科普','原理','图解','学习','教育','认知','光合'],bubbles:[{e:'📊',t:'知识卡片竖版'},{e:'🗺️',t:'思维导图风'},{e:'⬜',t:'极简白卡图解'},{e:'🔬',t:'博物学手绘'}]},
+  {keys:['儿童','宝宝','亲子','绘本','卡通','幼儿','早教'],bubbles:[{e:'🎨',t:'卡通绘本风'},{e:'🌈',t:'彩虹活力插画'},{e:'🐱',t:'萌系Q版'},{e:'📚',t:'故事场景图'}]},
+  {keys:['护肤','美妆','成分','肌肤','精华','防晒','烟酰胺','视黄醇'],bubbles:[{e:'🔬',t:'成分解析图'},{e:'⬜',t:'产品白底图'},{e:'💄',t:'美妆教程对比'},{e:'🌸',t:'日系清透风'}]},
+  {keys:['健身','减脂','运动','训练','锻炼','动作','深蹲','平板'],bubbles:[{e:'💪',t:'动作示意图'},{e:'📊',t:'训练计划表'},{e:'⚡',t:'运动科技风'},{e:'⬜',t:'极简对比图'}]},
+  {keys:['枸杞','当归','黄芪','陈皮','中药','本草','食疗','养生'],bubbles:[{e:'🌿',t:'博物学本草图鉴'},{e:'📜',t:'古典卷轴风'},{e:'🏮',t:'国潮手绘温暖风'}]},
+  {keys:['星座','性格','星盘','配对','天蝎','双鱼','狮子','摩羯'],bubbles:[{e:'✨',t:'星座宫廷金色风'},{e:'🌌',t:'赛博星云风'},{e:'🎀',t:'马卡龙少女风'}]},
+  {keys:['古诗','诗词','文言','春晓','静夜思','望庐山'],bubbles:[{e:'📜',t:'卷轴沉浸式'},{e:'🎋',t:'国风水彩插画'},{e:'📰',t:'民国复古报纸风'}]},
+  {keys:['基金','理财','股票','投资','复利','信用卡'],bubbles:[{e:'📊',t:'数据可视化图'},{e:'💰',t:'金融信息图'},{e:'📰',t:'商务深色风'}]},
+  {keys:['家装','室内','装修','设计','家居','卧室','客厅'],bubbles:[{e:'🏠',t:'效果图展示'},{e:'⬜',t:'极简北欧风'},{e:'✨',t:'轻奢现代感'}]},
+];
 
 // ===== 展示图片 =====
 const GALLERY_IMGS=[
@@ -708,83 +719,128 @@ function initGallery(){
   track.addEventListener('mousemove',e=>{if(!isDown)return;e.preventDefault();const x=e.pageX-track.offsetLeft;track.scrollLeft=scrollLeft-(x-startX);});
 }
 
-// ===== 第2阶：实时语义气泡 =====
-let debounceTimer=null;
-document.addEventListener('DOMContentLoaded',()=>{
-  const ta=document.getElementById('main-textarea');
-  if(ta){
-    ta.addEventListener('input',()=>{
-      clearTimeout(debounceTimer);
-      debounceTimer=setTimeout(()=>matchBubbles(ta.value),400);
-    });
-  }
-});
-
-function matchBubbles(text){
-  if(!text||text.trim().length<1){
-    document.getElementById('bubble-label').style.display='none';
-    document.getElementById('bubble-hint').style.display='none';
-    document.getElementById('bubbles-wrap').innerHTML='';
-    selectedBubbles=[];
-    return;
-  }
-  const lower=text.toLowerCase();
-  let matched=null;
-  // 精确关键词匹配
-  for(const group of SEMANTIC_MAP){
-    if(group.keys.some(k=>lower.includes(k))){matched=group;break;}
-  }
-  // 降级：短文本也给通用气泡
-  if(!matched&&text.trim().length>=1){
-    matched={bubbles:[
-      {e:'🎨',t:'知识卡片竖版'},{e:'📸',t:'精美插画风'},
-      {e:'⬜',t:'极简白卡图解'},{e:'🗺️',t:'地图插画风'},{e:'✨',t:'3D悬浮立体'}
-    ]};
-  }
-  if(!matched){
-    document.getElementById('bubble-label').style.display='none';
-    document.getElementById('bubble-hint').style.display='none';
-    document.getElementById('bubbles-wrap').innerHTML='';
-    return;
-  }
-  document.getElementById('bubble-label').style.display='flex';
-  document.getElementById('bubble-hint').style.display='block';
-  renderBubbles(matched.bubbles);
+// ===== 快捷关键词 =====
+function initKeywords(){
+  const tabs=document.getElementById('kw-tabs');
+  const chips=document.getElementById('kw-chips');
+  if(!tabs||!chips)return;
+  // 渲染分类标签
+  KW_CATEGORIES.forEach((cat,i)=>{
+    const tab=document.createElement('div');
+    tab.className='kw-tab'+(i===0?' active':'');
+    tab.textContent=cat.icon+' '+cat.name;
+    if(cat.special)tab.style.cssText='border-color:rgba(243,175,66,0.3);color:rgba(243,175,66,0.8);';
+    tab.onclick=()=>{
+      document.querySelectorAll('.kw-tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      renderChips(cat);
+    };
+    tabs.appendChild(tab);
+  });
+  renderChips(KW_CATEGORIES[0]);
 }
 
-function renderBubbles(bubbles){
-  const wrap=document.getElementById('bubbles-wrap');wrap.innerHTML='';
-  bubbles.forEach(b=>{
-    const chip=document.createElement('div');chip.className='bubble-chip';
-    const isSelected=selectedBubbles.includes(b.t);
-    if(isSelected)chip.classList.add('selected');
-    chip.innerHTML=`${b.e} ${b.t}`;
-    chip.onclick=()=>toggleBubble(b.t,chip);
-    wrap.appendChild(chip);
+function renderChips(cat){
+  const chips=document.getElementById('kw-chips');chips.innerHTML='';
+  cat.words.forEach(w=>{
+    const chip=document.createElement('div');
+    chip.className='kw-chip'+(cat.special?' kw-special':'');
+    chip.textContent=w;
+    chip.onclick=()=>{
+      document.getElementById('main-textarea').value=w;
+      document.getElementById('main-textarea').focus();
+      matchBubbles(w);
+    };
+    chips.appendChild(chip);
   });
 }
 
-function toggleBubble(tag,chip){
-  if(selectedBubbles.includes(tag)){
-    selectedBubbles=selectedBubbles.filter(t=>t!==tag);
-    chip.classList.remove('selected');
-  }else{
-    selectedBubbles.push(tag);
-    chip.classList.add('selected');
+// ===== 气泡联想 =====
+let debounceTimer=null;
+function setupBubbles(){
+  const ta=document.getElementById('main-textarea');
+  if(ta){ta.addEventListener('input',()=>{clearTimeout(debounceTimer);debounceTimer=setTimeout(()=>matchBubbles(ta.value),400);});}
+}
+function matchBubbles(text){
+  if(!text||text.trim().length<1){hideBubbles();return;}
+  const lower=text.toLowerCase();
+  let matched=null;
+  for(const group of BUBBLE_MAP){
+    if(group.keys.some(k=>lower.includes(k))){matched=group;break;}
   }
+  if(!matched){hideBubbles();return;}
+  document.getElementById('bubble-label').style.display='flex';
+  document.getElementById('bubble-hint').style.display='block';
+  const wrap=document.getElementById('bubbles-wrap');wrap.innerHTML='';
+  matched.bubbles.forEach(b=>{
+    const chip=document.createElement('div');chip.className='bubble-chip'+(selectedBubbles.includes(b.t)?' selected':'');
+    chip.innerHTML=`${b.e} ${b.t}`;
+    chip.onclick=()=>{
+      if(selectedBubbles.includes(b.t)){selectedBubbles=selectedBubbles.filter(t=>t!==b.t);chip.classList.remove('selected');}
+      else{selectedBubbles.push(b.t);chip.classList.add('selected');}
+    };
+    wrap.appendChild(chip);
+  });
+}
+function hideBubbles(){
+  document.getElementById('bubble-label').style.display='none';
+  document.getElementById('bubble-hint').style.display='none';
+  document.getElementById('bubbles-wrap').innerHTML='';
 }
 
 // ===== 文件上传 =====
+// 记录上传文件数量，支持多图
+let uploadedFileCount=0;
 function handleFile(input){
-  const file=input.files[0];if(!file)return;
+  const files=input.files;if(!files||files.length===0)return;
   isFileAttached=true;
   const badge=document.getElementById('file-badge');
   const bImg=document.getElementById('badge-img');
   const bName=document.getElementById('badge-name');
-  if(bName)bName.textContent=file.name.length>18?file.name.substring(0,18)+'…':file.name;
-  if(file.type.startsWith('image/')&&bImg){const r=new FileReader();r.onload=e=>{bImg.src=e.target.result;};r.readAsDataURL(file);}
-  if(badge)badge.style.display='flex';
-  uploadFile(file);
+  uploadedFileCount=files.length;
+
+  if(files.length>=2){
+    // 双图模式：电商双图融合
+    if(bName)bName.textContent=`已上传${files.length}张图（双图融合模式）`;
+    if(badge)badge.style.display='flex';
+    // 在输入框填入提示
+    const ta=document.getElementById('main-textarea');
+    if(ta&&!ta.value)ta.value='图A是我喜欢的风格，图B是我的产品，帮我做双图融合海报';
+    Array.from(files).forEach(f=>uploadFile(f));
+  }else{
+    const file=files[0];
+    if(bName)bName.textContent=file.name.length>18?file.name.substring(0,18)+'…':file.name;
+    if(file.type.startsWith('image/')&&bImg){const r=new FileReader();r.onload=e=>{bImg.src=e.target.result;};r.readAsDataURL(file);}
+    if(badge)badge.style.display='flex';
+    uploadFile(file);
+    // 单图：检测是否是电商场景
+    const ta=document.getElementById('main-textarea');
+    if(ta&&!ta.value){
+      // 显示电商快捷提示
+      showEcommerceHint();
+    }
+  }
+}
+
+function showEcommerceHint(){
+  // 在输入框下方显示快捷操作
+  let hint=document.getElementById('ecom-hint');
+  if(!hint){
+    hint=document.createElement('div');hint.id='ecom-hint';
+    hint.style.cssText='margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;';
+    hint.innerHTML=`
+      <span style="font-size:11px;color:var(--tx3);">检测到图片上传，快捷填入：</span>
+      <span onclick="fillEcom('帮我做这个产品的海报')" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">📢 做海报</span>
+      <span onclick="fillEcom('帮我做这个产品的详情页')" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">🛍️ 做详情页</span>
+      <span onclick="fillEcom('参考这张图的风格，帮我做知识图文')" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">🔄 复刻风格</span>
+      <span onclick="fillEcom('识别这张图的内容，帮我做知识图文提示词')" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">📝 识别内容</span>
+    `;
+    document.getElementById('input-stage')?.appendChild(hint);
+  }else{hint.style.display='flex';}
+}
+function fillEcom(text){
+  const ta=document.getElementById('main-textarea');if(ta)ta.value=text;
+  const hint=document.getElementById('ecom-hint');if(hint)hint.style.display='none';
 }
 async function uploadFile(file){
   try{
@@ -794,10 +850,10 @@ async function uploadFile(file){
     if(data.data?.id)uploadedFileIds.push(data.data.id);
   }catch(e){console.log('上传失败',e);}
 }
-function removeFile(){document.getElementById('file-input').value='';const b=document.getElementById('file-badge');if(b)b.style.display='none';isFileAttached=false;uploadedFileIds=[];}
+function removeFile(){document.getElementById('file-input').value='';const b=document.getElementById('file-badge');if(b)b.style.display='none';isFileAttached=false;uploadedFileIds=[];uploadedFileCount=0;const hint=document.getElementById('ecom-hint');if(hint)hint.style.display='none';}
 function fileToBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
 
-// ===== 第3阶：量子扫描 =====
+// ===== 量子扫描 =====
 function qLog(text,cls,delay){
   setTimeout(()=>{
     const log=document.getElementById('quantum-log');if(!log)return;
@@ -805,338 +861,292 @@ function qLog(text,cls,delay){
     log.appendChild(line);log.scrollTop=log.scrollHeight;
   },delay);
 }
-
-function runQuantumScan(topic,detectedCategory,styleName){
+function runQuantumScan(topic){
   const log=document.getElementById('quantum-log');if(log)log.innerHTML='';
   document.getElementById('quantum-stage').style.display='block';
   const dataNum=Math.floor(Math.random()*5000+1000).toLocaleString();
   const playNum=(Math.random()*5+0.5).toFixed(1);
-  qLog(`⚡ <span class="q-gold">系统启动</span> · 灵创AI出图引擎 v5.0 激活中…`,null,0);
-  qLog(`🛰️ <span class="q-blue">语义捕获</span> · 主题锁定：<span class="q-gold">${topic.substring(0,20)}</span>`,null,200);
-  qLog(`📡 <span class="q-blue">品类识别</span> · 判定为：<span class="q-gold">${detectedCategory}</span>`,null,450);
-  qLog(`🌐 <span class="q-gold">联网检索</span> · 正在穿透大盘语义网络…`,null,700);
-  qLog(`📊 <span class="q-dim">数据打捞</span> · 检索到 <span class="q-gold">${dataNum}</span> 条相关爆款图文数据`,null,950);
-  qLog(`🔥 <span class="q-dim">热度分析</span> · 相关话题播放量 <span class="q-gold">${playNum}亿</span>，趋势↑`,null,1200);
-  qLog(`🔮 <span class="q-blue">参数破译</span> · 逆向解构最高转化出图公式…`,null,1500);
-  qLog(`🎨 <span class="q-blue">风格锁定</span> · 匹配风格：<span class="q-gold">${styleName}</span>`,null,1750);
-  qLog(`✅ <span class="q-gold">方案就绪</span> · AI推荐参数已全量锁死，开始生成…`,null,2000);
-}
-
-// ===== 第4阶：AI推荐参数卡 =====
-function detectCategory(text){
-  const lower=text.toLowerCase();
-  for(const group of SEMANTIC_MAP){
-    for(const k of group.keys){
-      if(lower.includes(k)){
-        // 找对应品类
-        if(['美食','菜谱','做法','食材','烹饪','红烧','炒','炖','烤','蒸','料理','饮食'].some(k=>lower.includes(k)))return'菜谱美食';
-        if(['旅游','攻略','打卡','城市','景点','出行','自驾','探店','Citywalk'].some(k=>lower.includes(k)))return'城市探店';
-        if(['穿搭','outfit','显瘦','搭配','时尚','服装'].some(k=>lower.includes(k)))return'穿搭时尚';
-        if(['知识','科普','原理','图解','学习'].some(k=>lower.includes(k)))return'知识图文';
-        if(['儿童','宝宝','小朋友','亲子','绘本'].some(k=>lower.includes(k)))return'儿童教育';
-        if(['护肤','美妆','成分','肌肤'].some(k=>lower.includes(k)))return'护肤美妆';
-        if(['健身','减脂','运动','训练'].some(k=>lower.includes(k)))return'健身减脂';
-        if(['产品','电商','主图','详情'].some(k=>lower.includes(k)))return'电商产品';
-        if(['财经','理财','基金','投资'].some(k=>lower.includes(k)))return'财经理财';
-        if(['家装','室内','装修','设计'].some(k=>lower.includes(k)))return'室内家装';
-        return'知识图文';
-      }
-    }
-  }
-  return'AI自动识别';
-}
-
-function detectSize(category){
-  const sizeMap={'菜谱美食':'1:1方版','城市探店':'9:16竖版','穿搭时尚':'3:4竖版','知识图文':'3:4竖版','儿童教育':'1:1方版','护肤美妆':'3:4竖版','健身减脂':'9:16竖版','电商产品':'1:1方版','财经理财':'3:4竖版','室内家装':'16:9横版'};
-  return sizeMap[category]||'9:16竖版';
-}
-
-function detectStyle(category){
-  const styleMap={'菜谱美食':'暖色插画风','城市探店':'手绘插画风','穿搭时尚':'杂志封面风','知识图文':'极简白卡风','儿童教育':'卡通绘本风','护肤美妆':'日系清透风','健身减脂':'运动科技风','电商产品':'3D悬浮立体风','财经理财':'商务深色风','室内家装':'现代简约风'};
-  return styleMap[category]||'AI联网匹配最火风格';
-}
-
-function showRecommendCard(category,size,style){
-  aiParams={category,size,style};
-  const paramsEl=document.getElementById('rec-params');
-  if(paramsEl){
-    paramsEl.innerHTML=`
-      <div class="rec-param"><div class="rec-param-label">📐 输出尺寸</div><div class="rec-param-value">${size}</div></div>
-      <div class="rec-param"><div class="rec-param-label">🎨 视觉风格</div><div class="rec-param-value">${style}</div></div>
-      ${selectedBubbles.length>0?`<div class="rec-param"><div class="rec-param-label">✦ 追加方向</div><div class="rec-param-value">${selectedBubbles.join('·')}</div></div>`:''}
-    `;
-  }
-  document.getElementById('recommend-stage').style.display='block';
-}
-
-// ===== 第5阶：高定面板 =====
-function openCustom(){
-  document.getElementById('custom-stage').style.display='block';
-  setParamValue('size',aiParams.size);
-  setParamValue('style',aiParams.style);
-  document.getElementById('custom-stage').scrollIntoView({behavior:'smooth'});
-}
-
-function toggleDropdown(id){
-  document.querySelectorAll('.edit-dropdown').forEach(d=>{if(d.id!==id)d.classList.remove('show');});
-  const dd=document.getElementById(id);if(dd)dd.classList.toggle('show');
-  event.stopPropagation();
-}
-
-document.addEventListener('click',()=>{document.querySelectorAll('.edit-dropdown').forEach(d=>d.classList.remove('show'));});
-
-function setParam(key,value,e){
-  if(e)e.stopPropagation();
-  aiParams[key]=value;
-  setParamValue(key,value);
-  document.querySelectorAll('.edit-dropdown').forEach(d=>d.classList.remove('show'));
-  if(key==='style'&&value==='自定义'){document.getElementById('custom-style-dock').style.display='block';}
-  else if(key==='style'){document.getElementById('custom-style-dock').style.display='none';}
-}
-
-function setParamValue(key,value){
-  const el=document.getElementById('epv-'+key);if(el)el.textContent=value;
-}
-
-function launchCustom(){
-  if(aiParams.style==='自定义'){
-    const cv=document.getElementById('custom-style-input')?.value.trim();
-    if(!cv){alert('请输入你的专属风格词组！');return;}
-    aiParams.style=cv;
-  }
-  document.getElementById('custom-stage').style.display='none';
-  document.getElementById('recommend-stage').style.display='none';
-  // 选了AI联网匹配 → 显示4张风格卡让用户选
-  if(aiParams.style==='AI联网匹配'){
-    launchStyleCards(aiParams.style);
-    return;
-  }
-  // 已选具体风格 → 直接进单卡等待
-  const ts=document.getElementById('thinking-stage');
-  ts.style.display='flex';
-  const tsz=document.getElementById('t-size');if(tsz)tsz.innerHTML=`<span>${aiParams.size}</span>`;
-  const tst=document.getElementById('t-style');if(tst)tst.innerHTML=`<span>${aiParams.style}</span>`;
-  ts.scrollIntoView({behavior:'smooth'});
-  callCoze(aiParams.style);
-}
-
-function goDirectly(){
-  document.getElementById('recommend-stage').style.display='none';
-  document.getElementById('custom-stage').style.display='none';
-  // 直接进入思考单卡，不经过4张风格卡
-  const ts=document.getElementById('thinking-stage');
-  ts.style.display='flex';
-  const tsz=document.getElementById('t-size');if(tsz)tsz.innerHTML=`<span>${aiParams.size}</span>`;
-  const tst=document.getElementById('t-style');if(tst)tst.innerHTML=`<span>${aiParams.style}</span>`;
-  ts.scrollIntoView({behavior:'smooth'});
-  callCoze(aiParams.style);
+  qLog('⚡ <span class="q-gold">SYSTEM</span> · 灵创AI出图引擎 v1.3 激活…',null,0);
+  qLog(`🛰️ <span class="q-blue">INPUT</span> · 接收主题信号：<span class="q-gold">${topic.substring(0,20)}</span>`,null,250);
+  qLog('🌐 <span class="q-gold">NETWORK</span> · 联网穿透大盘语义网络…',null,500);
+  qLog(`📊 <span class="q-dim">DATA</span> · 检索到 <span class="q-gold">${dataNum}</span> 条相关爆款图文数据`,null,800);
+  qLog(`🔥 <span class="q-dim">TREND</span> · 相关话题播放量 <span class="q-gold">${playNum}亿</span> ↑`,null,1100);
+  qLog('🔮 <span class="q-blue">AI</span> · 三层判定执行中：品类→手法→风格…',null,1400);
+  qLog('✅ <span class="q-gold">READY</span> · 解析完成，内容识别结果已生成',null,1800);
 }
 
 // ===== 主引擎 =====
-function runEngine(){
+async function runEngine(){
   const topic=document.getElementById('main-textarea')?.value.trim();
-  if(!topic&&!isFileAttached){alert('老哥，请先输入你想做什么图，或者上传参考文件！');return;}
+  if(!topic&&!isFileAttached){alert('请先输入你想做什么图，或者上传参考文件！');return;}
   const ct=getCardType();
   if(!isUnlocked()){incCount();if(getCount()>getFreeLimit()){showLock();return;}}
   else if(ct==='次卡'){incCount();if(getCount()>(CFG.cards?.['次卡']?.times||50)){showLock();return;}}
-  // 隐藏所有输出区
-  ['quantum-stage','recommend-stage','custom-stage','style-stage','thinking-stage','output-section'].forEach(id=>{
+
+  // 重置状态
+  currentConvId=null;currentRound=0;cachedPrompt='';selectedBubbles=[];
+  ['analysis-stage','custom-stage','thinking-stage','output-section','copywrite-ask','copywrite-section'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display='none';
   });
   const btn=document.getElementById('gen-btn');if(btn){btn.disabled=true;btn.textContent='⚡ AI大脑启动中…';}
-  // 检测品类/尺寸/风格
-  const category=detectCategory(topic||'');
-  const size=detectSize(category);
-  const style=detectStyle(category);
-  // 第3阶：量子扫描
-  runQuantumScan(topic||'上传文件',category,style);
-  // 2.2秒后显示推荐卡
-  setTimeout(()=>{
-    document.getElementById('quantum-stage').style.display='none';
-    showRecommendCard(category,size,style);
-    document.getElementById('recommend-stage').scrollIntoView({behavior:'smooth'});
-    if(btn){btn.disabled=false;btn.textContent='🔮 启动大脑 · 开始全行业智能生图充能';}
-  },2300);
-  updateUsageBadge();
-}
 
-// ===== 风格卡片 =====
-function launchStyleCards(preferredStyle){
-  const pool=STYLE_POOLS[preferredStyle]||STYLE_POOLS['AI联网匹配'];
-  const start=styleBatch[preferredStyle]||0;
-  const list=[];for(let i=0;i<4;i++)list.push(pool[(start+i)%pool.length]);
-  renderStyleCards(list);
-}
+  runQuantumScan(topic||'上传文件');
 
-function switchBatch(){
-  const style=aiParams.style;
-  const pool=STYLE_POOLS[style]||STYLE_POOLS['AI联网匹配'];
-  styleBatch[style]=((styleBatch[style]||0)+4)%pool.length;
-  launchStyleCards(style);
-}
+  // 第一轮：发给扣子，让它自动分析
+  const bubbleStr=selectedBubbles.length>0?`\n追加排版方向：${selectedBubbles.join('、')}`:'';
+  const fileNotice=isFileAttached?'\n【多模态指令】：用户已上传参考图/文档，请优先识别内容。':'';
+  const query=`${topic||'请识别上传文件内容'}${bubbleStr}${fileNotice}`;
 
-function renderStyleCards(list){
-  const grid=document.getElementById('style-grid');if(!grid)return;
-  grid.innerHTML='';
-  grid.style.gridTemplateColumns=window.innerWidth<600?'repeat(2,1fr)':'repeat(4,1fr)';
-  list.forEach((s,i)=>{
-    const isFirst=i===0;
-    const card=document.createElement('div');card.className='sc'+(isFirst?' sc-rec':'');card.id='sc-'+i;
-    card.innerHTML=`
-      ${isFirst?'<div class="sc-badge">🏅 AI首选推荐</div>':''}
-      <div class="sc-visual ${s.cls}" style="${isFirst?'margin-top:22px;':''}">
-        <span class="sc-emoji">${s.e||'✨'}</span>
-        <span class="sc-name">${s.n}</span>
-      </div>
-      <div class="sc-body">
-        <div class="sc-title">${s.n}</div>
-        <div class="sc-desc">${s.d}</div>
-        <button class="sc-btn ${isFirst?'scb-p':'scb-s'}" onclick="confirmStyle('${s.n.replace(/'/g,'')}',${i})">
-          ${isFirst?'⚡ 锁定推荐，立即出图':'确定锁定该风格 ➔'}
-        </button>
-      </div>`;
-    grid.appendChild(card);
-  });
-  document.getElementById('style-stage').style.display='block';
-  document.getElementById('style-stage').scrollIntoView({behavior:'smooth'});
-}
-
-// ===== 确认风格 → 思考单卡 → API =====
-async function confirmStyle(styleName,cardIdx){
-  lastStyleName=styleName;
-  const grid=document.getElementById('style-grid');
-  const allCards=grid?.querySelectorAll('.sc');
-
-  // 其他卡淡出
-  allCards?.forEach((card,i)=>{
-    if(i!==cardIdx){
-      card.style.transition='all .35s ease';
-      card.style.opacity='0';card.style.transform='scale(0.9)';
-      setTimeout(()=>card.style.display='none',350);
-    }
-  });
-
-  // 选中卡变为左侧确认卡 + 右侧重选卡
-  setTimeout(()=>{
-    grid.style.gridTemplateColumns='1fr 1fr';
-    grid.style.maxWidth='680px';grid.style.margin='0 auto';
-
-    const selCard=document.getElementById('sc-'+cardIdx);
-    if(selCard){
-      selCard.style.position='relative';
-      // 加光圈等待overlay
-      const overlay=document.createElement('div');overlay.className='card-waiting-overlay';overlay.id='waiting-overlay';
-      overlay.innerHTML=`<div class="atom-ring"></div><p style="font-size:12px;color:var(--gold);font-weight:700;">${styleName}</p><p style="font-size:11px;color:var(--tx2);margin-top:4px;">AI联网生成中…</p>`;
-      selCard.appendChild(overlay);
-    }
-
-    // 加重选卡
-    const reCard=document.createElement('div');reCard.className='sc';reCard.id='sc-reselect';
-    reCard.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;min-height:200px;cursor:pointer;border-style:dashed;';
-    reCard.innerHTML=`<div style="font-size:32px;">🔀</div><div style="font-size:13px;font-weight:700;color:var(--tx2);">重新选择风格</div><div style="font-size:11px;color:var(--tx3);">返回上一步</div>`;
-    reCard.onclick=()=>{
-      document.getElementById('waiting-overlay')?.remove();
-      reCard.remove();
-      grid.style.gridTemplateColumns='repeat(4,1fr)';
-      grid.style.maxWidth='';grid.style.margin='';
-      allCards?.forEach(card=>{card.style.display='';card.style.opacity='1';card.style.transform='';});
-    };
-    grid.appendChild(reCard);
-  },380);
-
-  // 进入思考单卡
   setTimeout(async()=>{
-    document.getElementById('style-stage').style.display='none';
-    const ts=document.getElementById('thinking-stage');ts.style.display='flex';
-    const tsz=document.getElementById('t-size');if(tsz)tsz.innerHTML=`<span>${aiParams.size}</span>`;
-    const tst=document.getElementById('t-style');if(tst)tst.innerHTML=`<span>${styleName}</span>`;
-    ts.scrollIntoView({behavior:'smooth'});
-    await callCoze(styleName);
-  },800);
+    document.getElementById('quantum-stage').style.display='none';
+    try{
+      const res=await callCozeAPI(query,null);
+      currentConvId=res.conversation_id;
+      currentRound=1;
+      const msg=res.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
+      if(!msg)throw new Error('未获取到响应');
+      showAnalysisCard(msg.content);
+    }catch(e){
+      alert('生成失败：'+e.message);
+    }finally{
+      if(btn){btn.disabled=false;btn.textContent='🔮 启动大脑 · 开始全行业智能生图充能';}
+    }
+    updateUsageBadge();
+  },2100);
 }
 
-async function callCoze(styleName){
-  const topic=document.getElementById('main-textarea')?.value.trim();
-  const size=aiParams.size;
-  const category=aiParams.category;
-  const bubbleTags=selectedBubbles.length>0?`\n追加出图方向：${selectedBubbles.join('、')}`:'';
-  const fileNotice=isFileAttached?'\n【多模态指令】：用户已上传参考图/文档，请优先识别内容并据此生成提示词。':'';
+// ===== 调用扣子API =====
+async function callCozeAPI(query,convId){
+  const body={mode:'coze',query};
+  if(convId)body.conversation_id=convId;
+  if(uploadedFileIds.length>0)body.file_ids=uploadedFileIds;
+  const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const data=await res.json();
+  if(data.code!==0)throw new Error(data.msg||'API异常');
+  return data;
+}
 
-  // 完全还原扣子原版输入格式，让智能体自动判断品类
-  const bubbleStr = bubbleTags ? `，出图方向偏向：${bubbleTags}` : '';
-  const query = `${topic||'请识别上传文件内容'}${bubbleStr}
+// ===== 展示第一轮分析结果 =====
+function showAnalysisCard(rawContent){
+  // 解析关键字段
+  const fields=[
+    {key:'内容识别',icon:'✅',label:'内容要点提炼'},
+    {key:'品类判定',icon:'📂',label:'目标品类锁定'},
+    {key:'用户类型',icon:'👤',label:'预设受众类型'},
+    {key:'匹配手法',icon:'🎯',label:'顶配出图手法'},
+    {key:'本次随机风格|本次指定风格',icon:'🎨',label:'AI随机出航风格'},
+    {key:'推荐尺寸',icon:'📐',label:'黄金画布尺寸'},
+  ];
+  const grid=document.getElementById('analysis-grid');
+  if(grid){
+    grid.innerHTML='';
+    fields.forEach(f=>{
+      const regex=new RegExp(`(?:${f.key})[：:：]?\\s*([^\\n✅📂👤🎯🎨📐🎲]+)`,'i');
+      const match=rawContent.match(regex);
+      if(match&&match[1]&&match[1].trim().length>1){
+        const item=document.createElement('div');item.className='analysis-item';
+        item.innerHTML=`<div class="analysis-item-label">${f.icon} ${f.label}</div><div class="analysis-item-value">${match[1].trim().substring(0,60)}</div>`;
+        grid.appendChild(item);
+      }
+    });
+    // 如果解析不到，显示原文
+    if(grid.children.length===0){
+      const raw=document.getElementById('analysis-raw');
+      if(raw){raw.textContent=rawContent;raw.style.display='block';}
+    }
+  }
+  document.getElementById('analysis-stage').style.display='block';
+  document.getElementById('analysis-stage').scrollIntoView({behavior:'smooth'});
+}
 
-画布比例：${size}
-风格：${styleName}${fileNotice}`;
+// ===== 用户选择1/2/3/4 =====
+async function sendChoice(choice){
+  document.getElementById('analysis-stage').style.display='none';
+  document.getElementById('custom-stage').style.display='none';
+
+  // 显示思考单卡
+  const ts=document.getElementById('thinking-stage');ts.style.display='flex';
+  // 从第一轮结果里取风格和尺寸显示
+  const sizeEl=document.getElementById('t-size');const styleEl=document.getElementById('t-style');
+  if(choice==='1'){if(sizeEl)sizeEl.innerHTML='<span>AI推荐尺寸</span>';if(styleEl)styleEl.innerHTML='<span>AI推荐风格</span>';}
+  else if(choice==='2'){if(sizeEl)sizeEl.innerHTML='<span>AI推荐尺寸</span>';if(styleEl)styleEl.innerHTML='<span>🎲 换一套风格</span>';}
+  else if(choice==='3'){if(sizeEl)sizeEl.innerHTML='<span>用户自选尺寸</span>';if(styleEl)styleEl.innerHTML='<span>AI推荐风格</span>';}
+  ts.scrollIntoView({behavior:'smooth'});
 
   try{
-    const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze',query,file_ids:uploadedFileIds.length>0?uploadedFileIds:undefined})});
-    const data=await res.json();
-    if(data.code!==0)throw new Error(data.msg||'API异常');
-    const msg=data.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
-    if(!msg)throw new Error('未获取到内容');
-    const ring=document.getElementById('t-ring');
-    if(ring){ring.style.animation='none';ring.style.borderColor='#f3af42';ring.innerHTML='<span style="color:#f3af42;font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;height:100%;">✓</span>';}
-    const ts=document.getElementById('t-status');
-    if(ts){ts.style.color='#f3af42';ts.textContent='✨ 提示词已全量生成！成果面板即将展开…';}
-    cachedPrompt=extractPrompt(msg.content);
-    setTimeout(()=>{
-      document.getElementById('thinking-stage').style.display='none';
-      renderOutput(msg.content,styleName);
-    },1000);
+    const res=await callCozeAPI(choice,currentConvId);
+    currentConvId=res.conversation_id||currentConvId;
+    const msg=res.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
+    if(!msg)throw new Error('未获取到提示词');
+
+    // 判断是否需要更多交互（尺寸选择）
+    if(choice==='3'&&msg.content.includes('A 9:16竖版')){
+      // 显示尺寸选项让用户选
+      showSizeChoice(msg.content);
+      return;
+    }
+
+    // 判断是否是提示词（含有英文长段或关键词）
+    const hasPrompt=msg.content.includes('即梦生图提示词')||msg.content.includes('完整版（推荐）')||/[A-Za-z ,.\-]{80,}/.test(msg.content);
+    if(hasPrompt){
+      showResult(msg.content);
+    }else{
+      // 还需要一轮，自动发1
+      const tsStatus=document.getElementById('t-status');
+      if(tsStatus)tsStatus.textContent='🔄 方案已更新，正在生成提示词…';
+      const res2=await callCozeAPI('1',currentConvId);
+      currentConvId=res2.conversation_id||currentConvId;
+      const msg2=res2.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
+      if(!msg2)throw new Error('第二轮未获取到提示词');
+      showResult(msg2.content);
+    }
   }catch(e){
-    const ts=document.getElementById('t-status');
-    if(ts){ts.style.color='#ef4444';ts.textContent='❌ 生成失败：'+e.message+'\n请重新选择风格重试';}
-    setTimeout(()=>{document.getElementById('thinking-stage').style.display='none';document.getElementById('style-stage').style.display='block';},2500);
+    const tsStatus=document.getElementById('t-status');
+    if(tsStatus){tsStatus.style.color='#ef4444';tsStatus.textContent='❌ 生成失败：'+e.message;}
+    setTimeout(()=>{ts.style.display='none';document.getElementById('analysis-stage').style.display='block';},2000);
   }
 }
 
-function extractPrompt(raw){
-  const patterns=[
-    /🎨【完整英文提示词】\s*([\s\S]*?)(?=📱|⚙️|📣|$)/,
-    /完整英文提示词[^：:]*[：:]\s*([\s\S]*?)(?=📱|精简|⚙️|$)/,
-    /完整版[（(]推荐[）)][^：:]*[：:]\s*([\s\S]*?)(?=📱|精简|⚙️|$)/,
-  ];
-  for(const p of patterns){const m=raw.match(p);if(m&&m[1]&&m[1].trim().length>20)return m[1].trim();}
-  const enBlocks=raw.match(/[A-Za-z,. ]{80,}/g)||[];
-  if(enBlocks.length>0)return enBlocks.sort((a,b)=>b.length-a.length)[0];
-  return raw;
+// ===== 尺寸选择交互 =====
+function showSizeChoice(content){
+  document.getElementById('thinking-stage').style.display='none';
+  // 临时用analysis-stage显示尺寸选项
+  const grid=document.getElementById('analysis-grid');
+  if(grid){
+    grid.innerHTML=`<div class="analysis-item" style="grid-column:1/-1;"><div class="analysis-item-label">📐 请选择输出尺寸</div><div class="analysis-item-value">选择后立即生成提示词</div></div>`;
+  }
+  const actions=document.querySelector('.analysis-actions');
+  if(actions){
+    actions.innerHTML=`
+      <button class="btn-action btn-action-primary" onclick="sendChoice('A')">A · 9:16竖版</button>
+      <button class="btn-action btn-action-secondary" onclick="sendChoice('B')">B · 16:9横版</button>
+      <button class="btn-action btn-action-ghost" onclick="sendChoice('C')">C · 1:1方版</button>
+      <button class="btn-action btn-action-ghost" onclick="sendChoice('D')">D · 3:4竖版</button>
+    `;
+  }
+  document.getElementById('analysis-stage').style.display='block';
+  document.getElementById('analysis-stage').scrollIntoView({behavior:'smooth'});
 }
 
-// ===== 渲染输出 =====
-function renderOutput(rawContent,styleName,copywriteContent){
-  // 第二轮完整原文 → 提示词框
-  document.getElementById('out-prompt').textContent=rawContent;
-  // 第三轮完整原文 → 文案框（直接显示，不截取）
-  const copyText = copywriteContent || '（文案生成中，请稍后重试）';
-  document.getElementById('out-xhs').textContent=copyText;
-  document.getElementById('out-mp').textContent=copyText;
-  const userTopic=document.getElementById('main-textarea')?.value.trim()||'AI出图';
-  const shortTopic=userTopic.substring(0,12);
-  const tagLine=`#AI生图 #${shortTopic} #灵创星球 #AI出图 #提示词`;
-  document.getElementById('out-video').textContent=copyText||tagLine;
-  renderRadar();
-  document.getElementById('output-section').style.display='block';
-  document.getElementById('output-section').scrollIntoView({behavior:'smooth'});
+// ===== 自定义面板 =====
+function openCustom(){
+  document.getElementById('analysis-stage').style.display='none';
+  document.getElementById('custom-stage').style.display='block';
+  document.getElementById('custom-stage').scrollIntoView({behavior:'smooth'});
+}
+function handleCustomStyleChange(){
+  const val=document.getElementById('custom-style')?.value;
+  const dock=document.getElementById('custom-style-text');
+  if(dock)dock.style.display=val==='4'?'block':'none';
+}
+async function launchCustom(){
+  const sizeVal=document.getElementById('custom-size')?.value||'A';
+  const styleVal=document.getElementById('custom-style')?.value||'4';
+  let styleText='';
+  if(styleVal==='4'){
+    styleText=document.getElementById('custom-style-text')?.value.trim();
+    if(!styleText){alert('请输入你的专属风格词组！');return;}
+  }else{
+    // 直接用option的value，就是完整风格描述
+    styleText=styleVal;
+  }
+
+  document.getElementById('custom-stage').style.display='none';
+  const ts=document.getElementById('thinking-stage');ts.style.display='flex';
+  const sizeEl=document.getElementById('t-size');const styleEl=document.getElementById('t-style');
+  if(sizeEl)sizeEl.innerHTML=`<span>${sizeVal}尺寸</span>`;
+  if(styleEl)styleEl.innerHTML=`<span>${styleText}</span>`;
+  ts.scrollIntoView({behavior:'smooth'});
+
+  // 发送给扣子：先选尺寸（3→sizeVal），再指定风格（4→styleText）
+  try{
+    // 先发3选换尺寸
+    const res3=await callCozeAPI('3',currentConvId);
+    currentConvId=res3.conversation_id||currentConvId;
+    // 再发尺寸选项
+    const resSize=await callCozeAPI(sizeVal,currentConvId);
+    currentConvId=resSize.conversation_id||currentConvId;
+    // 再发4选自定义风格
+    const res4=await callCozeAPI('4',currentConvId);
+    currentConvId=res4.conversation_id||currentConvId;
+    // 发具体风格文字
+    const resStyle=await callCozeAPI(styleText,currentConvId);
+    currentConvId=resStyle.conversation_id||currentConvId;
+    const msg=resStyle.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
+    if(!msg)throw new Error('未获取到内容');
+
+    // 判断是否是最终提示词
+    const hasPrompt=msg.content.includes('即梦生图提示词')||msg.content.includes('完整版（推荐）')||/[A-Za-z ,.\-]{80,}/.test(msg.content);
+    if(hasPrompt){showResult(msg.content);}
+    else{
+      const res1=await callCozeAPI('1',currentConvId);
+      const msg1=res1.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
+      if(msg1)showResult(msg1.content);
+      else throw new Error('未获取到提示词');
+    }
+  }catch(e){
+    const tsStatus=document.getElementById('t-status');
+    if(tsStatus){tsStatus.style.color='#ef4444';tsStatus.textContent='❌ 生成失败：'+e.message;}
+    setTimeout(()=>{ts.style.display='none';},2000);
+  }
 }
 
-function renderRadar(){
-  const area=document.getElementById('radar-area');if(!area)return;area.innerHTML='';
-  const items=[
-    {tag:'🔥 限时新人福利',text:'《33大热门全赛道AI单人团队搞钱地图全集.pdf》免密领取',alert:'🎁 扫描下方二维码加微信，回复【搞钱地图】免费领取！'},
-    {tag:'💰 变现渠道',text:'灵创星球官方网盘分成后台（用户转存你拿拉新补贴）',alert:'加微信拉你进合伙人分成变现群，对接官方分成后台。'},
-  ];
-  items.forEach(item=>{
-    const el=document.createElement('div');el.className='radar-item';el.onclick=()=>alert(item.alert);
-    el.innerHTML=`<div style="flex:1;"><div class="radar-tag">${item.tag}</div><div class="radar-text">${item.text}</div></div><span class="radar-go">免密提取 ➔</span>`;
-    area.appendChild(el);
-  });
+// ===== 显示最终结果 =====
+function showResult(rawContent){
+  cachedPrompt=rawContent;
+  // 更新思考卡
+  const ring=document.getElementById('t-ring');
+  if(ring){ring.style.animation='none';ring.style.borderColor='#f3af42';ring.innerHTML='<span style="color:#f3af42;font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;height:100%;">✓</span>';}
+  const tsStatus=document.getElementById('t-status');
+  if(tsStatus){tsStatus.style.color='#f3af42';tsStatus.textContent='✨ 提示词已全量生成！';}
+
+  setTimeout(()=>{
+    document.getElementById('thinking-stage').style.display='none';
+    document.getElementById('out-prompt').textContent=rawContent;
+    document.getElementById('output-section').style.display='block';
+    document.getElementById('copywrite-ask').style.display='block';
+    document.getElementById('output-section').scrollIntoView({behavior:'smooth'});
+  },800);
+}
+
+// ===== 获取配套文案（发X）=====
+async function getCopywrite(){
+  document.getElementById('copywrite-ask').style.display='none';
+  const loading=document.createElement('div');
+  loading.id='copywrite-loading';
+  loading.style.cssText='text-align:center;padding:20px;color:var(--tx2);font-size:13px;';
+  loading.textContent='✍️ AI正在生成配套爆款文案…';
+  document.getElementById('output-section').appendChild(loading);
+
+  try{
+    const res=await callCozeAPI('X',currentConvId);
+    const msg=res.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
+    document.getElementById('copywrite-loading')?.remove();
+    if(msg&&msg.content){
+      // 分割文案：某书笔记和公众号文章
+      const content=msg.content;
+      const mpIdx=Math.max(content.indexOf('📘【公众号'),content.indexOf('【公众号'));
+      if(mpIdx>0){
+        document.getElementById('out-xhs').textContent=content.substring(0,mpIdx).trim();
+        document.getElementById('out-mp').textContent=content.substring(mpIdx).trim();
+      }else{
+        document.getElementById('out-xhs').textContent=content;
+        document.getElementById('out-mp').textContent=content;
+      }
+      document.getElementById('copywrite-section').style.display='block';
+      document.getElementById('copywrite-section').scrollIntoView({behavior:'smooth'});
+    }
+  }catch(e){
+    document.getElementById('copywrite-loading')?.remove();
+    document.getElementById('copywrite-ask').style.display='block';
+    alert('文案获取失败，请重试：'+e.message);
+  }
 }
 
 // ===== 复制 =====
 function showToast(){const t=document.getElementById('clip-toast');if(!t)return;t.style.display='block';setTimeout(()=>t.style.display='none',1200);}
-function copyById(id){
-  const el=document.getElementById(id);if(!el||!el.textContent){alert('请先等待生成完成！');return;}
+function copyBlock(id){
+  const el=document.getElementById(id);if(!el||!el.textContent.trim()){alert('内容为空，请先生成！');return;}
   navigator.clipboard.writeText(el.textContent).then(()=>showToast());
 }
 function copyAndGo(url){
@@ -1152,9 +1162,11 @@ function copyAndGo(url){
 async function boot(){
   try{updateCardUI();}catch(e){}
   try{initGallery();}catch(e){}
+  try{initKeywords();}catch(e){}
+  try{setupBubbles();}catch(e){}
   try{updateUsageBadge();}catch(e){}
   if(getCount()>=getFreeLimit()&&!isUnlocked()){showLock();}
-  // 后台拉取远程配置
+  // 后台拉配置
   try{
     const ctrl=new AbortController();
     const t=setTimeout(()=>ctrl.abort(),2000);
