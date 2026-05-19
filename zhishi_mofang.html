@@ -377,10 +377,16 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
       <div class="analysis-badge">🏅 AI内容解析全息汇总卡</div>
       <div class="analysis-grid" id="analysis-grid"></div>
       <div class="analysis-raw" id="analysis-raw" style="display:none;"></div>
+      <div id="analysis-recommend-bar" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:10px 14px;background:rgba(243,175,66,0.04);border:1px solid rgba(243,175,66,0.15);border-radius:8px;">
+        <span style="font-size:11px;color:var(--tx3);">AI推荐：</span>
+        <span id="rec-size-tag" style="font-size:12px;font-weight:700;color:var(--gold);">📐 --</span>
+        <span style="color:var(--tx3);font-size:12px;">·</span>
+        <span id="rec-style-tag" style="font-size:12px;font-weight:700;color:var(--gold);">🎨 --</span>
+      </div>
       <div class="analysis-actions">
-        <button class="btn-action btn-action-primary" onclick="sendChoice('1')">✅ 确定出图 →</button>
+        <button class="btn-action btn-action-primary" onclick="sendChoice('1')">✅ 确定，直接出图 →</button>
         <button class="btn-action btn-action-secondary" onclick="sendChoice('2')">🎲 换一套风格</button>
-        <button class="btn-action btn-action-ghost" onclick="openCustom()">⚙️ 我要高定自定义</button>
+        <button class="btn-action btn-action-ghost" onclick="showCustomPanel()">⚙️ 自定义尺寸/风格</button>
         <button class="btn-action btn-action-ghost" onclick="sendChoice('3')">📐 我要换尺寸</button>
       </div>
     </div>
@@ -600,6 +606,27 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
       </div>
     </div>
 
+    <!-- 福利雷达+灵创星球卡片 -->
+    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:16px;">
+      <div style="background:var(--panel);border:1px solid var(--bd);border-radius:14px;padding:20px;">
+        <div style="font-size:13px;font-weight:800;color:var(--tx2);border-left:3px solid var(--gold);padding-left:8px;margin-bottom:14px;">🎁 变现雷达：灵创星球专属会员福利</div>
+        <a href="javascript:void(0)" onclick="alert('加微信palinyu回复【搞钱地图】免费领取！')" style="display:flex;align-items:center;justify-content:space-between;background:#171922;border:1px solid rgba(255,255,255,0.03);border-radius:8px;padding:11px 12px;margin-bottom:8px;text-decoration:none;transition:all .2s;">
+          <div><div style="font-size:9px;font-weight:800;color:#000;background:var(--gold);padding:1px 5px;border-radius:3px;display:inline-block;margin-bottom:4px;">🔥 限时新人福利</div><div style="font-size:11px;color:#e2e8f0;font-weight:600;line-height:1.4;">《33大热门全赛道AI单人团队搞钱地图全集.pdf》免密领取</div></div>
+          <span style="font-size:11px;color:var(--gold);font-weight:700;white-space:nowrap;margin-left:8px;">免密提取 →</span>
+        </a>
+        <a href="javascript:void(0)" onclick="alert('加微信palinyu，对接官方分成后台！')" style="display:flex;align-items:center;justify-content:space-between;background:#171922;border:1px solid rgba(255,255,255,0.03);border-radius:8px;padding:11px 12px;text-decoration:none;transition:all .2s;">
+          <div><div style="font-size:9px;font-weight:800;color:#000;background:#8b5cf6;padding:1px 5px;border-radius:3px;display:inline-block;margin-bottom:4px;">💰 变现渠道</div><div style="font-size:11px;color:#e2e8f0;font-weight:600;line-height:1.4;">灵创星球官方网盘分成后台（用户转存你拿官方拉新补贴）</div></div>
+          <span style="font-size:11px;color:var(--gold);font-weight:700;white-space:nowrap;margin-left:8px;">免密提取 →</span>
+        </a>
+      </div>
+      <div style="background:linear-gradient(145deg,#20222e,#0e0f14);border:1px solid var(--bd-gold);border-radius:14px;padding:24px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div style="width:42px;height:42px;background:var(--gold);border-radius:50%;font-size:22px;color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;box-shadow:0 0 15px var(--gold-glow);margin-bottom:12px;">🌐</div>
+        <div style="font-size:15px;font-weight:900;color:#fff;margin-bottom:4px;">灵创星球</div>
+        <div style="font-size:11px;color:var(--tx3);margin-bottom:16px;">AI独立高精生图聚合平台</div>
+        <a href="https://lc.wazgz.com/" target="_blank" style="width:100%;padding:11px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;text-decoration:none;display:block;">点击进入 ➔</a>
+      </div>
+    </div>
+
     <div class="wechat-banner">
       <div class="wechat-qr"><img src="https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87%E4%BA%8C%E7%BB%B4%E7%A0%81_20260515141550_400_2.jpg" alt="微信"></div>
       <div class="wechat-meta"><h3>💬 觉得好用？扫码加微信</h3><p>获取更多AI出图技巧、爆款案例和合伙人专属变现玩法。微信号：<span class="wechat-id">palinyu</span></p></div>
@@ -616,7 +643,8 @@ let isFileAttached=false;
 let cachedPrompt='';
 let selectedBubbles=[];
 let currentConvId=null;
-let currentRound=0; // 追踪当前对话轮次
+let currentRound=0;
+const welcomeKeywords=['支持四种输入方式','发送任意内容，自动启动','我是灵创星球','专注把知识变成','直接输入主题','上传文档（PDF','上传图片（截图','告诉我你想做']; // 追踪当前对话轮次
 
 // ===== 快捷关键词库（完整版）=====
 const KW_CATEGORIES=[
@@ -914,11 +942,17 @@ async function runEngine(){
   if(!isUnlocked()){incCount();if(getCount()>getFreeLimit()){showLock();return;}}
   else if(ct==='次卡'){incCount();if(getCount()>(CFG.cards?.['次卡']?.times||50)){showLock();return;}}
 
-  // 重置状态
-  currentConvId=null;currentRound=0;cachedPrompt='';selectedBubbles=[];
+  // 重置状态，每次全新对话
+  currentConvId=null;currentRound=0;cachedPrompt='';
   ['analysis-stage','custom-stage','thinking-stage','output-section','copywrite-ask','copywrite-section'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.style.display='none';
   });
+  // 重置思考卡状态
+  const ring=document.getElementById('t-ring');
+  if(ring){ring.style.animation='spin-ring .9s linear infinite';ring.style.borderColor='';ring.innerHTML='';}
+  const tsStatus=document.getElementById('t-status');
+  if(tsStatus){tsStatus.style.color='#cbd5e1';tsStatus.textContent='AI大脑联网搜索爆款参数中…
+完整提示词与配套文案生成中…';}
   const btn=document.getElementById('gen-btn');if(btn){btn.disabled=true;btn.textContent='⚡ AI大脑启动中…';}
 
   runQuantumScan(topic||'上传文件');
@@ -934,17 +968,19 @@ async function runEngine(){
     qLog('⏳ <span class="q-dim">WAIT</span> · AI联网分析中，请稍候（10-20秒）…',null,300);
 
     try{
-      const res=await callCozeAPI(query,null);
+      const res=await callCozeAPI(query,null,true);// 第一轮带文件
       currentConvId=res.conversation_id;
       currentRound=1;
       const msg=res.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
       if(!msg)throw new Error('未获取到响应');
 
-      // 检测是否是开场白（用户输入为空时扣子返回的）
-      const isWelcome=msg.content.includes('支持四种输入方式')||msg.content.includes('发送任意内容，自动启动');
+      // 检测是否是开场白，覆盖所有变体
+      const welcomeKeywords=['支持四种输入方式','发送任意内容，自动启动','我是灵创星球','专注把知识变成','直接输入主题','上传文档','上传图片','告诉我你想做'];
+      const isWelcome=welcomeKeywords.some(kw=>msg.content.includes(kw))&&!msg.content.includes('品类判定')&&!msg.content.includes('内容识别');
       if(isWelcome){
         document.getElementById('quantum-stage').style.display='none';
-        alert('请在输入框输入你想做的主题，然后再点启动大脑！');
+        if(btn){btn.disabled=false;btn.textContent='🔮 启动大脑 · 开始全行业智能生图充能';}
+        alert('AI未能识别内容，请在输入框输入主题后重试！');
         return;
       }
 
@@ -968,10 +1004,11 @@ async function runEngine(){
 }
 
 // ===== 调用扣子API =====
-async function callCozeAPI(query,convId){
+async function callCozeAPI(query,convId,withFiles){
   const body={mode:'coze',query};
   if(convId)body.conversation_id=convId;
-  if(uploadedFileIds.length>0)body.file_ids=uploadedFileIds;
+  // withFiles=true时才带文件，避免污染后续轮次
+  if(withFiles&&uploadedFileIds.length>0)body.file_ids=uploadedFileIds;
   const res=await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   const data=await res.json();
   if(data.code!==0)throw new Error(data.msg||'API异常');
@@ -1007,6 +1044,16 @@ function showAnalysisCard(rawContent){
       if(raw){raw.textContent=rawContent;raw.style.display='block';}
     }
   }
+  // 解析推荐尺寸和风格显示在推荐栏
+  const sizeMatch=rawContent.match(/推荐尺寸[：:]\s*([^
+|｜]+)/);
+  const styleMatch=rawContent.match(/(?:本次随机风格|本次指定风格|随机风格)[：:：]?\s*([^
+（(]+)/);
+  const sizeTag=document.getElementById('rec-size-tag');
+  const styleTag=document.getElementById('rec-style-tag');
+  if(sizeTag&&sizeMatch)sizeTag.textContent='📐 '+sizeMatch[1].trim().substring(0,15);
+  if(styleTag&&styleMatch)styleTag.textContent='🎨 '+styleMatch[1].trim().substring(0,20);
+
   document.getElementById('analysis-stage').style.display='block';
   document.getElementById('analysis-stage').scrollIntoView({behavior:'smooth'});
 }
@@ -1026,7 +1073,7 @@ async function sendChoice(choice){
   ts.scrollIntoView({behavior:'smooth'});
 
   try{
-    const res=await callCozeAPI(choice,currentConvId);
+    const res=await callCozeAPI(choice,currentConvId,false);// 后续轮次不带文件
     currentConvId=res.conversation_id||currentConvId;
     const msg=res.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
     if(!msg)throw new Error('未获取到提示词');
@@ -1046,7 +1093,7 @@ async function sendChoice(choice){
       // 还需要一轮，自动发1
       const tsStatus=document.getElementById('t-status');
       if(tsStatus)tsStatus.textContent='🔄 方案已更新，正在生成提示词…';
-      const res2=await callCozeAPI('1',currentConvId);
+      const res2=await callCozeAPI('1',currentConvId,false);
       currentConvId=res2.conversation_id||currentConvId;
       const msg2=res2.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
       if(!msg2)throw new Error('第二轮未获取到提示词');
@@ -1071,6 +1118,16 @@ function showSizeChoice(content){
   if(actions){
     actions.innerHTML='<button class="btn-action btn-action-primary" onclick="sendChoice(\'A\')">A · 9:16竖版</button><button class="btn-action btn-action-secondary" onclick="sendChoice(\'B\')">B · 16:9横版</button><button class="btn-action btn-action-ghost" onclick="sendChoice(\'C\')">C · 1:1方版</button><button class="btn-action btn-action-ghost" onclick="sendChoice(\'D\')">D · 3:4竖版</button>';
   }
+  // 解析推荐尺寸和风格显示在推荐栏
+  const sizeMatch=rawContent.match(/推荐尺寸[：:]\s*([^
+|｜]+)/);
+  const styleMatch=rawContent.match(/(?:本次随机风格|本次指定风格|随机风格)[：:：]?\s*([^
+（(]+)/);
+  const sizeTag=document.getElementById('rec-size-tag');
+  const styleTag=document.getElementById('rec-style-tag');
+  if(sizeTag&&sizeMatch)sizeTag.textContent='📐 '+sizeMatch[1].trim().substring(0,15);
+  if(styleTag&&styleMatch)styleTag.textContent='🎨 '+styleMatch[1].trim().substring(0,20);
+
   document.getElementById('analysis-stage').style.display='block';
   document.getElementById('analysis-stage').scrollIntoView({behavior:'smooth'});
 }
@@ -1078,6 +1135,10 @@ function showSizeChoice(content){
 // ===== 自定义面板 =====
 function openCustom(){
   document.getElementById('analysis-stage').style.display='none';
+  document.getElementById('custom-stage').style.display='block';
+  document.getElementById('custom-stage').scrollIntoView({behavior:'smooth'});
+}
+function showCustomPanel(){
   document.getElementById('custom-stage').style.display='block';
   document.getElementById('custom-stage').scrollIntoView({behavior:'smooth'});
 }
@@ -1158,6 +1219,8 @@ function showResult(rawContent){
 
 // ===== 获取配套文案（发X）=====
 async function getCopywrite(){
+  if(!currentConvId){alert('请先生成提示词！');return;}
+  const lockedConvId=currentConvId;// 锁定当前会话ID
   document.getElementById('copywrite-ask').style.display='none';
   const loading=document.createElement('div');
   loading.id='copywrite-loading';
@@ -1166,12 +1229,20 @@ async function getCopywrite(){
   document.getElementById('output-section').appendChild(loading);
 
   try{
-    const res=await callCozeAPI('X',currentConvId);
+    const res=await callCozeAPI('X',lockedConvId,false);// 用锁定的convId，不带文件
     const msg=res.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
     document.getElementById('copywrite-loading')?.remove();
     if(msg&&msg.content){
-      // 分割文案：某书笔记和公众号文章
       const content=msg.content;
+      // 过滤开场白
+      const isWelcome2=welcomeKeywords.some(kw=>content.includes(kw))&&!content.includes('笔记')&&!content.includes('公众号');
+      if(isWelcome2){
+        document.getElementById('copywrite-loading')?.remove();
+        document.getElementById('copywrite-ask').style.display='block';
+        alert('文案获取失败，请重新点击生成配套文案');
+        return;
+      }
+      // 分割文案：某书笔记和公众号文章
       const mpIdx=Math.max(content.indexOf('📘【公众号'),content.indexOf('【公众号'));
       if(mpIdx>0){
         document.getElementById('out-xhs').textContent=content.substring(0,mpIdx).trim();
