@@ -100,8 +100,8 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
 #analysis-stage{display:none;margin-bottom:20px;}
 .analysis-card{background:linear-gradient(145deg,#1a1b25,#0f1015);border:1.5px solid var(--gold);border-radius:16px;padding:24px;box-shadow:0 0 40px rgba(243,175,66,0.1);}
 .analysis-badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:11px;font-weight:900;padding:4px 14px;border-radius:20px;margin-bottom:16px;}
-.analysis-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px;}
-.analysis-item{background:rgba(243,175,66,0.06);border:1px solid rgba(243,175,66,0.2);border-radius:10px;padding:10px 14px;}
+.analysis-grid{display:block;margin-bottom:16px;}
+.analysis-item{background:rgba(243,175,66,0.06);border:1px solid rgba(243,175,66,0.2);border-radius:10px;padding:10px 14px;flex:0 0 auto;width:calc(50% - 4px);min-width:110px;box-sizing:border-box;}
 .analysis-item-label{font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:4px;letter-spacing:.3px;}
 .analysis-item-value{font-size:12px;font-weight:700;color:#f3af42;line-height:1.5;}
 /* 内容识别列表区 */
@@ -270,7 +270,7 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
       <div class="custom-title">⚙️ 高定自定义参数 <span>（修改你不满意的，其余保持AI推荐）</span></div>
       <div class="custom-selects">
         <div>
-          <label class="csel-label">📐 输出尺寸</label>
+          <label class="csel-label" for="custom-size">📐 输出尺寸</label>
           <select id="custom-size" class="custom-sel">
             <optgroup label="📱 竖版">
               <option value="A">9:16 · 抖音/小红书/竖屏刷屏首选</option>
@@ -294,7 +294,7 @@ body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,'P
           </select>
         </div>
         <div>
-          <label class="csel-label">🎨 视觉风格</label>
+          <label class="csel-label" for="custom-style">🎨 视觉风格</label>
           <select id="custom-style" class="custom-sel" onchange="handleCustomStyleChange()">
             <option value="custom_input">✍️ 手打自定义专属风格</option>
             <optgroup label="🔥 当下最火">
@@ -672,7 +672,7 @@ function showAnalysisCard(raw){
 
   // === 右栏：小卡片网格 ===
   var rightCol=document.createElement('div');
-  rightCol.style.cssText='flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;align-content:start;';
+  rightCol.style.cssText='flex:1;display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;';
   var fields=[
     {keys:['品类判定'],icon:'📂',label:'目标品类锁定'},
     {keys:['用户类型'],icon:'👤',label:'预设受众类型'},
@@ -727,7 +727,7 @@ function confirmAI(){
   var ring=document.getElementById('t-ring');
   if(ring){ring.style.cssText='';ring.innerHTML='';}
   var tStatus=document.getElementById('t-status');
-  if(tStatus){tStatus.style.color='#cbd5e1';tStatus.innerHTML='AI大脑联网搜索爆款参数中…<br>完整提示词与配套文案生成中…';}
+  if(tStatus){tStatus.style.color='#cbd5e1';tStatus.textContent='AI大脑联网搜索爆款参数中… 完整提示词生成中…';}
   // 用 setTimeout 确保 DOM 渲染后再发请求（修复交互画面闪过问题）
   setTimeout(function(){
     if(!currentConvId){
@@ -738,10 +738,18 @@ function confirmAI(){
     }
     callCoze('1',currentConvId,false).then(function(res){
       currentConvId=res.conversation_id||currentConvId;
-      var answers=res.messages&&res.messages.filter(function(m){return m.role==='assistant'&&m.type==='answer';});
-      var msg=answers&&answers[answers.length-1];
-      if(!msg||!msg.content)throw new Error('未获取到提示词');
-      showResult(msg.content);
+      // 兼容多种消息结构
+      var allMsgs=res.messages||[];
+      var answers=allMsgs.filter(function(m){return m.role==='assistant'&&(m.type==='answer'||m.type==='text');});
+      if(answers.length===0) answers=allMsgs.filter(function(m){return m.role==='assistant';});
+      var msg=answers.length>0?answers[answers.length-1]:null;
+      var content=msg&&(msg.content||msg.text||'');
+      if(!content){
+        // 尝试从 answer 字段取
+        if(res.answer) content=res.answer;
+        else throw new Error('响应为空，请重试');
+      }
+      showResult(content);
     }).catch(function(e){
       var s=document.getElementById('t-status');
       if(s){s.style.color='#ef4444';s.textContent='❌ 失败：'+e.message;}
