@@ -725,17 +725,47 @@ function initKeywords(){
   const chips=document.getElementById('kw-chips');
   if(!tabs||!chips)return;
   // 渲染分类标签
-  KW_CATEGORIES.forEach((cat,i)=>{
+  // 分两排：普通分类和特殊功能
+  const normalCats=KW_CATEGORIES.filter(c=>!c.special);
+  const specialCats=KW_CATEGORIES.filter(c=>c.special);
+
+  const renderTab=(cat)=>{
     const tab=document.createElement('div');
-    tab.className='kw-tab'+(i===0?' active':'');
+    tab.className='kw-tab'; // 默认不高亮
     tab.textContent=cat.icon+' '+cat.name;
-    if(cat.special)tab.style.cssText='border-color:rgba(243,175,66,0.3);color:rgba(243,175,66,0.8);';
+    if(cat.special)tab.style.cssText='border-color:rgba(243,175,66,0.2);color:var(--tx3);font-size:11px;';
     tab.onclick=()=>{
-      document.querySelectorAll('.kw-tab').forEach(t=>t.classList.remove('active'));
-      tab.classList.add('active');
+      // 不加active，只切换chips
       renderChips(cat);
+      // 短暂高亮反馈
+      tab.style.borderColor='var(--gold)';tab.style.color='var(--gold)';
+      setTimeout(()=>{
+        tab.style.borderColor=cat.special?'rgba(243,175,66,0.2)':'';
+        tab.style.color=cat.special?'var(--tx3)':'';
+      },600);
     };
     tabs.appendChild(tab);
+  };
+
+  // 普通分类
+  normalCats.forEach(renderTab);
+
+  // 特殊分类换行
+  const specialRow=document.createElement('div');
+  specialRow.style.cssText='display:flex;gap:6px;flex-wrap:wrap;width:100%;margin-top:6px;padding-top:6px;border-top:1px solid var(--bd);';
+  specialRow.innerHTML='<span style="font-size:10px;color:var(--tx3);align-self:center;white-space:nowrap;">⚡ 特殊功能：</span>';
+  tabs.appendChild(specialRow);
+  specialCats.forEach(cat=>{
+    const tab=document.createElement('div');
+    tab.className='kw-tab';
+    tab.style.cssText='border-color:rgba(243,175,66,0.2);color:var(--tx3);font-size:11px;';
+    tab.textContent=cat.icon+' '+cat.name;
+    tab.onclick=()=>{
+      renderChips(cat);
+      tab.style.borderColor='var(--gold)';tab.style.color='var(--gold)';
+      setTimeout(()=>{tab.style.borderColor='rgba(243,175,66,0.2)';tab.style.color='var(--tx3)';},600);
+    };
+    specialRow.appendChild(tab);
   });
   renderChips(KW_CATEGORIES[0]);
 }
@@ -744,12 +774,20 @@ function renderChips(cat){
   const chips=document.getElementById('kw-chips');chips.innerHTML='';
   cat.words.forEach(w=>{
     const chip=document.createElement('div');
-    chip.className='kw-chip'+(cat.special?' kw-special':'');
+    // 默认灰色，不高亮，点击只填入不改变样式
+    chip.className='kw-chip';
+    chip.style.cssText=cat.special?'border-color:rgba(243,175,66,0.15);color:var(--tx3);':'';
     chip.textContent=w;
     chip.onclick=()=>{
       document.getElementById('main-textarea').value=w;
       document.getElementById('main-textarea').focus();
       matchBubbles(w);
+      // 短暂高亮反馈后恢复
+      chip.style.borderColor='var(--gold)';chip.style.color='var(--gold)';
+      setTimeout(()=>{
+        chip.style.borderColor=cat.special?'rgba(243,175,66,0.15)':'';
+        chip.style.color=cat.special?'var(--tx3)':'';
+      },600);
     };
     chips.appendChild(chip);
   });
@@ -898,16 +936,38 @@ async function runEngine(){
   const query=`${topic||'请识别上传文件内容'}${bubbleStr}${fileNotice}`;
 
   setTimeout(async()=>{
-    document.getElementById('quantum-stage').style.display='none';
+    // 扫描完成后加「等待AI响应」滚动日志
+    qLog('📡 <span class="q-gold">CALLING</span> · 正在呼叫扣子AI大脑…',null,0);
+    qLog('⏳ <span class="q-dim">WAIT</span> · AI联网分析中，请稍候（10-20秒）…',null,300);
+
     try{
       const res=await callCozeAPI(query,null);
       currentConvId=res.conversation_id;
       currentRound=1;
       const msg=res.messages?.find(m=>m.role==='assistant'&&m.type==='answer');
       if(!msg)throw new Error('未获取到响应');
-      showAnalysisCard(msg.content);
+
+      // 检测是否是开场白（用户输入为空时扣子返回的）
+      const isWelcome=msg.content.includes('支持四种输入方式')||msg.content.includes('发送任意内容，自动启动');
+      if(isWelcome){
+        document.getElementById('quantum-stage').style.display='none';
+        alert('请在输入框输入你想做的主题，然后再点启动大脑！');
+        return;
+      }
+
+      qLog('✅ <span class="q-gold">SUCCESS</span> · AI响应完成，正在渲染结果…',null,0);
+      setTimeout(()=>{
+        document.getElementById('quantum-stage').style.display='none';
+        showAnalysisCard(msg.content);
+      },600);
     }catch(e){
-      alert('生成失败：'+e.message);
+      document.getElementById('quantum-stage').style.display='none';
+      qLog("❌ ERROR · "+e.message,null,0);
+      setTimeout(()=>{
+        document.getElementById('quantum-stage').style.display='none';
+        alert('生成失败：'+e.message+'
+请检查网络后重试');
+      },800);
     }finally{
       if(btn){btn.disabled=false;btn.textContent='🔮 启动大脑 · 开始全行业智能生图充能';}
     }
