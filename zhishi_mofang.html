@@ -1224,7 +1224,7 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
     display:none!important;position:fixed;inset:0;margin:0;z-index:190000;
     width:100%!important;max-width:100%!important;min-width:0!important;
     flex-direction:column;transform:none!important;
-    background:#12121a!important;
+    background:#26263a!important;
     box-shadow:none;border-radius:0;
     -webkit-transform:none;transform:none;
     isolation:isolate;overflow:hidden;
@@ -1240,19 +1240,37 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
     overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;
     border-radius:0;border:none;
     -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
-    background:#12121a!important;
+    background:#26263a!important;
     background-image:none!important;
-    color:#e2e8f0!important;
+    color:#f1f5f9!important;
   }
   .case-sidebar-wrap .case-sidebar-nebula{display:none!important;}
   .case-sidebar-inner,.ds-copy-inner{
     position:relative;z-index:2;
-    background:#12121a!important;min-height:100%;
+    background:#26263a!important;min-height:100%;
     padding:14px 14px calc(18px + env(safe-area-inset-bottom,0px));
-    color:#e2e8f0!important;
+    color:#f1f5f9!important;
     -webkit-font-smoothing:antialiased;
     font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
   }
+  .case-sidebar-head-row,.ds-copy-head-row{
+    background:#1e1e2e!important;
+    margin:-14px -14px 12px;padding:12px 14px;
+    border-bottom:1px solid rgba(243,175,66,0.22);
+  }
+  .case-sidebar-close,.ds-copy-close{
+    background:#353548!important;color:#fff!important;
+    border-color:rgba(255,255,255,0.2)!important;
+  }
+  .case-card{
+    background:#323248!important;
+    border:1px solid rgba(243,175,66,0.28)!important;
+    opacity:1!important;visibility:visible!important;
+  }
+  .case-thumb{background:#1a1a28!important;}
+  .case-title{color:#f8fafc!important;}
+  .case-tag{color:#cbd5e1!important;}
+  .case-meta{color:rgba(243,175,66,0.85)!important;}
   .case-sidebar-wrap.is-open .case-card,
   .case-sidebar-wrap.is-open .case-card.is-flyin,
   .case-sidebar-wrap.is-open .case-card.is-visible{
@@ -1318,9 +1336,13 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
   #lc-drawer-backdrop.is-open{
     display:block!important;
     backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
-    background:rgba(0,0,0,0.78)!important;
+    background:rgba(0,0,0,0.82)!important;
   }
-  body.lc-m-drawer-open{overflow:hidden!important;}
+  body.lc-m-drawer-open{overflow:hidden!important;background:#0a0a0e!important;}
+  body.lc-m-drawer-open .app-main,
+  body.lc-m-drawer-open .shell{
+    visibility:hidden;
+  }
   .analysis-grid{grid-template-columns:1fr 1fr;}
   .platform-grid{grid-template-columns:repeat(2,1fr);}
   .custom-selects{grid-template-columns:1fr;}
@@ -2036,6 +2058,8 @@ var LC_NETWORK_TIP='🌍 网络环境波动，连接大脑超时，请刷新页�
 var LC_MAX_IMAGE_BYTES=2*1024*1024;
 var LC_MAX_DOC_BYTES=4*1024*1024;
 var LC_MAX_B64_CHARS=Math.floor(3.2*1024*1024);
+var LC_MAX_DOC_CHARS=32000;
+var LC_PDF_MAX_PAGES=24;
 function lcUploadLimitMsg(file,isImage){
   var max=isImage?LC_MAX_IMAGE_BYTES:LC_MAX_DOC_BYTES;
   var maxMb=(max/1024/1024).toFixed(0);
@@ -2755,7 +2779,9 @@ function syncLcMobileBackdrop(){
   var c=document.getElementById('case-sidebar-wrap');
   var d=document.getElementById('ds-copy-wrap');
   var open=(c&&c.classList.contains('is-open'))||(d&&d.classList.contains('is-open'));
-  document.body.classList.toggle('lc-m-drawer-open',!!(mw&&open));
+  var drawerOn=!!(mw&&open);
+  document.body.classList.toggle('lc-m-drawer-open',drawerOn);
+  document.documentElement.classList.toggle('lc-m-drawer-open',drawerOn);
   if(mw&&open){
     bd.classList.add('is-open');
     document.body.style.overflow='hidden';
@@ -3457,34 +3483,33 @@ function processDocumentFile(file){
   if(pa)pa.style.display='block';if(pi)pi.style.display='none';if(row)row.style.display='none';
   if(pd)pd.style.display='flex';if(pdn)pdn.textContent=file.name;if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 读取中…';
   var ext=file.name.split('.').pop().toLowerCase();
-  var upBackup=function(){
-    if(docTextContent&&docTextContent.length>20&&!/^\[(解析失败|PDF文件)/.test(docTextContent)){
-      return;
+  var scheduleDocCozeUpload=function(){
+    if(file.size<=LC_MAX_DOC_BYTES){
+      pendingUploadPromises.push(uploadFile(file,'doc'));
     }
-    pendingUploadPromises.push(uploadFile(file,'doc'));
   };
   if(ext==='txt'){
     var r2=new FileReader();
-    r2.onload=function(e){docTextContent=String(e.target.result||'').substring(0,20000);if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · ✅ 已读取 '+docTextContent.length+' 字';upBackup();finishDocParseWait();};
-    r2.onerror=function(){docTextContent='[解析失败：'+file.name+']';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 解析失败，已转交AI识别';upBackup();finishDocParseWait();};
+    r2.onload=function(e){docTextContent=String(e.target.result||'').substring(0,LC_MAX_DOC_CHARS);if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · ✅ 已读取 '+docTextContent.length+' 字';scheduleDocCozeUpload();finishDocParseWait();};
+    r2.onerror=function(){docTextContent='[解析失败：'+file.name+']';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 解析失败，已转交AI识别';scheduleDocCozeUpload();finishDocParseWait();};
     r2.readAsText(file,'utf-8');
   }else if(ext==='docx'&&typeof mammoth==='undefined'){
-    upBackup();docTextContent='[解析失败：'+file.name+']';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 已上传，AI将识别内容';finishDocParseWait();
+    scheduleDocCozeUpload();docTextContent='[解析失败：'+file.name+']';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 已上传，AI将识别内容';finishDocParseWait();
   }else if(ext==='docx'){
     var r3=new FileReader();
-    r3.onload=function(e){var ab=e.target.result;mammoth.extractRawText({arrayBuffer:ab}).then(function(result){docTextContent=String(result.value||'').substring(0,20000);if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · ✅ 已解析 '+docTextContent.length+' 字';upBackup();finishDocParseWait();}).catch(function(){docTextContent='[解析失败：'+file.name+']';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 解析失败，已转交AI识别';upBackup();finishDocParseWait();});};
-    r3.onerror=function(){docTextContent='[解析失败：'+file.name+']';upBackup();finishDocParseWait();};
+    r3.onload=function(e){var ab=e.target.result;mammoth.extractRawText({arrayBuffer:ab}).then(function(result){docTextContent=String(result.value||'').substring(0,LC_MAX_DOC_CHARS);if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · ✅ 已解析 '+docTextContent.length+' 字';scheduleDocCozeUpload();finishDocParseWait();}).catch(function(){docTextContent='[解析失败：'+file.name+']';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 解析失败，已转交AI识别';scheduleDocCozeUpload();finishDocParseWait();});};
+    r3.onerror=function(){docTextContent='[解析失败：'+file.name+']';scheduleDocCozeUpload();finishDocParseWait();};
     r3.readAsArrayBuffer(file);
   }else if(ext==='pdf'){
     if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · PDF解析中…';
-    upBackup();
+    scheduleDocCozeUpload();
     var r4=new FileReader();
     r4.onload=function(e){var ab=e.target.result;
       if(typeof pdfjsLib!=='undefined'){parsePDF(ab,file,pds);}
       else{var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';s.onload=function(){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';parsePDF(ab,file,pds);};document.head.appendChild(s);}};
     r4.onerror=function(){docTextContent='[解析失败：'+file.name+']';finishDocParseWait();};
     r4.readAsArrayBuffer(file);
-  }else{upBackup();docTextContent='[解析失败：'+file.name+']';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 已上传，AI将识别内容';finishDocParseWait();}
+  }else{scheduleDocCozeUpload();docTextContent='[解析失败：'+file.name+']';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 已上传，AI将识别内容';finishDocParseWait();}
 }
 function handleFile(input){
   var files=input.files;if(!files||!files.length)return;
@@ -3506,20 +3531,55 @@ function removeImageSlot(idx){
   refreshImagePreviewUI();
   if(uploadedImageCount===0&&!docTextContent&&!getDocumentContent())removeFile();
 }
+function pdfPageToText(content){
+  var items=(content.items||[]).map(function(it){
+    var tr=it.transform||[1,0,0,1,0,0];
+    return {str:String(it.str||''),x:tr[4],y:tr[5]};
+  }).filter(function(it){return it.str&&it.str.trim();});
+  items.sort(function(a,b){
+    if(Math.abs(b.y-a.y)>4) return b.y-a.y;
+    return a.x-b.x;
+  });
+  var lines=[],buf='',lastY=null;
+  items.forEach(function(it){
+    if(lastY!==null&&Math.abs(it.y-lastY)>7){
+      if(buf.trim()) lines.push(buf.trim());
+      buf='';
+    }
+    buf+=(buf?' ':'')+it.str;
+    lastY=it.y;
+  });
+  if(buf.trim()) lines.push(buf.trim());
+  return lines.join('\n');
+}
 function parsePDF(ab,file,pds){
+  var pdfMeta={numPages:0,parsedPages:0};
   pdfjsLib.getDocument({data:ab}).promise.then(function(pdf){
-    var pages=[];var total=Math.min(pdf.numPages,8);
-    var _p=1; while(_p!==total+1){pages.push(pdf.getPage(_p));_p++;}
-    return Promise.all(pages);
-  }).then(function(pagesArr){
-    return Promise.all(pagesArr.map(function(page){return page.getTextContent();}));
-  }).then(function(contents){
-    var text=contents.map(function(c){
-      return c.items.map(function(i){return i.str;}).join(' ');
-    }).join(' ');
-    docTextContent=text.substring(0,20000);
+    pdfMeta.numPages=pdf.numPages||0;
+    pdfMeta.parsedPages=Math.min(pdfMeta.numPages,LC_PDF_MAX_PAGES);
+    var pages=[];var _p=1;
+    for(;_p<=pdfMeta.parsedPages;_p++) pages.push(pdf.getPage(_p));
+    return Promise.all(pages.map(function(page,idx){
+      return page.getTextContent().then(function(c){
+        return {idx:idx+1,text:pdfPageToText(c)};
+      });
+    }));
+  }).then(function(pageTexts){
+    var chunks=[];
+    pageTexts.forEach(function(pt){
+      if(pt.text&&pt.text.trim()) chunks.push('【第'+pt.idx+'页】\n'+pt.text.trim());
+    });
+    var text=chunks.join('\n\n');
+    if(!text.trim()){
+      docTextContent='[PDF文件已上传·正文为空或扫描版，已转交扣子识读附件]';
+    }else{
+      docTextContent=text.substring(0,LC_MAX_DOC_CHARS);
+    }
     var pdsEl=pds||document.getElementById('preview-doc-size');
-    if(pdsEl) pdsEl.textContent=(docTextContent.length/1000).toFixed(1)+'K字 · ✅ PDF已解析 '+docTextContent.length+' 字';
+    if(pdsEl){
+      var extra=pdfMeta.numPages>pdfMeta.parsedPages?'（共'+pdfMeta.numPages+'页·已解析前'+pdfMeta.parsedPages+'页）':'';
+      pdsEl.textContent=(docTextContent.length/1000).toFixed(1)+'K字 · ✅ PDF已解析 '+docTextContent.length+' 字'+extra;
+    }
     finishDocParseWait();
   }).catch(function(){
     docTextContent='[解析失败：'+(file&&file.name?file.name:'PDF')+']';
@@ -3660,7 +3720,13 @@ function getDocumentContent(){
 function buildUserQuery(topic){
   var bubbleStr=selectedBubbles.length>0?'\n追加排版方向：'+selectedBubbles.join('、'):'';
   var fileNotice=(isFileAttached&&uploadedFileIds.length>0)?'\n【已上传文件，请识别内容】':'';
-  if(isFileAttached&&!getDocumentContent()&&!topic) fileNotice+='\n【请识别上传的图片或文件内容】';
+  var doc=getDocumentContent();
+  if(doc){
+    fileNotice+='\n【文档原文已解析·必须按全文前部提炼1~6条内容要点，禁止只写联想记忆点及以后章节】';
+    var excerpt=doc.replace(/\s+/g,' ').trim().slice(0,1200);
+    if(excerpt) fileNotice+='\n【文档摘录】\n'+excerpt+(doc.length>1200?'…':'');
+  }
+  if(isFileAttached&&!doc&&!topic) fileNotice+='\n【请识别上传的图片或文件内容】';
   return (topic||'请识别上传文件内容')+bubbleStr+fileNotice;
 }
 function extractCoreTopicFromInput(topic){
@@ -3953,14 +4019,18 @@ function uploadFile(file,slotKey){
   if(!file)return Promise.resolve();
   var isImage=String(file.type||'').indexOf('image/')===0;
   if(!checkUploadSize(file)) return Promise.reject(new Error(lcUploadLimitMsg(file,isImage)));
+  var uploadMeta={name:file.name||'upload.bin',type:file.type||'application/octet-stream',size:file.size};
   var prep=isImage?compressImageFileForUpload(file):Promise.resolve(file);
   return prep.then(function(safeFile){
+    uploadMeta.name=safeFile.name||uploadMeta.name;
+    uploadMeta.type=safeFile.type||uploadMeta.type;
+    uploadMeta.size=safeFile.size||uploadMeta.size;
     var maxB=isImage?LC_MAX_IMAGE_BYTES:LC_MAX_DOC_BYTES;
     if(safeFile.size>maxB) throw new Error(lcUploadLimitMsg(safeFile,isImage));
     return fileToBase64(safeFile);
   }).then(function(b64){
     if(b64.length>LC_MAX_B64_CHARS) throw new Error('上传体积超限，请压缩至单张图片＜2MB 或换更小文档');
-    return fetch(API_BASE+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze-upload',file_base64:b64,file_name:safeFile.name,file_type:safeFile.type||'application/octet-stream'})});
+    return fetch(API_BASE+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze-upload',file_base64:b64,file_name:uploadMeta.name,file_type:uploadMeta.type})});
   }).then(parseApiResponse).then(function(data){
     if(data&&data.code===0&&data.data&&data.data.id){
       var fid=String(data.data.id);
@@ -4489,6 +4559,7 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
   if(docFull){
     body.documentContent=docFull;
     body.file_content=docFull;
+    body.lc_has_document=true;
     if(!body.core_topic||body.core_topic==='上传文件内容识别'||body.core_topic==='请识别上传文件内容'){
       body.core_topic=docFull.replace(/\s+/g,' ').trim().substring(0,120);
     }
@@ -4694,6 +4765,17 @@ function isAnalysisMenuLine(line){
   if(/^👉\s*确认/.test(t)) return true;
   return false;
 }
+function extractNumberedPoints1to6(raw){
+  var map={};
+  String(raw||'').split(/\r?\n/).forEach(function(line){
+    var t=line.trim();
+    var m=t.match(/^([1-6])[\.、．\)\]]\s*(.+)/);
+    if(m&&m[2]&&m[2].trim().length>2) map[parseInt(m[1],10)]=m[2].trim();
+  });
+  var out=[],n=1;
+  for(;n<=6;n++){if(map[n]) out.push(map[n]);}
+  return out;
+}
 function parseContentList(raw){
   var text=String(raw||'');
   var sectionMatch=text.match(/(?:^|\n)\s*(?:6[\.、\s]*|[✅✔]?\s*)?内容(?:要点|识别)[^\n]*[：:\s]*\n([\s\S]*?)(?=\n\s*(?:7[\.、\s]*|联想记忆|场景延伸|电商应用|全息深度|建议回复|确认直接|用这套|换一套|📊|🎨【即梦)|$)/i);
@@ -4803,15 +4885,31 @@ function showAnalysisCard(raw){
     grid.appendChild(reasonTip);
   }
 
-  var contentItems=parseContentList(raw);
+  var contentItems=extractNumberedPoints1to6(raw);
+  if(contentItems.length===0) contentItems=parseContentList(raw);
   if(contentItems.length===0){
     var sv=parseFieldFromRaw(raw,['内容识别','内容要点']);
     if(sv&&!isAnalysisMenuLine(sv)) contentItems=[sv];
   }
   if(contentItems.length===1&&isAnalysisMenuLine(contentItems[0])) contentItems=[];
   if(contentItems.length===0){
-    var insight=parseInsightSection(raw,['内容要点','内容识别','联想记忆点']);
+    var insight=parseInsightSection(raw,['内容要点','内容识别']);
+    insight=insight.filter(function(t){return !/^[7-9][\.、．]/.test(t)&&t.indexOf('联想记忆点')<0&&t.indexOf('场景延伸')<0;});
     if(insight.length) contentItems=insight.slice(0,6);
+  }
+  var docSnap=getDocumentContent();
+  if(docSnap&&contentItems.length>0&&contentItems[0].indexOf('联想记忆')>=0){
+    contentItems=extractNumberedPoints1to6(raw);
+    if(!contentItems.length){
+      var docLines=docSnap.split(/\r?\n/).map(function(l){return l.trim();}).filter(function(l){return l.length>8&&l.length<120;});
+      contentItems=docLines.slice(0,6);
+    }
+  }
+  if(docSnap){
+    var docHint=document.createElement('div');
+    docHint.style.cssText='margin-bottom:10px;padding:8px 10px;border-radius:8px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.22);font-size:11px;line-height:1.5;color:#bae6fd;';
+    docHint.innerHTML='📄 已读取文档 <strong>'+docTextContent.length+'</strong> 字'+(attachedFileName?' · '+attachedFileName:'')+' · 要点须来自文档前部核心';
+    grid.appendChild(docHint);
   }
   if(contentItems.length>0){
     var block=document.createElement('div');
