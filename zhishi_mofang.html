@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- 静态页与 API 不同域时：添加 meta 或 window.LC_API_BASE 指向后端根路径（无尾斜杠），例 <meta name="lc-api-base" content="https://api.xxx.com"> -->
+<script>
+(function(){
+  var K='lingchuang_intro_done';
+  try{if(localStorage.getItem(K)==='1')return;}catch(e){}
+  document.documentElement.classList.add('lc-await-intro');
+})();
+</script>
 <title>灵创星球 · 图片提示词大师</title>
 <style>
 :root{
@@ -566,10 +573,21 @@ body{
   .ds-copy-disclaimer{font-size:9px;color:var(--tx3);line-height:1.45;margin-top:10px;}
 }
 /* ========== v4 入场 / 协议 / 手机悬浮钮 / 微动效 ========== */
+/* 首访：在 JS 执行前先显示开场层，避免先闪首页 */
+html.lc-await-intro body{overflow:hidden;}
+html.lc-await-intro #lc-intro-overlay{display:flex!important;visibility:visible!important;}
+html.lc-await-intro .app-top-bar,
+html.lc-await-intro .app-layout,
+html.lc-await-intro #lux-bg-layer,
+html.lc-await-intro #cockpit-ambient,
+html.lc-await-intro #lc-drawer-backdrop,
+html.lc-await-intro .lc-mobile-fab,
+html.lc-await-intro #lc-mobile-legal-bar{visibility:hidden!important;pointer-events:none!important;}
 #lc-intro-overlay{
   position:fixed;inset:0;z-index:200000;display:none;flex-direction:column;align-items:center;justify-content:center;
-  background:radial-gradient(ellipse 120% 80% at 50% 35%,#12121c 0%,#09090d 55%,#050508 100%);
-  overflow-x:hidden;overflow-y:auto;font-family:system-ui,sans-serif;
+  background:#09090d;
+  background-image:radial-gradient(ellipse 120% 80% at 50% 35%,#12121c 0%,#09090d 55%,#050508 100%);
+  overflow-x:hidden;overflow-y:auto;font-family:system-ui,-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
 }
 #lc-intro-overlay.is-visible{display:flex;}
 #lc-intro-canvas{
@@ -1132,45 +1150,61 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
 .p-tag{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;display:inline-block;}
 .tag-gold{background:rgba(243,175,66,0.1);color:var(--gold);}.tag-green{background:rgba(34,197,94,0.1);color:#22c55e;}
 @media(max-width:768px){
-  .lc-mobile-fab{display:block;}
+  #cockpit-ambient{display:none!important;}
+  .lc-mobile-fab{display:block;z-index:188000;}
   .app-top-bar{display:block!important;padding:8px 10px 0;}
   .app-layout{padding:0;}
   .app-main .shell{padding:20px 16px calc(96px + 52px);}
   .lc-mobile-legal-bar{display:block;}
   .case-sidebar-wrap,.ds-copy-wrap{
-    display:flex!important;position:fixed;top:0;bottom:0;margin:0;z-index:85600;
-    width:min(92vw,320px);max-width:100%;transition:transform .34s cubic-bezier(.22,1,.36,1);
-    box-shadow:0 0 48px rgba(0,0,0,0.55);border-radius:0;
-    -webkit-transform:translateZ(0);
-    transform:translateZ(0);
-    isolation:isolate;
+    display:none!important;position:fixed;inset:0;margin:0;z-index:190000;
+    width:100%!important;max-width:100%!important;min-width:0!important;
+    flex-direction:column;transform:none!important;
+    background:#12121a!important;
+    box-shadow:none;border-radius:0;
+    -webkit-transform:none;transform:none;
+    isolation:isolate;overflow:hidden;
   }
-  .case-sidebar-wrap{left:0;flex-direction:row;transform:translateX(-105%);}
-  .case-sidebar-wrap.is-open{transform:translateX(0);}
-  .ds-copy-wrap{right:0;left:auto;flex-direction:row;transform:translateX(105%);}
-  .ds-copy-wrap.is-open{transform:translateX(0);}
+  .case-sidebar-wrap.is-open,.ds-copy-wrap.is-open{display:flex!important;}
   .case-sidebar-rail,.ds-copy-rail{display:none!important;}
   .case-sidebar-wrap .case-sidebar,.ds-copy-wrap .ds-copy-panel{
-    position:relative!important;left:auto!important;right:auto!important;
-    transform:none!important;opacity:1!important;pointer-events:auto!important;
-    flex:1 1 auto!important;width:100%!important;min-width:0!important;max-height:100vh;
-    border-radius:0;
-    -webkit-backdrop-filter:none!important;
-    backdrop-filter:none!important;
-    background:#13131c!important;
-    background-image:linear-gradient(180deg,#1a1a24 0%,#12121a 100%)!important;
+    position:relative!important;left:auto!important;right:auto!important;top:auto!important;
+    transform:none!important;opacity:1!important;visibility:visible!important;
+    pointer-events:auto!important;filter:none!important;
+    flex:1 1 auto!important;width:100%!important;min-width:0!important;
+    height:100%;max-height:100%;min-height:0;
+    overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    border-radius:0;border:none;
+    -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+    background:#12121a!important;
+    background-image:none!important;
     color:#e2e8f0!important;
-    -webkit-transform:translateZ(0);
-    transform:translateZ(0);
-    isolation:isolate;
   }
   .case-sidebar-wrap .case-sidebar-nebula{display:none!important;}
-  .case-sidebar-wrap.is-open,.ds-copy-wrap.is-open{background:#12121a!important;}
-  .case-sidebar-inner,.ds-copy-inner{background:#12121a!important;min-height:100%;}
-  #lc-drawer-backdrop.is-open{
-    backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
-    background:rgba(0,0,0,0.72)!important;
+  .case-sidebar-inner,.ds-copy-inner{
+    position:relative;z-index:2;
+    background:#12121a!important;min-height:100%;
+    padding:14px 14px calc(18px + env(safe-area-inset-bottom,0px));
+    color:#e2e8f0!important;
+    -webkit-font-smoothing:antialiased;
   }
+  .case-sidebar-inner *,.ds-copy-inner *{
+    -webkit-text-fill-color:currentColor;
+  }
+  .case-sidebar-head,.case-title,.ds-copy-head,.case-tab,.ds-copy-field label,.ds-ol{color:#e2e8f0!important;}
+  .case-tag,.case-meta,.ds-copy-hint,.ds-copy-disclaimer{color:#94a3b8!important;}
+  .ds-copy-field select,.ds-copy-field input[type="text"],
+  .ds-out-ta,.case-apply-input{
+    color:#f1f5f9!important;background:#1a1a24!important;
+    -webkit-text-fill-color:#f1f5f9;
+  }
+  #lc-drawer-backdrop{z-index:189990;}
+  #lc-drawer-backdrop.is-open{
+    display:block!important;
+    backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+    background:rgba(0,0,0,0.78)!important;
+  }
+  body.lc-m-drawer-open{overflow:hidden!important;}
   .analysis-grid{grid-template-columns:1fr 1fr;}
   .platform-grid{grid-template-columns:repeat(2,1fr);}
   .custom-selects{grid-template-columns:1fr;}
@@ -1734,6 +1768,7 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
         <div class="ds-copy-actions" style="margin-top:0;">
           <button type="button" class="ds-gen-primary btn-ds-redgold lux-tap" id="ds-gen-btn">🚀 生成爆款笔记框架</button>
         </div>
+        <span class="ds-copy-hint ds-quota-hint">成功生成后消耗 1 次体验额度（与主区生图提示词、配套文案分开计费）</span>
       </div>
       <div class="ds-copy-out" id="ds-copy-out" style="display:none;">
         <div class="ds-copy-out-block">
@@ -1759,7 +1794,7 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
           <button type="button" class="lux-tap" id="ds-copy-all">📦 全部复制</button>
         </div>
       </div>
-      <p class="ds-copy-disclaimer" id="ds-copy-disclaimer">文案由 DeepSeek 生成；与主生图扣子链路独立。生成内容仅供创作参考。</p>
+      <p class="ds-copy-disclaimer" id="ds-copy-disclaimer">文案由 DeepSeek 生成；与主生图扣子链路独立。成功生成笔记框架另计 1 次体验额度。生成内容仅供创作参考。</p>
     </div>
   </aside>
   <button type="button" class="ds-copy-rail lux-tap" id="ds-copy-toggle" aria-expanded="false" aria-controls="ds-copy-panel" title="展开笔记框架生成">
@@ -2472,29 +2507,6 @@ function switchCaseTab(tabId){
   tabs.forEach(function(t){t.classList.toggle('is-active',t.getAttribute('data-tab')===tabId);});
   renderCaseGrid(tabId);
 }
-function applyMobileDrawerPanelStyle(open,wrapId,panelId){
-  var mw=typeof window.matchMedia==='function'&&window.matchMedia('(max-width:768px)').matches;
-  var wrap=document.getElementById(wrapId);
-  var pan=document.getElementById(panelId);
-  if(!mw||!wrap||!pan) return;
-  if(open){
-    wrap.style.background='#12121a';
-    wrap.style.opacity='1';
-    pan.style.background='#12121a';
-    pan.style.opacity='1';
-    pan.style.visibility='visible';
-    var inner=pan.querySelector('.case-sidebar-inner')||pan.querySelector('.ds-copy-inner');
-    if(inner){inner.style.background='#12121a';inner.style.opacity='1';}
-  }else{
-    wrap.style.background='';
-    wrap.style.opacity='';
-    pan.style.background='';
-    pan.style.opacity='';
-    pan.style.visibility='';
-    var inner2=pan.querySelector('.case-sidebar-inner')||pan.querySelector('.ds-copy-inner');
-    if(inner2){inner2.style.background='';inner2.style.opacity='';}
-  }
-}
 function syncLcMobileBackdrop(){
   var bd=document.getElementById('lc-drawer-backdrop');
   if(!bd) return;
@@ -2502,12 +2514,15 @@ function syncLcMobileBackdrop(){
   var c=document.getElementById('case-sidebar-wrap');
   var d=document.getElementById('ds-copy-wrap');
   var open=(c&&c.classList.contains('is-open'))||(d&&d.classList.contains('is-open'));
+  document.body.classList.toggle('lc-m-drawer-open',!!(mw&&open));
   if(mw&&open){
     bd.classList.add('is-open');
     document.body.style.overflow='hidden';
   }else{
     bd.classList.remove('is-open');
-    document.body.style.overflow='';
+    if(!document.documentElement.classList.contains('lc-await-intro')){
+      document.body.style.overflow='';
+    }
   }
   var fc=document.getElementById('lc-m-fab-case');
   var fcp=document.getElementById('lc-m-fab-copy');
@@ -2531,14 +2546,12 @@ function setCaseSidebarOpen(open){
     aside.setAttribute('aria-hidden','false');
     btn.classList.add('is-active');
     btn.title='收起案例库';
-    applyMobileDrawerPanelStyle(true,'case-sidebar-wrap','case-sidebar');
   }else{
     wrap.classList.remove('is-open');
     btn.setAttribute('aria-expanded','false');
     aside.setAttribute('aria-hidden','true');
     btn.classList.remove('is-active');
     btn.title='展开案例库';
-    applyMobileDrawerPanelStyle(false,'case-sidebar-wrap','case-sidebar');
   }
   syncLcMobileBackdrop();
 }
@@ -2571,14 +2584,12 @@ function setDsCopyOpen(open){
     pan.setAttribute('aria-hidden','false');
     btn.classList.add('is-active');
     btn.title='收起笔记框架';
-    applyMobileDrawerPanelStyle(true,'ds-copy-wrap','ds-copy-panel');
   }else{
     wrap.classList.remove('is-open');
     btn.setAttribute('aria-expanded','false');
     pan.setAttribute('aria-hidden','true');
     btn.classList.remove('is-active');
     btn.title='展开笔记框架';
-    applyMobileDrawerPanelStyle(false,'ds-copy-wrap','ds-copy-panel');
   }
   syncLcMobileBackdrop();
 }
@@ -2663,6 +2674,10 @@ function setupDsCopyPanel(){
     var topicEl=document.getElementById('ds-topic');
     var topic=topicEl?String(topicEl.value||'').trim():'';
     if(!topic){alert('请填写主题');return;}
+    if(getFreeTrialsRemaining()<=0&&!hasValidCardKey()){
+      handleFreeTrialExhausted();
+      return;
+    }
     genBtn.disabled=true;
     var old=genBtn.textContent;
     genBtn.textContent='⏳ AI生成中，请稍候…';
@@ -2682,6 +2697,7 @@ function setupDsCopyPanel(){
         if(tb) tb.value=coerceApiTextual(p.body||p.raw||'');
         if(tg) tg.value=coerceApiTextual(p.tags||'');
         if(ou) ou.style.display='block';
+        deductFreeTrialOnDsNotesSuccess();
       })
       .catch(function(err){alert(err.message||String(err));})
       .finally(function(){
@@ -3339,6 +3355,13 @@ function deductFreeTrialOnFetch(){
   var left=consumeFreeTrial();
   showFreeTrialToast(left);
 }
+/** 右侧笔记 DeepSeek 框架：生成成功后单独扣 1 次（与主流程生图、配套文案分开） */
+function deductFreeTrialOnDsNotesSuccess(){
+  if(hasValidCardKey()) return;
+  if(getFreeTrialsRemaining()<=0) return;
+  var left=consumeFreeTrial();
+  showFreeTrialToast(left,'笔记框架');
+}
 function updateFreeTrialHint(){
   var hint=document.getElementById('free-trial-hint');
   if(!hint)return;
@@ -3363,12 +3386,13 @@ function verifyCardKeyUnlock(){
   persistCardKey();
   updateFreeTrialHint();
 }
-function showFreeTrialToast(remaining){
+function showFreeTrialToast(remaining,scene){
   var toast=document.getElementById('free-trial-toast');
   if(!toast)return;
+  var tag=scene?('（'+scene+'）'):'';
   toast.textContent=isFirstVisitDay()
-    ?'✨ 新人首日：本次消耗 1 次，今日剩余 '+remaining+' 次'
-    :'✨ 今日免费额度：本次消耗 1 次，剩余 '+remaining+' 次';
+    ?'✨ 新人首日：本次消耗 1 次'+tag+'，今日剩余 '+remaining+' 次'
+    :'✨ 今日免费额度：本次消耗 1 次'+tag+'，剩余 '+remaining+' 次';
   toast.classList.add('is-show');
   if(_freeTrialToastTimer)clearTimeout(_freeTrialToastTimer);
   _freeTrialToastTimer=setTimeout(function(){
@@ -4481,9 +4505,14 @@ function wireLcTermsOnce(){
     var to=document.getElementById('lc-terms-overlay');
     try{if(document.activeElement&&to&&to.contains(document.activeElement)) document.activeElement.blur();}catch(e){}
     try{localStorage.setItem(LC_LS_INTRO_DONE,'1');}catch(e2){}
+    clearLcAwaitIntro();
+    document.body.style.overflow='';
     if(to){to.classList.remove('is-visible');to.setAttribute('aria-hidden','true');}
   });
   syncChk();
+}
+function clearLcAwaitIntro(){
+  try{document.documentElement.classList.remove('lc-await-intro');}catch(e){}
 }
 function hideIntroShowTerms(){
   stopLcIntroTunnel();
@@ -4496,9 +4525,13 @@ function hideIntroShowTerms(){
 }
 function initLcV4Boot(){
   try{
-    if(localStorage.getItem(LC_LS_INTRO_DONE)==='1') return;
+    if(localStorage.getItem(LC_LS_INTRO_DONE)==='1'){
+      clearLcAwaitIntro();
+      return;
+    }
     var io=document.getElementById('lc-intro-overlay');
     if(!io) return;
+    document.documentElement.classList.add('lc-await-intro');
     io.classList.add('is-visible');
     io.setAttribute('aria-hidden','false');
     try{startLcIntroTunnel();}catch(e2){}
