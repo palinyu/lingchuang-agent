@@ -1184,6 +1184,7 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
 /* 输出区 */
 #output-section{display:none;margin-bottom:32px;}
 .prompt-block{background:var(--panel);border:1px solid var(--bd);border-radius:14px;margin-bottom:16px;overflow:hidden;}
+.prompt-block.is-jimeng-rec{border-color:rgba(34,197,94,0.45);box-shadow:0 0 20px rgba(34,197,94,0.1);}
 .block-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd);background:rgba(15,15,22,0.9);}
 .block-head-left{display:flex;align-items:center;gap:8px;}
 .block-icon{width:28px;height:28px;border-radius:8px;background:var(--gold-dim);display:flex;align-items:center;justify-content:center;font-size:14px;}
@@ -1760,19 +1761,19 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
     </div>
   </div>
   <div id="output-section">
-    <div class="prompt-block" id="main-prompt-full-block">
-      <div class="block-head">
-        <div class="block-head-left"><div class="block-icon">🔮</div><div><div class="block-title">①完整版提示词（英文）</div><div class="block-sub">仅含可粘贴即梦文生图的英文正文 · 无知识点/设置/话题</div></div></div>
-        <button class="btn-copy" onclick="copyPromptBox('full')">复制</button>
-      </div>
-      <div class="block-body prompt-style" id="out-prompt-full"></div>
-    </div>
     <div class="prompt-block" id="main-prompt-short-block" style="display:none;">
       <div class="block-head">
-        <div class="block-head-left"><div class="block-icon">📱</div><div><div class="block-title">①精简版提示词（中文）</div><div class="block-sub">手机端适配描述 · 仅含精简版正文</div></div></div>
+        <div class="block-head-left"><div class="block-icon">📱</div><div><div class="block-title">①精简版提示词（中文）· 即梦推荐</div><div class="block-sub">餐饮/海报请复制此框：须含主标题、价格、卖点短句，避免空标题框</div></div></div>
         <button class="btn-copy" onclick="copyPromptBox('short')">复制</button>
       </div>
       <div class="block-body" id="out-prompt-short"></div>
+    </div>
+    <div class="prompt-block" id="main-prompt-full-block">
+      <div class="block-head">
+        <div class="block-head-left"><div class="block-icon">🔮</div><div><div class="block-title">②完整版提示词（英文）· 参考</div><div class="block-sub">长英文含留白/negative 时即梦易断层；海报类优先用上方精简版</div></div></div>
+        <button class="btn-copy" onclick="copyPromptBox('full')">复制</button>
+      </div>
+      <div class="block-body prompt-style" id="out-prompt-full"></div>
     </div>
     <div id="copywrite-ask">
       <div class="copywrite-ask-card">
@@ -3633,17 +3634,80 @@ var LC_ITH_LOG_LINES=[
   '注入风格库与合规护栏…',
   '等待扣子大脑返回…'
 ];
+var LC_MD_LEGACY_OVERRIDES=[
+  {keys:['古诗','静夜思','诗词','李白','杜甫','苏轼','逐句','唐诗','宋词','文言文'],categoryId:'education',templateKey:'classic_poetry',technique:'手法十三/十四·卷轴沉浸式古诗法',profile:'poetry'},
+  {keys:['unit','英语课','英语单词','四年级英语','三年级英语'],categoryId:'education',templateKey:'english_card',technique:'手法五·场景叙事词汇法',profile:'english_edu'},
+  {keys:['食疗','食材搭配','汤品','膳食','药食'],categoryId:'life_science',templateKey:'food_therapy',technique:'手法六/二十·食材深度结构法',profile:'food_therapy'},
+  {keys:['贺卡','春节','中秋','端午','圣诞','生日祝福','礼物','祝福语'],categoryId:'life_science',templateKey:'festival_card',technique:'手法十九·DIY手工模板教程法',profile:'life_science'}
+];
+var LC_MD_CATEGORIES={
+  ecom:{id:'ecom',name:'餐饮电商海报类',keys:['海报','促销','电商','主图','详情','种草','探店','牛蛙','火锅','餐饮','招牌','菜品','炭烤','套餐','128元','份'],technique:'手法二十二B·餐饮海报法',templateKey:'ecom_image',profile:'ecom_image'},
+  education:{id:'education',name:'教育学科类',keys:['学科','年级','考纲','词汇','题型','电路','物理','化学','生物','历史','地理','政治','英语','语文','数学','单元','课时','上册','下册','考前','复习','知识点','公式','定理','光合作用','考试'],technique:'手法三·结构化知识模块法',templateKey:'education',profile:'education'},
+  life_science:{id:'life_science',name:'生活科普类',keys:['食疗','养生','植物','节气','百科','花卉','冬至','立春','春分','夏至','秋分','科普','原理','玫瑰','茉莉','牡丹','荷花','芍药'],technique:'手法十五·博物学六格百科图鉴法',templateKey:'life_science',profile:'life_science'},
+  city:{id:'city',name:'城市文化类',keys:['城市','地标','美食地图','Citywalk','北京','上海','广州','深圳','成都','重庆','杭州','南京','苏州','武汉','西安','胡同','外滩','必打卡','老街','古镇','旅游'],technique:'手法四升级·俯瞰鸟瞰地图法',templateKey:'city',profile:'city'},
+  constellation:{id:'constellation',name:'星座情感类',keys:['星座','性格','配对','运势','白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手','摩羯','水瓶','双鱼','人格','MBTI','情感'],technique:'手法十六·星座人格深度解析法',templateKey:'constellation',profile:'constellation'},
+  recipe:{id:'recipe',name:'菜谱教程类',keys:['做法','食谱','烘焙','饮品','红烧','糖醋','清蒸','凉拌','炒','炸','蒸','煮','焖','炖','烤','蛋糕','面包','甜品','奶茶','咖啡','菜谱','食材','煲汤'],technique:'手法二十二·分步骤菜谱教程卡法',templateKey:'recipe',profile:'recipe'},
+  herb:{id:'herb',name:'中药本草类',keys:['本草','中药','药材','配伍','枸杞','当归','黄芪','陈皮','人参','党参','甘草','茯苓','药典','食药同源','功效','性味'],technique:'手法三十一·中药本草博物图鉴法',templateKey:'herb',profile:'tcm'},
+  skincare:{id:'skincare',name:'护肤美妆类',keys:['护肤','成分','肤质','妆容','美妆','烟酰胺','玻尿酸','视黄醇','水杨酸','果酸','神经酰胺','油皮','干皮','混合皮','敏感肌','面膜','精华','乳液'],technique:'手法三十九·护肤成分图鉴法',templateKey:'skincare',profile:'skincare'},
+  fitness:{id:'fitness',name:'健身减脂类',keys:['训练','运动','动作','健身','减脂','增肌','平板支撑','深蹲','俯卧撑','卷腹','硬拉','臀部','腹肌','有氧','无氧','HIIT','瑜伽','普拉提'],technique:'手法四十·健身动作分解图法',templateKey:'fitness',profile:'fitness'},
+  finance:{id:'finance',name:'财经理财类',keys:['理财','基金','投资','经济','消费','复利','股票','债券','保险','存款','定投','指数基金','ETF','黄金','资产','负债','现金流','收益','风险'],technique:'手法四十一·财经知识可视化法',templateKey:'finance',profile:'finance'},
+  citywalk:{id:'citywalk',name:'Citywalk探店类',keys:['探店','打卡','本地','攻略','咖啡店','网红店','隐藏','宝藏','人均','推荐','夜市','集市'],technique:'手法四十二·探店Citywalk地图法',templateKey:'citywalk',profile:'city'},
+  workplace:{id:'workplace',name:'职场技能类',keys:['职场','技能','简历','时间管理','四象限','汇报','PPT','Excel','沟通','高效','副业','面试','跳槽','晋升','管理','团队'],technique:'手法三十·快闪卡片法',templateKey:'workplace',profile:'workplace'},
+  fashion:{id:'fashion',name:'时尚搭配类',keys:['搭配','穿着','体型','色系','通勤','约会','日常','梨形','苹果','OOTD','穿搭','look','裤装','裙装','秋冬','春夏'],technique:'手法三十八·穿搭公式视觉拆解法',templateKey:'fashion',profile:'fashion'}
+};
+var LC_STRUCTURE_TEMPLATES={
+  recipe:'【品类专属结构模板·菜谱教程·手法二十二】\n① 标题区：菜名大字毛笔体 + 红色横幅 + 时间/难度/人份标签\n② 食材清单：大圆形图标网格 + 名称克重 + 特殊警示badge\n③ 核心处理：横向流程（每步有小图示+文字+箭头）\n④ 步骤区：2×3网格（步骤插图+编号+标题+tip）\n⑤ 避坑区：红色卡片三条横排\n⑥ 变形版：底部三款小图\n⑦ 页脚：时间|难度|份量|菜系标签',
+  herb:'【品类专属结构模板·中药本草·手法三十一】\n① 超大毛笔字药材名 + 青花瓷罐实物插画 + 药典功效金句横幅\n② 来源：植株博物手绘 + 植物学特征标注 + 产地 + 制作工艺流程图\n③ 性味归经与功效：古风人体经络图 + 三性味徽章 + 功效四格椭圆图\n④ 用法用量：泡茶/煎汤/外用三种用法卡\n⑤ 配伍应用：主药居中 + 配伍药辐射连线\n⑥ 注意事项：三条图标+文字 + 现代药理研究金色框',
+  skincare:'【品类专属结构模板·护肤美妆·手法三十九】\n① 顶部：核心成分/主题大字 + 功效概括 + 肤质适用标签\n② 成分解析区：分子结构示意图 + 成分来源 + 作用机制3条\n③ 肤质适配区：四格图标（干/油/混合/敏感）\n④ 使用步骤：横向流程3-4步\n⑤ 避坑区：红色警示卡3条\n⑥ 底部：AI科普仅供参考',
+  finance:'【品类专属结构模板·财经理财·手法四十一】\n① 顶部：核心概念大字 + 一句话定义 + 适合人群\n② 知识拆解区：3-5个核心要点+图表\n③ 案例区：数字化案例\n④ 避坑区：3条常见误区\n⑤ 行动建议：1-3条操作步骤',
+  fitness:'【品类专属结构模板·健身减脂·手法四十】\n① 顶部：训练主题大字 + 目标人群 + 时长/难度\n② 目标肌群：人体轮廓图+高亮\n③ 动作分解区：3-5个关键动作+要点+组数\n④ 错误示范区：❌错误对比\n⑤ 训练计划：频次+组数+休息',
+  citywalk:'【品类专属结构模板·Citywalk探店·手法四十二】\n① 顶部：城市/区域名 + 主题标签 + 最佳时间\n② 地图主体：手绘路线5-8打卡点\n③ 打卡点详情：名称+人均+必点+评价\n④ 实用信息栏：交通+时长+营业时间\n⑤ 踩坑提示：2-3条避雷',
+  workplace:'【品类专属结构模板·职场技能·手法三十】\n① 顶部：技能主题 + 适用场景 + 核心价值\n② 核心方法区：3-5个关键方法/步骤\n③ 案例对比区：Before/After\n④ 工具推荐区：2-3个配套工具\n⑤ 行动清单：今天可做的3件事',
+  fashion:'【品类专属结构模板·时尚搭配·手法三十八】\n① 顶部：搭配主题 + 场景标签 + 季节\n② 主视觉：全身搭配效果图\n③ 单品拆解区：每件单品+色值+价格区间\n④ 颜色公式：主色+辅色+点缀色\n⑤ 体型建议：适合/不适合标注',
+  classic_poetry:'【老品类结构模板·古诗图解·手法十三/十四·9模块】\n① 标题：诗名+朝代作者+年级\n② 作者简介\n③ 诗句原文\n④ 逐句翻译\n⑤ 重点字词\n⑥ 主旨情感\n⑦ 写作手法\n⑧ 易错点\n⑨ 记忆小技巧',
+  english_card:'【老品类结构模板·英语知识卡·手法五】\n① 沉浸式真实场景背景\n② 卡通人物互动+对话气泡\n③ 悬浮词汇卡：单词+音标+释义\n④ 标题区：Unit+主题中英\n⑤ Tips框：学习金句',
+  food_therapy:'【老品类结构模板·食疗科普·手法六/二十】\n每食材独立卡块：调理作用/参考人群/注意/食用方式\n底部：特别声明\n食材4-6个',
+  festival_card:'【老品类结构模板·节日贺卡·手法十九】\n① 主视觉花束/礼物70-80%\n② 背景三层渐变+光晕+花瓣\n③ 双层边框\n④ 主祝福语大字+副文案\n⑤ 装饰元素≥5种',
+  city:'【老品类结构模板·城市文化·手法四】\n① 标题区：城市名+Citywalk副标题\n② 手绘地图8-10地标动线\n③ 每个地标：插画+编号+特色描述\n④ 右侧美食栏5-6道\n⑤ Tips框+底部金句',
+  education:'【品类专属结构模板·教育学科·手法三】\n① 标题区：主题+年级/学科\n② 核心模块：3-5个并列知识块\n③ 解题/记忆：流程图或口诀框\n④ 易错点：红色警示2-3条\n⑤ 小结：底部复习要点',
+  life_science:'【品类专属结构模板·生活科普·手法十五】\n① 标题：主题+分类标签\n② 六格图鉴2×3\n③ 核心原理流程或对比图\n④ 趣味冷知识气泡',
+  constellation:'【品类专属结构模板·星座情感·手法十六/十七】\n① 顶部：星座名+日期+元素\n② 性格特征3条\n③ 优势与短板双栏\n④ 情感/配对建议\n⑤ 金句+话题标签',
+  ecom_image:'【第七章·电商单图海报模式】\n① 产品主体居中或黄金分割\n② 平台风格匹配\n③ 海报版式：大字卖点+价格条\n④ 背景按平台流行风格选定',
+  ecom_dual:'【第七章·电商双图融合模式】\n图A风格框架+图B产品主体，把B穿上A的外衣',
+  default:'【通用·手法三结构化知识模块法】\n① 标题区：主题大字+副标题+适用人群\n② 核心内容：≥3个信息模块\n③ 视觉插图：1主+2辅\n④ 装饰层：背景纹理+边框+角标\n⑤ 底部：来源/标签/系列标识'
+};
+function classifyTopicCategory(blob){
+  var lower=String(blob||'').toLowerCase();
+  var i,j,leg,cat,hit,bestScore=0,best=null,matchedKey='',first;
+  if(uploadedImageCount>=2){
+    return {categoryId:'ecom',categoryName:'电商双图融合类',templateKey:'ecom_dual',technique:'第七章·电商双图融合',profile:'ecom_dual',matchedKey:'双图上传'};
+  }
+  for(i=0;i<LC_MD_LEGACY_OVERRIDES.length;i++){
+    leg=LC_MD_LEGACY_OVERRIDES[i];
+    for(j=0;j<leg.keys.length;j++){
+      if(lower.indexOf(leg.keys[j].toLowerCase())!==-1){
+        cat=LC_MD_CATEGORIES[leg.categoryId]||LC_MD_CATEGORIES.education;
+        return {categoryId:leg.categoryId,categoryName:cat.name,templateKey:leg.templateKey,technique:leg.technique,profile:leg.profile,matchedKey:leg.keys[j]};
+      }
+    }
+  }
+  var ids=Object.keys(LC_MD_CATEGORIES);
+  for(i=0;i<ids.length;i++){
+    cat=LC_MD_CATEGORIES[ids[i]];
+    hit=0;first='';
+    for(j=0;j<cat.keys.length;j++){
+      if(lower.indexOf(cat.keys[j].toLowerCase())!==-1){hit++;if(!first) first=cat.keys[j];}
+    }
+    if(hit>bestScore){bestScore=hit;best=cat;matchedKey=first;}
+  }
+  if(!best) best=LC_MD_CATEGORIES.education;
+  return {categoryId:best.id,categoryName:best.name,templateKey:best.templateKey,technique:best.technique,profile:best.profile,matchedKey:matchedKey};
+}
+function getLcStructureTemplate(templateKey){
+  return LC_STRUCTURE_TEMPLATES[templateKey]||LC_STRUCTURE_TEMPLATES.default;
+}
 function guessCategoryLabel(topic){
-  var t=String(topic||'');
-  if(/红烧|菜谱|做法|食谱|烘焙|煲汤/.test(t)) return '菜谱教程类';
-  if(/古诗|诗词|文言文|唐诗/.test(t)) return '古诗图解类';
-  if(/英语|单词|Unit|课时/.test(t)) return '教育学科类';
-  if(/本草|枸杞|当归|中药/.test(t)) return '中药本草类';
-  if(/护肤|成分|面膜/.test(t)) return '护肤美妆类';
-  if(/健身|深蹲|减脂/.test(t)) return '健身减脂类';
-  if(/城市|地标|Citywalk|旅游/.test(t)) return '城市文化类';
-  if(/星座|白羊|MBTI/.test(t)) return '星座情感类';
-  return '知识图解类';
+  return classifyTopicCategory(topic).categoryName;
 }
 function playInputThinkingDrop(){
   var panel=document.getElementById('input-thinking-panel');
@@ -3757,7 +3821,20 @@ function buildUserQuery(topic){
     if(excerpt) fileNotice+='\n【文档摘录】\n'+excerpt+(doc.length>1200?'…':'');
   }
   if(isFileAttached&&!doc&&!topic) fileNotice+='\n【请识别上传的图片或文件内容】';
-  return (topic||'请识别上传文件内容')+bubbleStr+fileNotice;
+  var classifyBlob=(topic||'')+bubbleStr+fileNotice+(doc?doc.slice(0,800):'');
+  var cat=classifyTopicCategory(classifyBlob);
+  sessionContext.categoryId=cat.categoryId;
+  sessionContext.categoryName=cat.categoryName;
+  sessionContext.templateKey=cat.templateKey;
+  sessionContext.promptProfile=cat.profile||sessionContext.promptProfile||'standard';
+  if(cat.technique&&!isLifecycleTopic(topic||'')) sessionContext.technique=cat.technique;
+  var tpl=getLcStructureTemplate(cat.templateKey);
+  var catBlock='\n【品类判定】'+cat.categoryName+
+    (cat.matchedKey?'（命中：'+cat.matchedKey+'）':'')+
+    '\n【匹配手法】'+cat.technique+
+    '\n'+tpl+
+    '\n【执行铁律】按上述结构模板逐模块填充画面与版式，禁止空框占位。';
+  return (topic||'请识别上传文件内容')+bubbleStr+fileNotice+catBlock;
 }
 function extractCoreTopicFromInput(topic){
   var t=String(topic||'').trim();
@@ -3798,7 +3875,10 @@ function getContextPayload(opts){
     technique:sessionContext.technique||(selectedBubbles.length>0?selectedBubbles.join('、'):'爆款知识图解手法'),
     size:opts.size||sessionContext.size||aiRecSize||userCustomSize||'AI推荐尺寸',
     intent:opts.intent||'analyze',
-    user_notes:sessionContext.userNotes||''
+    user_notes:sessionContext.userNotes||'',
+    category_id:sessionContext.categoryId||'',
+    category_name:sessionContext.categoryName||'',
+    template_key:sessionContext.templateKey||''
   };
 }
 function purifyAnalysisDisplay(raw){
@@ -5188,7 +5268,7 @@ function extractPureEnglishPrompt(raw){
     }
   }
   result=result.replace(/\n{3,}/g,'\n\n').trim();
-  result=sanitizeKnowledgeJimengPrompt(result);
+  result=stripJimengKnownBrands(result);
   if(result.length>2000) result=result.slice(0,2000).trim();
   return result;
 }
@@ -5285,6 +5365,7 @@ function renderPromptOutputBoxes(englishText,chineseText,done){
   cachedPromptShort=short;
   if(shortBlock){
     shortBlock.style.display=short&&short.length>8?'block':'none';
+    shortBlock.classList.remove('is-jimeng-rec');
   }
   var pending=0;
   function tick(){pending--;if(pending<=0&&done) done();}
@@ -5355,42 +5436,14 @@ function ensurePromptAnchoredToTopic(prompt){
 }
 function sanitizeLifecyclePrompt(prompt){
   if(!prompt) return '';
-  var s=String(prompt);
-  s=stripJimengKnownBrands(s);
-  s=s.replace(/\s{2,}/g,' ').trim();
-  if(!/no (real-world )?brand|trademarked products|generic unbranded/i.test(s)){
-    s=s+', no real-world brand names or trademarked products, generic unbranded objects only';
-  }
-  return ensurePromptAnchoredToTopic(s);
+  return stripJimengKnownBrands(String(prompt)).replace(/\s{2,}/g,' ').trim();
 }
-/** 知识图解/笔记配图：保留 typography zones 等版式词，仅去掉引号内具体文案与品牌 */
+/** 仅剔除明确商标/品牌名，保留全部视觉/构图/光影/风格描述词 */
 function sanitizeKnowledgeJimengPrompt(prompt){
   if(!prompt) return '';
   var s=String(prompt);
   s=s.replace(/^[\s#*【\d.]+]*(生图提示词|即梦生图|Prompt)[^\n]*\n?/gim,'');
-  s=s.replace(/\btext\s+saying\s+['"][^'"]{2,100}['"]/gi,' ');
-  s=s.replace(/'[^']{2,80}'/g,' ');
-  s=s.replace(/"[^"]{2,80}"/g,' ');
-  s=stripJimengKnownBrands(s);
-  s=s.replace(/\s{2,}/g,' ').trim();
-  if(getPromptBodyLatinLen(s)<90){
-    var fallback=extractPureEnglishPrompt(prompt);
-    s=fallback||'';
-    s=stripJimengKnownBrands(s).replace(/\s{2,}/g,' ').trim();
-  }
-  if(getPromptBodyLatinLen(s)<90) return '';
-  if(!/cinematic\s+lighting|8k|masterpiece/i.test(s)){
-    s=s+', cinematic lighting, 8k resolution, ultra-photorealistic, highly detailed, professional composition, masterpiece, best quality --v 6.0';
-  }
-  if(!/typography\s+zones|infographic|layout|module|panel|scene/i.test(s)){
-    s='Vertical knowledge infographic layout with clear modules, Chinese typography zones for post-editing, '+s;
-  }
-  if(!/no text|no letters/i.test(s)){
-    s=s+', reserved areas for Chinese typography zones only, no readable logo or watermark text, no real-world brand names';
-  }else if(!/no (real-world )?brand|trademarked products|generic unbranded/i.test(s)){
-    s=s+', no real-world brand names or trademarked products, generic unbranded objects only';
-  }
-  return ensurePromptAnchoredToTopic(s.replace(/\s{2,}/g,' ').trim());
+  return stripJimengKnownBrands(s).replace(/\s{2,}/g,' ').trim();
 }
 function sanitizeJimengPrompt(prompt){
   return sanitizeKnowledgeJimengPrompt(prompt);
@@ -5400,144 +5453,51 @@ function showResult(raw,retryCount,fromConfirm){
   fromConfirm=!!fromConfirm;
   var statusEl=document.getElementById('t-status');
   var extracted=extractPrompt(raw);
-  if(!extracted&&isWelcome(raw)&&fromConfirm&&retryCount<2){
-    var session=getCurrentSession();
-    if(session){
-      if(statusEl) statusEl.innerHTML='🔄 会话续接中，正在重新索取提示词…';
-      requestPromptFromCoze(session,retryCount+1).then(function(c){showResult(c,retryCount+1,true);}).catch(function(e){
-        if(statusEl){statusEl.style.color='#ef4444';statusEl.textContent='❌ '+e.message;}
-      });
-      return;
-    }
-  }
-  if(!extracted&&isWelcome(raw)&&!fromConfirm){
-    document.getElementById('thinking-stage').style.display='none';
-    document.getElementById('analysis-stage').style.display='block';
-    return;
-  }
-  if(!extracted&&retryCount<2){
-    var session2=getCurrentSession();
-    if(session2){
-      if(statusEl) statusEl.innerHTML='🔄 内容仍为分析轮，自动重试获取提示词…';
-      requestPromptFromCoze(session2,retryCount+1).then(function(c){showResult(c,retryCount+1,fromConfirm);}).catch(function(e){
-        if(statusEl){statusEl.style.color='#ef4444';statusEl.textContent='❌ '+e.message;}
-      });
-      return;
-    }
-  }
-  if(isSopPlaceholderOutput(raw)||isSopPlaceholderOutput(extracted)){
-    if(retryCount<2){
-      var sessionPh=getCurrentSession();
-      if(sessionPh){
-        if(statusEl) statusEl.innerHTML='🔄 检测到模板占位符，正在重新生成真实英文提示词…';
-        requestPromptFromCoze(sessionPh,retryCount+1).then(function(c){showResult(c,retryCount+1,fromConfirm);}).catch(function(e){
-          if(statusEl){statusEl.style.color='#ef4444';statusEl.textContent='❌ '+e.message;}
-        });
-        return;
-      }
-    }
-    if(statusEl){statusEl.style.color='#ef4444';statusEl.textContent='❌ 仅返回了模板说明，未生成真实英文。请点「重新生成提示词」或重新启动大脑。';}
-    document.getElementById('thinking-stage').style.display='none';
-    document.getElementById('analysis-stage').style.display='block';
-    return;
-  }
-  if(!extracted){
+  if(!extracted||!String(extracted).trim()){
     var peFromRaw=extractPureEnglishPrompt(raw);
     if(peFromRaw&&peFromRaw.length>=40) extracted=peFromRaw;
   }
-  var looksAnalysisBlob=
-    isAnalysisRound(raw)||
-    /✅\s*内容识别/.test(String(raw))||
-    (/品类判定/.test(String(raw))&&/用户类型/.test(String(raw)));
-  if(!extracted&&looksAnalysisBlob){
+  if(!extracted||!String(extracted).trim()){
     if(retryCount<2){
-      var sessionAn=getCurrentSession();
-      if(sessionAn){
-        if(statusEl) statusEl.innerHTML='🔄 本次返回仅为分析说明，正在自动索取英文生图提示词…';
-        requestPromptFromCoze(sessionAn,retryCount+1).then(function(c){showResult(c,retryCount+1,fromConfirm);}).catch(function(e){
+      var sessionEmpty=getCurrentSession();
+      if(sessionEmpty){
+        if(statusEl) statusEl.innerHTML='🔄 未获得有效提示词，正在重新索取…';
+        requestPromptFromCoze(sessionEmpty,retryCount+1).then(function(c){showResult(c,retryCount+1,fromConfirm);}).catch(function(e){
           if(statusEl){statusEl.style.color='#ef4444';statusEl.textContent='❌ '+resolveUserFacingApiError(e);}
         });
         return;
       }
     }
+    if(!extracted&&isWelcome(raw)&&!fromConfirm){
+      document.getElementById('thinking-stage').style.display='none';
+      document.getElementById('analysis-stage').style.display='block';
+      return;
+    }
     if(statusEl){
       statusEl.style.color='#ef4444';
-      statusEl.textContent='❌ 未获得可复制英文生图提示词（仅返回了分析/思考正文）。请点击「重新生成提示词」或调整主题后重试。';
+      statusEl.textContent='❌ 未获得可复制生图提示词。请点击「重新生成提示词」或调整主题后重试。';
     }
     document.getElementById('thinking-stage').style.display='none';
     document.getElementById('analysis-stage').style.display='block';
     return;
   }
-  if(!extracted) extracted=raw;
   var cozePkg=parseCozeOutputPackage(raw);
   var knowledgeTopic=isKnowledgeTopic();
   var pureEn=extractPureEnglishPrompt(extracted);
   if(cozePkg.hasPackage&&cozePkg.englishFull&&cozePkg.englishFull.length>=40) pureEn=cozePkg.englishFull;
   if(pureEn&&pureEn.length>=40) extracted=pureEn;
   extracted=knowledgeTopic?sanitizeLifecyclePrompt(extracted):sanitizeKnowledgeJimengPrompt(extracted);
-  if(cozePkg.hasPackage&&cozePkg.englishFull&&cozePkg.englishFull.length>=80){
+  if(cozePkg.hasPackage&&cozePkg.englishFull&&cozePkg.englishFull.length>=40){
     var enFromPkg=cleanEnglishPromptText(cozePkg.englishFull)||extractPureEnglishPrompt(cozePkg.englishFull)||cozePkg.englishFull;
     extracted=knowledgeTopic?sanitizeLifecyclePrompt(enFromPkg):sanitizeKnowledgeJimengPrompt(enFromPkg);
   }
   var enChars=(String(extracted).match(/[A-Za-z]/g)||[]).length;
   var cnChars=(String(extracted).match(/[\u4e00-\u9fff]/g)||[]).length;
-  if(!knowledgeTopic&&enChars<120&&cnChars>220&&retryCount<2){
-    var sessionMix=getCurrentSession();
-    if(sessionMix){
-      if(statusEl) statusEl.innerHTML='🔄 输出仍以中文说明为主，正在重新索取英文提示词…';
-      requestPromptFromCoze(sessionMix,retryCount+1).then(function(c){showResult(c,retryCount+1,fromConfirm);}).catch(function(e){
-        if(statusEl){statusEl.style.color='#ef4444';statusEl.textContent='❌ '+resolveUserFacingApiError(e);}
-      });
-      return;
-    }
-  }
-  if(isSopPlaceholderOutput(extracted)){
-    if(retryCount<2){
-      var sessionPh2=getCurrentSession();
-      if(sessionPh2){
-        if(statusEl) statusEl.innerHTML='🔄 英文提取失败，正在重新生成…';
-        requestPromptFromCoze(sessionPh2,retryCount+1).then(function(c){showResult(c,retryCount+1,fromConfirm);}).catch(function(e){
-          if(statusEl){statusEl.style.color='#ef4444';statusEl.textContent='❌ '+e.message;}
-        });
-        return;
-      }
-    }
-  }
-  if(!knowledgeTopic&&enChars<100&&cnChars>180){
-    if(statusEl){
-      statusEl.style.color='#ef4444';
-      statusEl.textContent='❌ 未抽出足够英文生图提示词（输出以中文说明为主）。请点击「重新生成提示词」或换更具体的画面描述。';
-    }
-    document.getElementById('thinking-stage').style.display='none';
-    document.getElementById('analysis-stage').style.display='block';
-    return;
-  }
-  if(knowledgeTopic&&enChars<200&&retryCount<2&&!cozePkg.hasPackage){
-    var sessionLc=getCurrentSession();
-    if(sessionLc){
-      if(statusEl) statusEl.innerHTML='🔄 知识图解提示词过短，正在按「'+String(sessionContext.routeHumanLabel||'推荐画法')+'」重新生成…';
-      requestPromptFromCoze(sessionLc,retryCount+1).then(function(c){showResult(c,retryCount+1,fromConfirm);}).catch(function(e){
-        if(statusEl){statusEl.style.color='#ef4444';statusEl.textContent='❌ '+resolveUserFacingApiError(e);}
-      });
-      return;
-    }
-  }
-  extracted=ensurePromptAnchoredToTopic(extracted);
-  if(isPromptBoilerplateOnly(extracted)&&retryCount<2){
-    var sessionBoiler=getCurrentSession();
-    if(sessionBoiler){
-      if(statusEl) statusEl.innerHTML='🔄 提示词仅有合规尾巴、缺少画面描述，正在按主题重新生成…';
-      requestPromptFromCoze(sessionBoiler,retryCount+1).then(function(c){showResult(c,retryCount+1,fromConfirm);}).catch(function(e){
-        if(statusEl){statusEl.style.color='#ef4444';statusEl.textContent='❌ '+resolveUserFacingApiError(e);}
-      });
-      return;
-    }
-  }
-  if(isPromptMostlyBoilerplate(extracted)&&retryCount<2){
-    var sessionTopic=getCurrentSession();
-    if(sessionTopic){
-      if(statusEl) statusEl.innerHTML='🔄 提示词未体现主题「'+String(sessionContext.coreTopic||'')+'」，正在重新生成…';
-      requestPromptFromCoze(sessionTopic,retryCount+1).then(function(c){showResult(c,retryCount+1,fromConfirm);}).catch(function(e){
+  if(enChars<80&&cnChars>180&&retryCount<2){
+    var sessionCn=getCurrentSession();
+    if(sessionCn){
+      if(statusEl) statusEl.innerHTML='🔄 输出以中文说明为主，正在重新索取英文提示词…';
+      requestPromptFromCoze(sessionCn,retryCount+1).then(function(c){showResult(c,retryCount+1,fromConfirm);}).catch(function(e){
         if(statusEl){statusEl.style.color='#ef4444';statusEl.textContent='❌ '+resolveUserFacingApiError(e);}
       });
       return;
