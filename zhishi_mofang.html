@@ -234,6 +234,32 @@ body{
 .hero-sub{color:#cbd5e1;font-size:14px;margin-bottom:6px;}
 .hero-feat{color:var(--tx3);font-size:12px;}
 .hero-feat span{color:#fff;margin:0 6px;}
+.gallery-wall{background:var(--panel);border:1px solid var(--bd);border-radius:18px;padding:22px;margin-bottom:28px;}
+.gallery-header{border-left:3px solid var(--gold);padding-left:12px;margin-bottom:16px;}
+.gallery-title{font-size:14px;font-weight:800;color:#fff;}
+.gallery-sub{font-size:11px;color:var(--tx3);margin-top:4px;}
+.gallery-track{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;cursor:grab;padding-bottom:4px;}
+.gallery-track::-webkit-scrollbar{display:none;}
+.g-card{flex-shrink:0;width:138px;background:#171922;border-radius:10px;padding:6px;border:1px solid rgba(255,255,255,0.02);}
+.g-img{
+  position:relative;width:126px;height:178px;border-radius:7px;overflow:hidden;cursor:zoom-in;
+  background:linear-gradient(145deg,rgba(14,14,18,0.98),rgba(28,24,18,0.92));
+}
+.g-img::before{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;
+  background:linear-gradient(105deg,rgba(12,12,16,0.4) 0%,rgba(226,192,125,0.22) 48%,rgba(12,12,16,0.4) 100%);
+  background-size:220% 100%;
+}
+.g-img.is-loading::before{opacity:1;animation:g-shimmer 1.35s ease-in-out infinite;}
+@keyframes g-shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+.g-img img{
+  position:relative;z-index:2;width:100%;height:100%;object-fit:cover;display:block;
+  opacity:0;transition:opacity .45s ease,transform .3s;
+}
+.g-img.is-loaded img{opacity:1;}
+.g-img.is-loaded.is-loading::before{opacity:0;animation:none;}
+.g-img:hover img{transform:scale(1.06);}
+.g-label{font-size:11px;color:var(--tx2);margin-top:7px;display:block;text-align:center;font-weight:600;}
 /* 顶部系统跑马灯（桌面端） */
 .app-top-bar{max-width:1320px;margin:0 auto;padding:10px 16px 0;position:relative;z-index:3;}
 .app-marquee-wrap{overflow:hidden;border-radius:10px;border:1px solid rgba(243,175,66,0.12);background:rgba(15,16,26,0.75);}
@@ -593,7 +619,79 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
 .thinking-wrap{position:relative;width:340px;height:400px;display:flex;justify-content:center;align-items:center;}
 @property --t-glow-angle{syntax:'<angle>';initial-value:0deg;inherits:false;}
 @keyframes t-glow-spin{to{--t-glow-angle:360deg;}}
-.t-stack-back{position:absolute;width:300px;height:360px;border-radius:22px;background:linear-gradient(145deg,#12131a,#08090e);border:1px solid rgba(243,175,66,0.1);transform:translate(14px,16px) rotate(2.5deg);z-index:0;box-shadow:0 20px 50px rgba(0,0,0,0.65);}
+@keyframes t-back-float{
+  0%,100%{transform:translate(14px,16px) rotate(2.5deg);}
+  50%{transform:translate(18px,12px) rotate(-2deg);}
+}
+@keyframes t-phantom-spin{to{transform:rotate(360deg);}}
+@keyframes t-phantom-spin-rev{to{transform:rotate(-360deg);}}
+@keyframes t-phantom-pulse{0%,100%{opacity:0.35;}50%{opacity:0.85;}}
+@keyframes t-phantom-scan{
+  0%{transform:translateY(-100%);opacity:0;}
+  15%{opacity:0.9;}
+  85%{opacity:0.5;}
+  100%{transform:translateY(420px);opacity:0;}
+}
+.t-stack-back{
+  position:absolute;width:300px;height:360px;border-radius:22px;z-index:0;overflow:hidden;
+  background:linear-gradient(155deg,rgba(10,12,22,0.98) 0%,rgba(4,5,12,0.99) 55%,rgba(18,14,8,0.95) 100%);
+  border:1px solid rgba(96,165,250,0.18);
+  box-shadow:0 24px 56px rgba(0,0,0,0.72),0 0 48px rgba(243,175,66,0.12),inset 0 0 0 1px rgba(243,175,66,0.06);
+  animation:t-back-float 5.5s ease-in-out infinite;
+}
+.t-stack-back::before{
+  content:'';position:absolute;inset:-55%;pointer-events:none;
+  background:conic-gradient(from 0deg,transparent 0deg,rgba(147,197,253,0.22) 55deg,transparent 110deg,rgba(243,175,66,0.45) 180deg,transparent 235deg,rgba(139,92,246,0.2) 300deg,transparent 360deg);
+  animation:t-phantom-spin 7s linear infinite;opacity:0.7;
+}
+.t-stack-back::after{
+  content:'';position:absolute;inset:1px;border-radius:21px;pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg,transparent,transparent 14px,rgba(243,175,66,0.045) 15px),
+    repeating-linear-gradient(90deg,transparent,transparent 14px,rgba(147,197,253,0.04) 15px),
+    radial-gradient(ellipse 70% 55% at 50% 42%,rgba(243,175,66,0.14),transparent 68%);
+  mask:linear-gradient(#000,#000);
+}
+.t-phantom-orbit{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.t-phantom-orbit-ring{
+  position:absolute;border-radius:50%;border:1px solid transparent;
+  box-shadow:0 0 18px rgba(243,175,66,0.08);
+}
+.t-phantom-orbit-ring.r1{
+  width:220px;height:220px;
+  border-color:rgba(243,175,66,0.22);
+  border-top-color:rgba(243,175,66,0.75);
+  border-right-color:rgba(147,197,253,0.35);
+  animation:t-phantom-spin 9s linear infinite;
+  opacity:0.55;
+}
+.t-phantom-orbit-ring.r2{
+  width:168px;height:168px;
+  border-style:dashed;
+  border-color:rgba(147,197,253,0.2);
+  border-bottom-color:rgba(243,175,66,0.55);
+  animation:t-phantom-spin-rev 6s linear infinite;
+  opacity:0.45;
+}
+.t-phantom-hex{
+  position:absolute;width:72px;height:72px;opacity:0.5;
+  background:linear-gradient(135deg,rgba(243,175,66,0.08),rgba(147,197,253,0.06));
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  animation:t-phantom-spin 14s linear infinite;
+  box-shadow:0 0 24px rgba(243,175,66,0.15);
+}
+.t-phantom-scan{
+  position:absolute;left:0;right:0;height:48px;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(243,175,66,0.12) 35%,rgba(147,197,253,0.18) 50%,rgba(243,175,66,0.08) 65%,transparent);
+  filter:blur(0.5px);
+  animation:t-phantom-scan 3.2s ease-in-out infinite;
+}
+.t-phantom-tag{
+  position:absolute;bottom:18px;left:0;right:0;text-align:center;
+  font:700 8px/1 'Menlo',monospace;letter-spacing:2.5px;text-transform:uppercase;
+  color:rgba(243,175,66,0.45);
+  animation:t-phantom-pulse 2.4s ease-in-out infinite;
+}
 .t-glow-ring{position:absolute;width:304px;height:364px;border-radius:24px;padding:2px;z-index:1;display:flex;align-items:center;justify-content:center;background:conic-gradient(from var(--t-glow-angle),transparent 0deg,rgba(243,175,66,0.05) 40deg,rgba(243,175,66,0.85) 120deg,rgba(255,220,140,0.95) 180deg,rgba(243,175,66,0.85) 240deg,rgba(243,175,66,0.05) 300deg,transparent 360deg);animation:t-glow-spin 2.8s linear infinite;box-shadow:0 0 40px rgba(243,175,66,0.25);}
 .t-glow-ring::after{content:"";position:absolute;inset:2px;border-radius:22px;background:#0a0b10;z-index:0;pointer-events:none;}
 .t-core{position:relative;width:296px;height:356px;background:linear-gradient(165deg,#14151c 0%,#0c0d12 100%);border:1px solid rgba(243,175,66,0.22);border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;box-shadow:0 15px 45px rgba(0,0,0,0.85),inset 0 1px 0 rgba(255,255,255,0.04);padding:28px;text-align:center;margin:2px;}
@@ -705,6 +803,13 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
     <p class="hero-sub">大白话描述你的想法 ➔ AI联网分析 ➔ 完整提示词直接生图</p>
     <p class="hero-feat">全品类覆盖<span>•</span>联网搜爆款<span>•</span>傻瓜式操作</p>
     <div id="system-notice-bar" class="system-notice-bar" aria-live="polite"></div>
+  </div>
+  <div class="gallery-wall">
+    <div class="gallery-header">
+      <div class="gallery-title">✨ 真实出图效果（复制提示词 ➔ 灵创星球/即梦 ➔ 直接出图）</div>
+      <div class="gallery-sub">底层内置工业级高精光影参数，44种专业手法，全品类自动匹配</div>
+    </div>
+    <div class="gallery-track" id="gallery-track"></div>
   </div>
   <div class="keywords-section">
     <div class="keywords-label">💡 快捷关键词（点击直接填入，或自己手打大白话）</div>
@@ -926,7 +1031,15 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
   </div>
   <div id="thinking-stage">
     <div class="thinking-wrap">
-      <div class="t-stack-back"></div>
+      <div class="t-stack-back" aria-hidden="true">
+        <div class="t-phantom-orbit">
+          <div class="t-phantom-orbit-ring r1"></div>
+          <div class="t-phantom-orbit-ring r2"></div>
+          <div class="t-phantom-hex"></div>
+        </div>
+        <div class="t-phantom-scan"></div>
+        <div class="t-phantom-tag">NEURAL · QUANTUM · SYNC</div>
+      </div>
       <div class="t-glow-ring">
       <div class="t-core">
         <div class="t-badge">🏅 算力锁死发射中</div>
@@ -1409,6 +1522,15 @@ var CASE_IMG={
   knowledge:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/ChatGPT%20Image%202026%E5%B9%B45%E6%9C%8815%E6%97%A5%2012_30_04.png',
   huangshan:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E9%BB%84%E5%B1%B1.png'
 };
+var GALLERY_IMGS=[
+  {url:CASE_IMG.lotus,label:'🌿 植物科普'},
+  {url:CASE_IMG.osmanthus,label:'🌸 国风水彩'},
+  {url:CASE_IMG.suzhou,label:'🏙️ 城市浮雕'},
+  {url:CASE_IMG.changsha,label:'🗺️ 手绘地图'},
+  {url:CASE_IMG.hotpot,label:'🦞 美食菜谱'},
+  {url:CASE_IMG.knowledge,label:'📚 知识图文'},
+  {url:CASE_IMG.huangshan,label:'🏔️ 山水旅游'}
+];
 var CASE_ACTIVE_TAB='edu';
 var _pendingCaseItem=null;
 var _caseApplyPreset=null;
@@ -1520,6 +1642,46 @@ function syncSessionRecommendations(){
   if(userCustomStyle) sessionContext.style=userCustomStyle;
   else if(picked) sessionContext.style=picked;
   else if(aiRecStyle) sessionContext.style=aiRecStyle;
+}
+function initGallery(){
+  var track=document.getElementById('gallery-track');
+  if(!track)return;
+  GALLERY_IMGS.forEach(function(item){
+    var card=document.createElement('div');
+    card.className='g-card';
+    var imgWrap=document.createElement('div');
+    imgWrap.className='g-img is-loading';
+    imgWrap.addEventListener('click',function(){
+      document.getElementById('img-zoom-src').src=item.url;
+      document.getElementById('img-zoom').style.display='flex';
+    });
+    var img=document.createElement('img');
+    img.src=item.url;
+    img.alt=item.label||'出图案例';
+    img.loading='lazy';
+    img.decoding='async';
+    img.addEventListener('load',function(){
+      imgWrap.classList.add('is-loaded');
+      imgWrap.classList.remove('is-loading');
+    });
+    img.addEventListener('error',function(){imgWrap.classList.remove('is-loading');});
+    imgWrap.appendChild(img);
+    if(img.complete&&img.naturalWidth>0){
+      imgWrap.classList.add('is-loaded');
+      imgWrap.classList.remove('is-loading');
+    }
+    var label=document.createElement('span');
+    label.className='g-label';
+    label.textContent=item.label;
+    card.appendChild(imgWrap);
+    card.appendChild(label);
+    track.appendChild(card);
+  });
+  var isDown=false,startX,scrollLeft;
+  track.addEventListener('mousedown',function(e){isDown=true;track.style.cursor='grabbing';startX=e.pageX-track.offsetLeft;scrollLeft=track.scrollLeft;});
+  track.addEventListener('mouseleave',function(){isDown=false;track.style.cursor='grab';});
+  track.addEventListener('mouseup',function(){isDown=false;track.style.cursor='grab';});
+  track.addEventListener('mousemove',function(e){if(!isDown)return;e.preventDefault();var x=e.pageX-track.offsetLeft;track.scrollLeft=scrollLeft-(x-startX);});
 }
 function initAppMarquee(conf){
   try{
@@ -2852,6 +3014,7 @@ function initCockpitDecor(){
 function bootApp(){
   try{initFreeTrialQuota(_systemConfigCache&&_systemConfigCache.business_funnel);}catch(e){}
   try{initCaseSidebar();}catch(e){}
+  try{initGallery();}catch(e){}
   try{initKeywords();}catch(e){}
   try{initStylePicker();}catch(e){}
   try{setupBubbles();}catch(e){}
