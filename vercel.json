@@ -1,4 +1,8 @@
 {
+  "functions": {
+    "api/generate.js": { "maxDuration": 60 },
+    "api/deepseek-copy.js": { "maxDuration": 60 }
+  },
   "rewrites": [
     { "source": "/", "destination": "/zhishi_mofang.html" },
     { "source": "/mofang", "destination": "/zhishi_mofang.html" }
