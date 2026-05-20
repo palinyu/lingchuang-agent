@@ -190,6 +190,59 @@ function extractTechniquePatch46_49(raw) {
   return chunk.trim().slice(0, 4500);
 }
 
+/** 手法三十二：一生 / 生命周期（横切剖面五阶段） */
+const TECHNIQUE_32_TRIGGERS = {
+  line: '手法三十二：实物横切生命周期对比法',
+  startMarker: '手法三十二：实物横切生命周期对比法',
+  endMarker: '手法三十三',
+  keys: [
+    '一生',
+    '生命周期',
+    '生长阶段',
+    '成熟阶段',
+    '阶段对比',
+    '剖面',
+    '横切',
+    '未熟',
+    '过熟',
+    '可采',
+    '完熟',
+    '荔枝',
+    '榴莲',
+    '石榴',
+    '枇杷',
+    '芒果',
+    '桃子',
+    '苹果的一生',
+    '人的一生',
+    '人生',
+    '婴儿',
+    '童年',
+    '老年',
+  ],
+};
+
+function extractTechniquePatch32(raw) {
+  const start = raw.indexOf(TECHNIQUE_32_TRIGGERS.startMarker);
+  if (start === -1) return '';
+  const end = raw.indexOf(TECHNIQUE_32_TRIGGERS.endMarker, start + 10);
+  const chunk =
+    end === -1 ? raw.slice(start, start + 2200) : raw.slice(start, Math.min(end, start + 2200));
+  return chunk.trim();
+}
+
+function pickTechnique32Hits(topic, technique, style, patchBlock) {
+  const blob = [topic, technique, style].join(' ');
+  const matched = TECHNIQUE_32_TRIGGERS.keys.some(function (k) {
+    return blob.indexOf(k) !== -1;
+  });
+  if (!matched) return [];
+  const hits = [TECHNIQUE_32_TRIGGERS.line];
+  const detail = patchBlock || '';
+  if (detail) hits.push(detail.slice(0, 1800));
+  return hits;
+}
+
 /** 用户主题关键词 → 强制注入对应新手法（46-49） */
 const TECHNIQUE_46_49_TRIGGERS = [
   {
@@ -387,6 +440,8 @@ function buildStyleLibSystemBlock(opts) {
   const extracted = lib.extracted || extractKnowledge('');
 
   const techniqueHits = pickBestSnippet(extracted.techniques || [], [technique, topic, style], 3);
+  const patch32 = extractTechniquePatch32(lib.raw || '');
+  const patch32Hits = pickTechnique32Hits(topic, technique, style, patch32);
   const patch46_49 = pickTechnique46_49Hits(
     topic,
     technique,
@@ -425,6 +480,11 @@ function buildStyleLibSystemBlock(opts) {
       extracted.qualityFooter,
   ];
 
+  if (patch32Hits.length) {
+    lines.push(
+      '【手法库·三十二·一生/生命周期·主题命中·必须遵循】\n' + patch32Hits.join('\n\n---\n\n')
+    );
+  }
   if (patch46_49.length) {
     lines.push(
       '【手法库·46-49补丁·主题命中·必须遵循】\n' + patch46_49.join('\n\n---\n\n')
@@ -469,6 +529,7 @@ module.exports = {
   initStyleLib,
   ensureStyleLibFresh,
   getStyleLibStatus,
+  pickBestSnippet,
   buildStyleLibSystemBlock,
   getQualityFooter,
   getJimengCharLimit,
