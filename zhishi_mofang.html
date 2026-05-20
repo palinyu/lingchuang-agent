@@ -576,6 +576,7 @@ body{
 /* 首访：在 JS 执行前先显示开场层，避免先闪首页 */
 html.lc-await-intro body{overflow:hidden;}
 html.lc-await-intro #lc-intro-overlay{display:flex!important;visibility:visible!important;}
+html.lc-await-intro #lc-intro-overlay.is-dismissed{display:none!important;visibility:hidden!important;pointer-events:none!important;}
 html.lc-await-intro .app-top-bar,
 html.lc-await-intro .app-layout,
 html.lc-await-intro #lux-bg-layer,
@@ -4631,10 +4632,21 @@ function hideIntroShowTerms(){
   stopLcIntroTunnel();
   if(_lcIntroTimer){clearTimeout(_lcIntroTimer);_lcIntroTimer=null;}
   var io=document.getElementById('lc-intro-overlay');
-  if(io){io.classList.remove('is-visible');io.setAttribute('aria-hidden','true');}
+  if(io){
+    io.classList.remove('is-visible');
+    io.classList.add('is-dismissed');
+    io.setAttribute('aria-hidden','true');
+  }
   var to=document.getElementById('lc-terms-overlay');
-  if(to){to.classList.add('is-visible');to.setAttribute('aria-hidden','false');}
-  wireLcTermsOnce();
+  if(to){
+    to.classList.add('is-visible');
+    to.setAttribute('aria-hidden','false');
+    wireLcTermsOnce();
+    return;
+  }
+  try{localStorage.setItem(LC_LS_INTRO_DONE,'1');}catch(e){}
+  clearLcAwaitIntro();
+  document.body.style.overflow='';
 }
 function initLcV4Boot(){
   try{
@@ -4660,9 +4672,19 @@ function initLcV4Boot(){
     }
     setTimeout(tickType,620);
     var sk=document.getElementById('lc-intro-skip');
-    if(sk) sk.onclick=function(){hideIntroShowTerms();};
+    if(sk){
+      sk.onclick=function(){hideIntroShowTerms();};
+      sk.onkeydown=function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();hideIntroShowTerms();}};
+    }
+    io.addEventListener('click',function(ev){
+      var t=ev.target;
+      if(t===io||(t&&t.id==='lc-intro-canvas')) hideIntroShowTerms();
+    });
     _lcIntroTimer=setTimeout(hideIntroShowTerms,4000);
-  }catch(e){}
+  }catch(e){
+    clearLcAwaitIntro();
+    try{localStorage.setItem(LC_LS_INTRO_DONE,'1');}catch(e2){}
+  }
 }
 function setupLcMobileChrome(){
   if(!window._imgZoomEscBound){
