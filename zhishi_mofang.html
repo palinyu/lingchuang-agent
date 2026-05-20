@@ -270,6 +270,8 @@ body{
 /* 桌面双栏布局 */
 .app-layout{max-width:1320px;margin:0 auto;padding:0 16px 80px;position:relative;z-index:2;}
 .case-sidebar-wrap{display:none;}
+.ds-copy-wrap{display:none;}
+.ds-copy-rail{display:none;}
 .case-sidebar{
   display:block;position:relative;overflow:hidden;
   background:rgba(15,16,26,0.95);border:1px solid rgba(243,175,66,0.15);border-radius:0 16px 16px 0;
@@ -405,6 +407,82 @@ body{
   .case-sidebar::-webkit-scrollbar{width:4px;}
   .case-sidebar::-webkit-scrollbar-thumb{background:rgba(243,175,66,0.25);border-radius:4px;}
   .app-main{flex:1;min-width:0;transition:flex-basis .32s ease;}
+  /* 右侧 DeepSeek 爆款文案区（文档 v3 · 竖条 + 300px 面板） */
+  .ds-copy-wrap{
+    display:flex;flex-direction:row;flex-shrink:0;align-items:flex-start;position:sticky;top:12px;
+    max-height:none;overflow:hidden;width:44px;min-width:44px;
+    transition:width .32s ease,min-width .32s ease,box-shadow .25s ease;
+    border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.25);
+  }
+  .ds-copy-wrap:not(.is-open) .ds-copy-panel{
+    position:absolute;right:44px;top:0;width:300px;min-width:300px;z-index:2;
+    max-height:calc(100vh - 24px);
+    transform:translateX(-100%);
+  }
+  .ds-copy-wrap.is-open{align-items:stretch;max-height:calc(100vh - 24px);overflow:hidden;}
+  .ds-copy-wrap.is-open .ds-copy-panel{
+    position:relative;right:auto;top:auto;flex:0 0 300px;z-index:1;
+    transform:translateX(0);
+  }
+  .ds-copy-wrap.is-open .ds-copy-rail{align-self:stretch;max-height:none;overflow:visible;}
+  .ds-copy-wrap.is-open{width:344px;min-width:344px;box-shadow:0 12px 40px rgba(0,0,0,0.35);}
+  .ds-copy-wrap.is-open .ds-copy-rail{border-radius:0;border-left:1px solid rgba(243,175,66,0.15);}
+  .ds-copy-rail{
+    display:flex;flex:0 0 44px;width:44px;min-width:44px;align-items:center;justify-content:center;
+    align-self:flex-start;padding:18px 0;border:none;cursor:pointer;font-family:inherit;
+    background:linear-gradient(180deg,rgba(22,23,32,0.98),rgba(12,13,18,0.98));
+    border:1px solid rgba(243,175,66,0.22);border-radius:0 16px 16px 0;border-left:none;
+    box-shadow:-4px 0 24px rgba(0,0,0,0.35);
+    color:rgba(243,175,66,0.92);font-size:11px;font-weight:800;letter-spacing:0.1em;
+    writing-mode:vertical-rl;text-orientation:mixed;text-align:center;line-height:1.4;
+    transition:background .2s,color .2s,box-shadow .2s;
+  }
+  .ds-copy-rail:hover{background:rgba(243,175,66,0.1);color:#fff;box-shadow:-4px 0 28px rgba(243,175,66,0.12);}
+  .ds-copy-rail-text{pointer-events:none;}
+  .ds-copy-rail.is-active{background:rgba(243,175,66,0.14);color:#fff;}
+  .ds-copy-panel{
+    display:block;position:relative;overflow:hidden;
+    background:rgba(15,16,26,0.95);border:1px solid rgba(243,175,66,0.15);border-radius:16px 0 0 16px;
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    flex:0 0 300px;width:300px;min-width:300px;
+    transform:translateX(0);transition:transform .32s ease;
+    border-right:none;
+  }
+  .ds-copy-inner{position:relative;z-index:1;padding:14px 12px 16px;max-height:calc(100vh - 24px);overflow-y:auto;}
+  .ds-copy-inner::-webkit-scrollbar{width:4px;}
+  .ds-copy-inner::-webkit-scrollbar-thumb{background:rgba(243,175,66,0.25);border-radius:4px;}
+  .ds-copy-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px;}
+  .ds-copy-head{font-size:13px;font-weight:700;color:#fff;letter-spacing:0.5px;margin:0;flex:1;line-height:1.35;}
+  .ds-copy-close{
+    flex-shrink:0;width:32px;height:32px;padding:0;border:1px solid rgba(255,255,255,0.12);
+    border-radius:8px;background:rgba(0,0,0,0.35);color:var(--tx2);font-size:18px;line-height:1;
+    cursor:pointer;font-family:inherit;transition:color .2s,background .2s,border-color .2s;
+  }
+  .ds-copy-close:hover{color:#fff;border-color:rgba(243,175,66,0.35);background:rgba(243,175,66,0.12);}
+  .ds-copy-field{margin-bottom:10px;}
+  .ds-copy-field label{display:block;font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px;letter-spacing:0.04em;}
+  .ds-copy-field select,.ds-copy-field input[type="text"]{
+    width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;
+    border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.35);color:var(--tx2);
+    font-size:12px;font-family:inherit;
+  }
+  .ds-copy-field input[type="text"]::placeholder{color:rgba(148,163,184,0.55);}
+  .ds-copy-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+  .ds-copy-actions button{
+    flex:1;min-width:calc(50% - 3px);padding:8px 6px;border-radius:8px;border:1px solid rgba(243,175,66,0.28);
+    background:rgba(243,175,66,0.12);color:var(--gold);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;
+  }
+  .ds-copy-actions button:hover{background:rgba(243,175,66,0.2);color:#fff;}
+  .ds-copy-actions button.ds-gen-primary{flex:1 1 100%;background:linear-gradient(135deg,rgba(243,175,66,0.35),rgba(243,175,66,0.12));color:#fff;border-color:rgba(243,175,66,0.45);}
+  .ds-copy-actions button:disabled{opacity:0.55;cursor:not-allowed;}
+  .ds-copy-out{margin-top:12px;padding-top:12px;border-top:1px solid rgba(243,175,66,0.12);}
+  .ds-copy-out-block{margin-bottom:10px;}
+  .ds-copy-out-block .ds-ol{font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px;}
+  .ds-copy-out-block .ds-ot{
+    font-size:12px;color:var(--tx2);line-height:1.55;white-space:pre-wrap;word-break:break-word;
+    background:rgba(0,0,0,0.28);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:8px 10px;min-height:2.4em;
+  }
+  .ds-copy-disclaimer{font-size:9px;color:var(--tx3);line-height:1.45;margin-top:10px;}
 }
 /* 快捷关键词 · 黑金奢华胶囊 */
 @keyframes kw-gold-sweep{0%{transform:translateX(-120%) skewX(-18deg);opacity:0;}40%{opacity:1;}100%{transform:translateX(220%) skewX(-18deg);opacity:0;}}
@@ -803,7 +881,7 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
 .p-tag{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;display:inline-block;}
 .tag-gold{background:rgba(243,175,66,0.1);color:var(--gold);}.tag-green{background:rgba(34,197,94,0.1);color:#22c55e;}
 @media(max-width:768px){
-  .case-sidebar-wrap,.app-top-bar{display:none!important;}
+  .case-sidebar-wrap,.ds-copy-wrap,.app-top-bar{display:none!important;}
   .app-layout{padding:0;}
   .app-main .shell{padding:20px 16px 80px;}
   .analysis-grid{grid-template-columns:1fr 1fr;}.platform-grid{grid-template-columns:repeat(2,1fr);}.custom-selects{grid-template-columns:1fr;}.quantum-box{grid-template-columns:1fr;}.quantum-visual{border-left:none;border-top:1px solid rgba(255,255,255,0.04);padding-left:0;padding-top:12px;}
@@ -1226,6 +1304,93 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
 </aside>
 </div>
 </main>
+<div class="ds-copy-wrap" id="ds-copy-wrap">
+  <aside class="ds-copy-panel" id="ds-copy-panel" aria-label="DeepSeek 爆款文案" aria-hidden="true">
+    <div class="ds-copy-inner">
+      <div class="ds-copy-head-row">
+        <h2 class="ds-copy-head">🔥 爆款文案 · DeepSeek</h2>
+        <button type="button" class="ds-copy-close lux-tap" id="ds-copy-close" aria-label="收起文案区">×</button>
+      </div>
+      <div class="ds-copy-field">
+        <label for="ds-category">品类</label>
+        <select id="ds-category" aria-label="品类">
+          <option value="知识科普">知识科普</option>
+          <option value="美妆护肤">美妆护肤</option>
+          <option value="美食探店">美食探店</option>
+          <option value="母婴育儿">母婴育儿</option>
+          <option value="家居家装">家居家装</option>
+          <option value="数码科技">数码科技</option>
+          <option value="职场成长">职场成长</option>
+          <option value="情感心理">情感心理</option>
+          <option value="健康养生">健康养生</option>
+          <option value="旅行出行">旅行出行</option>
+          <option value="健身运动">健身运动</option>
+          <option value="穿搭时尚">穿搭时尚</option>
+          <option value="教育培训">教育培训</option>
+          <option value="金融理财">金融理财</option>
+        </select>
+      </div>
+      <div class="ds-copy-field">
+        <label for="ds-platform">平台</label>
+        <select id="ds-platform" aria-label="平台">
+          <option value="xiaohongshu">小红书</option>
+          <option value="douyin">抖音</option>
+          <option value="shipinhao">视频号</option>
+        </select>
+      </div>
+      <div class="ds-copy-field">
+        <label for="ds-persona">人设语气</label>
+        <select id="ds-persona" aria-label="人设">
+          <option value="qinqie">亲切闺蜜感</option>
+          <option value="zhuanye">专业理性</option>
+          <option value="dushe">毒舌犀利</option>
+          <option value="suren">素人接地气</option>
+        </select>
+      </div>
+      <div class="ds-copy-field">
+        <label for="ds-copy-style">文案体裁</label>
+        <select id="ds-copy-style" aria-label="文案体裁">
+          <option value="ceping">测评体</option>
+          <option value="ganhuo">干货体</option>
+          <option value="gushi">故事体</option>
+          <option value="duibi">对比体</option>
+          <option value="gonglue">攻略体</option>
+          <option value="qinggan">情感体</option>
+        </select>
+      </div>
+      <div class="ds-copy-field">
+        <label for="ds-topic">主题</label>
+        <input type="text" id="ds-topic" maxlength="200" placeholder="输入本期笔记主题或关键词" autocomplete="off">
+      </div>
+      <div class="ds-copy-actions">
+        <button type="button" class="ds-gen-primary lux-tap" id="ds-gen-btn">一键生成（DeepSeek）</button>
+        <button type="button" class="lux-tap" id="ds-fill-main">填入主输入框</button>
+        <button type="button" class="lux-tap" id="ds-copy-pack">打包复制</button>
+      </div>
+      <div class="ds-copy-out" id="ds-copy-out" style="display:none;">
+        <div class="ds-copy-out-block">
+          <div class="ds-ol">【标题】</div>
+          <div class="ds-ot" id="ds-out-title"></div>
+          <button type="button" class="lux-tap" style="margin-top:6px;width:100%;padding:6px;font-size:11px;" id="ds-copy-title">复制标题</button>
+        </div>
+        <div class="ds-copy-out-block">
+          <div class="ds-ol">【正文】</div>
+          <div class="ds-ot" id="ds-out-body"></div>
+          <button type="button" class="lux-tap" style="margin-top:6px;width:100%;padding:6px;font-size:11px;" id="ds-copy-body">复制正文</button>
+        </div>
+        <div class="ds-copy-out-block">
+          <div class="ds-ol">【话题标签】</div>
+          <div class="ds-ot" id="ds-out-tags"></div>
+          <button type="button" class="lux-tap" style="margin-top:6px;width:100%;padding:6px;font-size:11px;" id="ds-copy-tags">复制话题</button>
+        </div>
+      </div>
+      <p class="ds-copy-disclaimer" id="ds-copy-disclaimer">生成内容为创作框架，发布前请自行修改事实与合规表述；商业推广须依法标注广告。不涉及扣子主链路。</p>
+    </div>
+  </aside>
+  <button type="button" class="ds-copy-rail lux-tap" id="ds-copy-toggle" aria-expanded="false" aria-controls="ds-copy-panel" title="展开爆款文案区">
+    <span class="ds-copy-rail-text">🔥 爆款文案 · DeepSeek</span>
+  </button>
+</div>
 </div>
 <div id="case-apply-backdrop" class="case-apply-backdrop" onclick="closeApplySheet()"></div>
 <div id="case-apply-sheet" class="case-apply-sheet" role="dialog" aria-labelledby="apply-case-title">
@@ -1894,6 +2059,118 @@ function setCaseSidebarOpen(open){
     btn.classList.remove('is-active');
     btn.title='展开案例灵感库';
   }
+}
+function parseDsCopyAnswer(raw){
+  var text=String(raw||'');
+  var title='',body='',tags='';
+  var mT=text.match(/【标题】\s*([\s\S]*?)(?=【正文】)/);
+  var mB=text.match(/【正文】\s*([\s\S]*?)(?=【话题标签】)/);
+  var mTa=text.match(/【话题标签】\s*([\s\S]*)/);
+  if(mT) title=mT[1].trim();
+  if(mB) body=mB[1].trim();
+  if(mTa) tags=mTa[1].trim();
+  if(!title&&!body&&!tags) body=text.trim();
+  return {title:title,body:body,tags:tags,raw:text};
+}
+function setDsCopyOpen(open){
+  var wrap=document.getElementById('ds-copy-wrap');
+  var btn=document.getElementById('ds-copy-toggle');
+  var pan=document.getElementById('ds-copy-panel');
+  if(!wrap||!btn||!pan) return;
+  if(open){
+    wrap.classList.add('is-open');
+    btn.setAttribute('aria-expanded','true');
+    pan.setAttribute('aria-hidden','false');
+    btn.classList.add('is-active');
+    btn.title='收起爆款文案区';
+  }else{
+    wrap.classList.remove('is-open');
+    btn.setAttribute('aria-expanded','false');
+    pan.setAttribute('aria-hidden','true');
+    btn.classList.remove('is-active');
+    btn.title='展开爆款文案区';
+  }
+}
+function setupDsCopyPanel(){
+  var wrap=document.getElementById('ds-copy-wrap');
+  var btn=document.getElementById('ds-copy-toggle');
+  var close=document.getElementById('ds-copy-close');
+  var genBtn=document.getElementById('ds-gen-btn');
+  if(!wrap||!btn||wrap.dataset.dsCopyBound==='1') return;
+  wrap.dataset.dsCopyBound='1';
+  btn.addEventListener('click',function(){setDsCopyOpen(!wrap.classList.contains('is-open'));});
+  if(close) close.addEventListener('click',function(){setDsCopyOpen(false);});
+  document.addEventListener('keydown',function(ev){
+    if(ev.key==='Escape'&&wrap.classList.contains('is-open')) setDsCopyOpen(false);
+  });
+  function clipText(s,useToast){
+    if(!s||!String(s).trim()){alert('内容为空，请先生成！');return;}
+    navigator.clipboard.writeText(String(s).trim()).then(function(){
+      if(useToast!==false){try{showToast();}catch(e2){}}
+    }).catch(function(){alert('复制失败，请手动选中文本复制');});
+  }
+  function packDsCopyText(){
+    var t=document.getElementById('ds-out-title');
+    var b=document.getElementById('ds-out-body');
+    var tg=document.getElementById('ds-out-tags');
+    var parts=[];
+    if(t&&t.textContent.trim()) parts.push('【标题】\n'+t.textContent.trim());
+    if(b&&b.textContent.trim()) parts.push('【正文】\n'+b.textContent.trim());
+    if(tg&&tg.textContent.trim()) parts.push('【话题标签】\n'+tg.textContent.trim());
+    return parts.join('\n\n');
+  }
+  var fillMain=document.getElementById('ds-fill-main');
+  if(fillMain) fillMain.addEventListener('click',function(){
+    var s=packDsCopyText();
+    if(!s.trim()){alert('请先生成文案');return;}
+    var ta=document.getElementById('main-textarea');
+    if(ta) ta.value=s.trim();
+    setDsCopyOpen(false);
+    try{ta.focus();}catch(e){}
+  });
+  var cp=document.getElementById('ds-copy-pack');
+  if(cp) cp.addEventListener('click',function(){clipText(packDsCopyText());});
+  var cpt=document.getElementById('ds-copy-title');
+  if(cpt) cpt.addEventListener('click',function(){var el=document.getElementById('ds-out-title');clipText(el&&el.textContent);});
+  var cpb=document.getElementById('ds-copy-body');
+  if(cpb) cpb.addEventListener('click',function(){var el=document.getElementById('ds-out-body');clipText(el&&el.textContent);});
+  var cptg=document.getElementById('ds-copy-tags');
+  if(cptg) cptg.addEventListener('click',function(){var el=document.getElementById('ds-out-tags');clipText(el&&el.textContent);});
+  if(genBtn) genBtn.addEventListener('click',function(){
+    var topicEl=document.getElementById('ds-topic');
+    var topic=topicEl?String(topicEl.value||'').trim():'';
+    if(!topic){alert('请填写主题');return;}
+    var body={
+      mode:'deepseek-copy',
+      ds_topic:topic,
+      ds_platform:(document.getElementById('ds-platform')||{}).value||'xiaohongshu',
+      ds_category:(document.getElementById('ds-category')||{}).value||'知识科普',
+      ds_persona:(document.getElementById('ds-persona')||{}).value||'qinqie',
+      ds_copy_style:(document.getElementById('ds-copy-style')||{}).value||'ganhuo'
+    };
+    genBtn.disabled=true;
+    var old=genBtn.textContent;
+    genBtn.textContent='生成中…';
+    fetch(API_BASE+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+      .then(parseApiResponse)
+      .then(function(data){
+        if(!data) throw new Error('无响应');
+        if(typeof data.code!=='undefined'&&data.code!==0) throw new Error(data.msg||data.error||'生成失败');
+        var ans=String(data.answer||'').trim();
+        if(!ans) throw new Error('返回内容为空');
+        var p=parseDsCopyAnswer(ans);
+        var ot=document.getElementById('ds-out-title');
+        var ob=document.getElementById('ds-out-body');
+        var og=document.getElementById('ds-out-tags');
+        var ou=document.getElementById('ds-copy-out');
+        if(ot) ot.textContent=p.title||'';
+        if(ob) ob.textContent=p.body||p.raw||'';
+        if(og) og.textContent=p.tags||'';
+        if(ou) ou.style.display='block';
+      })
+      .catch(function(err){alert(err.message||String(err));})
+      .finally(function(){genBtn.disabled=false;genBtn.textContent=old;});
+  });
 }
 function setupCaseSidebarToggle(){
   var wrap=document.getElementById('case-sidebar-wrap');
@@ -3301,6 +3578,7 @@ function initCockpitDecor(){
 function bootApp(){
   try{initFreeTrialQuota(_systemConfigCache&&_systemConfigCache.business_funnel);}catch(e){}
   try{initCaseSidebar();setupCaseSidebarToggle();}catch(e){}
+  try{setupDsCopyPanel();}catch(e){}
   try{initGallery();}catch(e){}
   try{initKeywords();}catch(e){}
   try{initStylePicker();}catch(e){}
