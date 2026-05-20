@@ -3689,7 +3689,10 @@ function processDocumentFile(file){
     r2.onerror=function(){docTextContent='[解析失败：'+file.name+']';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 解析失败，已转交AI识别';scheduleDocCozeUpload();finishDocParseWait();};
     r2.readAsText(file,'utf-8');
   }else if(ext==='docx'&&typeof mammoth==='undefined'){
-    scheduleDocCozeUpload();docTextContent='[解析失败：'+file.name+']';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 已上传，AI将识别内容';finishDocParseWait();
+    docTextContent='';
+    if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · ❌ 文档解析库未加载，请刷新页面后重试';
+    finishDocParseWait();
+    alert('Word 解析组件未加载，请按 Ctrl+F5 强制刷新页面后重新上传文档。');
   }else if(ext==='docx'){
     var r3=new FileReader();
     r3.onload=function(e){var ab=e.target.result;mammoth.extractRawText({arrayBuffer:ab}).then(function(result){docTextContent=String(result.value||'').substring(0,LC_MAX_DOC_CHARS);if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · ✅ 已解析 '+docTextContent.length+' 字';scheduleDocCozeUpload();finishDocParseWait();}).catch(function(){docTextContent='[解析失败：'+file.name+']';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 解析失败，已转交AI识别';scheduleDocCozeUpload();finishDocParseWait();});};
@@ -3975,17 +3978,38 @@ function getDocumentContent(){
   if(/^\[(已上传|PDF文件|解析失败)/.test(t)) return '';
   return t;
 }
+function deriveTopicFromDocument(doc,fileName){
+  var t=String(doc||'').trim();
+  if(!t) return '';
+  var lines=t.split(/\r?\n/).map(function(l){return l.trim();}).filter(function(l){return l.length>=4&&l.length<=96;});
+  var i=0;
+  for(;i<Math.min(lines.length,12);i++){
+    var line=lines[i];
+    if(/^(目录|目\s*录|第\s*\d|附录|参考文献|前言|摘要)\s*/.test(line)) continue;
+    if(/^[\d\.\-\*、\s]+$/.test(line)) continue;
+    if(line.length>=6) return line.slice(0,56);
+  }
+  var fn=String(fileName||'').replace(/\.(docx?|pdf|txt)$/i,'').replace(/[_\-]+/g,' ').trim();
+  if(fn.length>=4) return fn.slice(0,56);
+  return t.replace(/\s+/g,' ').trim().slice(0,56);
+}
+function buildDocumentQueryBlock(doc){
+  if(!doc) return '';
+  var head=doc.length>15000?doc.slice(0,15000)+'\n…（后文已截断，以此前内容为准）':doc;
+  return (
+    '\n【文档死命令·最高优先级】\n'+
+    '以下为用户上传文档的全文摘录（'+doc.length+'字），分析/出图/提示词必须且只能基于此文，禁止脱离文档瞎编无关美食海报或通用导图模板！\n'+
+    '内容要点 1~6 须来自文档前部核心；完整版英文画面须体现文档真实主题（产品/运营/培训/手册等）。\n'+
+    '<document_content>\n'+head+'\n</document_content>'
+  );
+}
 function buildUserQuery(topic){
   var bubbleStr=selectedBubbles.length>0?'\n追加排版方向：'+selectedBubbles.join('、'):'';
-  var fileNotice=(isFileAttached&&uploadedFileIds.length>0)?'\n【已上传文件，请识别内容】':'';
   var doc=getDocumentContent();
-  if(doc){
-    fileNotice+='\n【文档原文已解析·必须按全文前部提炼1~6条内容要点，禁止只写联想记忆点及以后章节】';
-    var excerpt=doc.replace(/\s+/g,' ').trim().slice(0,1200);
-    if(excerpt) fileNotice+='\n【文档摘录】\n'+excerpt+(doc.length>1200?'…':'');
-  }
+  var fileNotice=(doc||((isFileAttached&&uploadedFileIds.length>0)))?'\n【已上传文档/文件，必须以附件原文为准】':'';
+  if(doc) fileNotice+=buildDocumentQueryBlock(doc);
   if(isFileAttached&&!doc&&!topic) fileNotice+='\n【请识别上传的图片或文件内容】';
-  var classifyBlob=(topic||'')+bubbleStr+fileNotice+(doc?doc.slice(0,800):'');
+  var classifyBlob=(topic||'')+bubbleStr+fileNotice+(doc?doc.slice(0,3000):'');
   var cat=classifyTopicCategory(classifyBlob);
   sessionContext.categoryId=cat.categoryId;
   sessionContext.categoryName=cat.categoryName;
@@ -4017,7 +4041,11 @@ function extractCoreTopicFromInput(topic){
   return t;
 }
 function lockSessionFromInput(topic){
-  sessionContext.coreTopic=extractCoreTopicFromInput(topic)||'上传文件内容识别';
+  var docLock=getDocumentContent();
+  if(docLock&&(!topic||String(topic).trim().length<2)){
+    topic=deriveTopicFromDocument(docLock,attachedFileName)||topic;
+  }
+  sessionContext.coreTopic=extractCoreTopicFromInput(topic)||(docLock?deriveTopicFromDocument(docLock,attachedFileName):'')||'上传文件内容识别';
   var baseTech=selectedBubbles.length>0?selectedBubbles.join('、'):'爆款知识图解手法';
   var ct=sessionContext.coreTopic;
   if(isLifecycleTopic(ct)) sessionContext.technique='手法三十二：实物横切生命周期对比法';
@@ -5000,8 +5028,10 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
     body.documentContent=docFull;
     body.file_content=docFull;
     body.lc_has_document=true;
+    body.lc_has_document_text=true;
     if(!body.core_topic||body.core_topic==='上传文件内容识别'||body.core_topic==='请识别上传文件内容'){
-      body.core_topic=docFull.replace(/\s+/g,' ').trim().substring(0,120);
+      body.core_topic=deriveTopicFromDocument(docFull,attachedFileName)||docFull.replace(/\s+/g,' ').trim().substring(0,120);
+      sessionContext.coreTopic=body.core_topic;
     }
   }
   if(attachedFileName) body.file_name=attachedFileName;
@@ -5083,8 +5113,19 @@ function runEngine(){
   lockGenBtn();
   var topic=(document.getElementById('main-textarea')||{}).value;
   topic=(topic||'').trim();
+  var docReady=getDocumentContent();
+  if(!topic&&docReady){
+    topic=deriveTopicFromDocument(docReady,attachedFileName);
+    var ta0=document.getElementById('main-textarea');
+    if(ta0&&!ta0.value.trim()) ta0.value=topic;
+  }
   if(!topic&&!isFileAttached){
     alert('请先输入你想做什么图，或者上传参考文件！');
+    unlockGenBtn();
+    return;
+  }
+  if(isFileAttached&&attachedFileName&&!docReady&&/\.(docx?|pdf|txt)$/i.test(attachedFileName)){
+    alert('文档仍在解析中，请稍等出现「✅ 已解析 xxx 字」后再点「启动大脑」。');
     unlockGenBtn();
     return;
   }
@@ -5397,8 +5438,12 @@ function isLifecycleTopic(t){
   return false;
 }
 function requestPromptFromCoze(session,attempt){
+  lockSessionFromInput((document.getElementById('main-textarea')||{}).value||'');
   var topic=(sessionContext.coreTopic||'').trim()||'当前主题';
+  var docSnap=getDocumentContent();
+  if(docSnap&&!topic) topic=deriveTopicFromDocument(docSnap,attachedFileName)||topic;
   var userOrig=(sessionContext.userNotes||topic).trim();
+  var docBind=docSnap?buildDocumentQueryBlock(docSnap):'';
   var label=sessionContext.routeHumanLabel||'知识图解';
   var tech=sessionContext.technique||'爆款知识图解手法';
   var knowledge=isKnowledgeTopic();
@@ -5422,14 +5467,15 @@ function requestPromptFromCoze(session,attempt){
     return content;
     });
   }
+  var docLead=docBind?('\n'+docBind+'\n【出图铁律】画面主体/场景/信息模块必须来自 <document_content>，禁止写成无关美食海报或空泛导图。'):'';
   var prompts=knowledge?[
-    '【确认出图·STEP2标准包】为「'+topic+'」按灵创星球标准输出：📊知识点结构化 → 📋完整版（推荐）英文 → 📱精简版中文 → ⚙️即梦设置 → 📣话题。推荐画法：'+label+'；手法：'+tech+(styleHint?'；风格：'+styleHint:'')+'。禁止占位符。用户原话：'+userOrig,
-    '【系统重试】必须输出完整 STEP2 包！完整版英文≥350字符，含 infographic/modules/Chinese typography zones。用户原话：'+userOrig,
-    '【最后重试】禁止空壳！必须真实描述「'+topic+'」版式与主体，质量≥平台直聊。用户原话：'+userOrig
+    docLead+'【确认出图·STEP2标准包】为「'+topic+'」按灵创星球标准输出：📊知识点结构化 → 📋完整版（推荐）英文 → 📱精简版中文 → ⚙️即梦设置 → 📣话题。推荐画法：'+label+'；手法：'+tech+(styleHint?'；风格：'+styleHint:'')+'。禁止占位符。用户原话：'+userOrig,
+    docLead+'【系统重试】必须输出完整 STEP2 包！完整版英文≥350字符，须体现文档真实主题，含 infographic/modules/Chinese typography zones。用户原话：'+userOrig,
+    docLead+'【最后重试】禁止空壳！必须真实描述「'+topic+'」版式与主体（与文档一致），质量≥平台直聊。用户原话：'+userOrig
   ]:[
-    '【确认出图·STEP2】为「'+topic+'」输出完整版（推荐）英文+精简版+即梦设置+话题。用户原话：'+userOrig,
-    '【系统重试】禁止方括号占位！完整版英文≥300字符。用户原话：'+userOrig,
-    '【最后重试】必须写真实英文主体、环境、光影。用户原话：'+userOrig
+    docLead+'【确认出图·STEP2】为「'+topic+'」输出完整版（推荐）英文+精简版+即梦设置+话题。用户原话：'+userOrig,
+    docLead+'【系统重试】禁止方括号占位！完整版英文≥300字符，须与文档主题一致。用户原话：'+userOrig,
+    docLead+'【最后重试】必须写真实英文主体、环境、光影（禁止脱离文档）。用户原话：'+userOrig
   ];
   var query=prompts[Math.min(attempt||0,prompts.length-1)];
   var statusEl=document.getElementById('t-status');

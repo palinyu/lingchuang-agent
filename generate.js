@@ -105,8 +105,16 @@ function injectDocumentIntoPrompt(assembledMessage, body, intent) {
       '\n\n【文档分析铁律·STEP1】\n' +
       '1. <document_content> 是唯一事实来源，禁止脱离文档编造。\n' +
       '2. 「6. 内容要点」或「✅ 内容识别」必须提炼文档【前部核心】至少 6 条（编号 1~6），不得只写第 7 条「联想记忆点」及之后章节。\n' +
-      '3. 若文档为脚本/笔记/课件，须覆盖开篇主题、结构、案例与结论，不得遗漏前半部分。\n' +
+      '3. 若文档为脚本/笔记/课件/运营手册，须覆盖开篇主题、结构、案例与结论，不得遗漏前半部分。\n' +
       '4. 品类/手法/尺寸/风格可结合文档推断，但内容要点必须带文档原意关键词。';
+  }
+  if (intent === 'prompt' || intent === 'custom') {
+    msg +=
+      '\n\n【文档出图铁律·STEP2·最高优先】\n' +
+      '1. 存在 <document_content> 时，完整版英文必须可视化文档中的真实主题与关键信息，禁止套用无关美食/复古海报/空泛思维导图模板。\n' +
+      '2. 主体、场景、版式模块、中文标注区须来自文档前部核心（运营/产品/培训/手册/SOP 等按文档类型设计画面）。\n' +
+      '3. 精简版中文须概括文档主题，不得写成与文档无关的菜品/节日/古诗内容。\n' +
+      '4. 若用户未指定相反题材，画面语义必须与文档一致。';
   }
   return msg;
 }
@@ -328,6 +336,7 @@ module.exports = async function handler(req, res) {
     }
 
     const docFullText = resolveDocumentContent(body);
+    const hasDocText = !!docFullText;
     let coreTopic = String(core_topic || rawQuery).trim();
     if (
       docFullText &&
@@ -335,13 +344,18 @@ module.exports = async function handler(req, res) {
         coreTopic === '请识别上传文件内容' ||
         coreTopic === '上传文件内容识别')
     ) {
-      coreTopic = docFullText.replace(/\s+/g, ' ').trim().slice(0, 120);
+      const firstLine = docFullText
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .find((l) => l.length >= 6 && l.length <= 96 && !/^第\s*\d|目录|附录/.test(l));
+      coreTopic = (firstLine || docFullText.replace(/\s+/g, ' ').trim()).slice(0, 120);
     }
 
     const intent = bodyIntent || resolveIntent(body);
     const cozeFileIds = Array.isArray(file_ids)
       ? file_ids.map(String).filter(Boolean)
       : [];
+    const hasFileAttach = cozeFileIds.length > 0 || hasDocText;
     initStyleLib(ROOT);
     const lcImageCount = Math.max(
       0,
@@ -349,9 +363,9 @@ module.exports = async function handler(req, res) {
     );
     const route = routePlainLanguageTopic(
       coreTopic,
-      rawQuery || user_notes || '',
+      rawQuery || user_notes || docFullText.slice(0, 3000) || '',
       ROOT,
-      { hasFile: cozeFileIds.length > 0, imageCount: lcImageCount }
+      { hasFile: hasFileAttach, imageCount: lcImageCount }
     );
 
     let assembledMessage = buildCozeMessage({
@@ -364,7 +378,7 @@ module.exports = async function handler(req, res) {
       rawQuery: rawQuery || coreTopic,
       userNotes: user_notes || '',
       route: route,
-      hasFile: cozeFileIds.length > 0,
+      hasFile: hasFileAttach,
       fileIds: cozeFileIds,
       imageCount: lcImageCount,
     });
