@@ -247,13 +247,36 @@ body{
 .gallery-header{border-left:3px solid var(--gold);padding-left:12px;margin-bottom:16px;}
 .gallery-title{font-size:14px;font-weight:800;color:#fff;}
 .gallery-sub{font-size:11px;color:var(--tx3);margin-top:4px;}
-.gallery-track{display:flex;gap:14px;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;cursor:grab;padding:6px 16px 14px;box-sizing:border-box;-webkit-overflow-scrolling:touch;}
-.gallery-track::-webkit-scrollbar{height:6px;}
-.gallery-track::-webkit-scrollbar-thumb{background:rgba(243,175,66,0.35);border-radius:6px;}
-.gallery-scroll-ctrl{display:flex;flex-direction:column;gap:8px;margin-top:4px;padding:6px 12px 10px;border-top:1px solid rgba(255,255,255,0.06);}
+.gallery-track{display:flex;gap:14px;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;cursor:grab;padding:6px 16px 8px;box-sizing:border-box;-webkit-overflow-scrolling:touch;}
+.gallery-track::-webkit-scrollbar{display:none;}
+.gallery-scroll-ctrl{display:flex;flex-direction:column;gap:6px;margin-top:0;padding:4px 14px 12px;border-top:1px solid rgba(255,255,255,0.05);}
 .gallery-scroll-ctrl[hidden]{display:none!important;}
-.gallery-scroll-hint{font-size:11px;font-weight:600;color:rgba(226,232,240,0.55);text-align:center;letter-spacing:0.02em;}
-.gallery-scroll-range{width:100%;height:32px;margin:0;padding:0;accent-color:#e2c07d;cursor:pointer;}
+.gallery-scroll-hint{font-size:10px;font-weight:600;color:rgba(148,163,184,0.75);text-align:center;letter-spacing:0.02em;}
+.gallery-scroll-range{
+  width:100%;height:20px;margin:0;padding:0;cursor:pointer;
+  -webkit-appearance:none;appearance:none;background:transparent;
+}
+.gallery-scroll-range::-webkit-slider-runnable-track{
+  height:4px;border-radius:4px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(243,175,66,0.12);
+}
+.gallery-scroll-range::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;margin-top:-6px;border-radius:50%;
+  background:linear-gradient(145deg,rgba(226,192,125,0.95),rgba(180,140,60,0.95));
+  border:1px solid rgba(0,0,0,0.35);
+  box-shadow:0 0 0 2px rgba(243,175,66,0.15);
+}
+.gallery-scroll-range::-moz-range-track{
+  height:4px;border-radius:4px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(243,175,66,0.12);
+}
+.gallery-scroll-range::-moz-range-thumb{
+  width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,0.35);
+  background:linear-gradient(145deg,rgba(226,192,125,0.95),rgba(180,140,60,0.95));
+  box-shadow:0 0 0 2px rgba(243,175,66,0.15);
+}
 .g-card{flex-shrink:0;width:138px;background:#171922;border-radius:10px;padding:6px;border:1px solid rgba(255,255,255,0.02);}
 .g-img{
   position:relative;width:126px;height:178px;border-radius:7px;overflow:hidden;cursor:zoom-in;
@@ -1074,6 +1097,8 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
 .copywrite-ask-card{background:linear-gradient(135deg,rgba(79,142,247,0.06),rgba(243,175,66,0.04));border:1px solid rgba(243,175,66,0.2);border-radius:14px;padding:20px;text-align:center;}
 .copywrite-ask-card h3{font-size:15px;font-weight:800;color:var(--tx);margin-bottom:6px;}
 .copywrite-ask-card p{font-size:12px;color:var(--tx2);margin-bottom:16px;}
+.copywrite-quota-note{font-size:11px;color:rgba(148,163,184,0.88);margin:10px 0 0;line-height:1.55;}
+.copywrite-quota-note em{color:rgba(226,192,125,0.9);font-style:normal;font-weight:700;}
 .cw-btns{display:flex;gap:10px;justify-content:center;}
 .btn-cw-yes{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:10px;padding:11px 24px;font-size:14px;font-weight:900;cursor:pointer;}
 .btn-cw-no{background:transparent;border:1px solid var(--bd);color:var(--tx3);border-radius:10px;padding:11px 20px;font-size:13px;cursor:pointer;}
@@ -1140,6 +1165,12 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
     isolation:isolate;
   }
   .case-sidebar-wrap .case-sidebar-nebula{display:none!important;}
+  .case-sidebar-wrap.is-open,.ds-copy-wrap.is-open{background:#12121a!important;}
+  .case-sidebar-inner,.ds-copy-inner{background:#12121a!important;min-height:100%;}
+  #lc-drawer-backdrop.is-open{
+    backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+    background:rgba(0,0,0,0.72)!important;
+  }
   .analysis-grid{grid-template-columns:1fr 1fr;}
   .platform-grid{grid-template-columns:repeat(2,1fr);}
   .custom-selects{grid-template-columns:1fr;}
@@ -1528,6 +1559,7 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
           <button type="button" class="btn-cw-yes lux-tap" onclick="getCopywrite()">✍️ 生成配套文案</button>
           <button class="btn-cw-no" onclick="document.getElementById('copywrite-ask').style.display='none'">不需要，跳过</button>
         </div>
+        <p class="copywrite-quota-note">① 图片提示词生成完成已计 <em>1 次</em>；点击下方「生成配套文案」<em>另计 1 次</em>（生成文案消耗1次）</p>
       </div>
     </div>
     <div id="copywrite-section" style="display:none;">
@@ -2440,6 +2472,29 @@ function switchCaseTab(tabId){
   tabs.forEach(function(t){t.classList.toggle('is-active',t.getAttribute('data-tab')===tabId);});
   renderCaseGrid(tabId);
 }
+function applyMobileDrawerPanelStyle(open,wrapId,panelId){
+  var mw=typeof window.matchMedia==='function'&&window.matchMedia('(max-width:768px)').matches;
+  var wrap=document.getElementById(wrapId);
+  var pan=document.getElementById(panelId);
+  if(!mw||!wrap||!pan) return;
+  if(open){
+    wrap.style.background='#12121a';
+    wrap.style.opacity='1';
+    pan.style.background='#12121a';
+    pan.style.opacity='1';
+    pan.style.visibility='visible';
+    var inner=pan.querySelector('.case-sidebar-inner')||pan.querySelector('.ds-copy-inner');
+    if(inner){inner.style.background='#12121a';inner.style.opacity='1';}
+  }else{
+    wrap.style.background='';
+    wrap.style.opacity='';
+    pan.style.background='';
+    pan.style.opacity='';
+    pan.style.visibility='';
+    var inner2=pan.querySelector('.case-sidebar-inner')||pan.querySelector('.ds-copy-inner');
+    if(inner2){inner2.style.background='';inner2.style.opacity='';}
+  }
+}
 function syncLcMobileBackdrop(){
   var bd=document.getElementById('lc-drawer-backdrop');
   if(!bd) return;
@@ -2476,12 +2531,14 @@ function setCaseSidebarOpen(open){
     aside.setAttribute('aria-hidden','false');
     btn.classList.add('is-active');
     btn.title='收起案例库';
+    applyMobileDrawerPanelStyle(true,'case-sidebar-wrap','case-sidebar');
   }else{
     wrap.classList.remove('is-open');
     btn.setAttribute('aria-expanded','false');
     aside.setAttribute('aria-hidden','true');
     btn.classList.remove('is-active');
     btn.title='展开案例库';
+    applyMobileDrawerPanelStyle(false,'case-sidebar-wrap','case-sidebar');
   }
   syncLcMobileBackdrop();
 }
@@ -2514,12 +2571,14 @@ function setDsCopyOpen(open){
     pan.setAttribute('aria-hidden','false');
     btn.classList.add('is-active');
     btn.title='收起笔记框架';
+    applyMobileDrawerPanelStyle(true,'ds-copy-wrap','ds-copy-panel');
   }else{
     wrap.classList.remove('is-open');
     btn.setAttribute('aria-expanded','false');
     pan.setAttribute('aria-hidden','true');
     btn.classList.remove('is-active');
     btn.title='展开笔记框架';
+    applyMobileDrawerPanelStyle(false,'ds-copy-wrap','ds-copy-panel');
   }
   syncLcMobileBackdrop();
 }
@@ -2555,26 +2614,34 @@ function setupDsCopyPanel(){
     if(tg&&String(tg.value||'').trim()) parts.push('【话题标签】\n'+String(tg.value).trim());
     return parts.join('\n\n');
   }
+  function resolveDsPicCoreTopic(){
+    var el=document.getElementById('ds-topic');
+    return el?String(el.value||'').trim():'';
+  }
   function buildPicPromptFromDs(){
+    var topic=resolveDsPicCoreTopic();
     var pack=packDsCopyText();
-    var topic=(document.getElementById('ds-topic')||{}).value||'';
     var cat=(document.getElementById('ds-category')||{}).value||'';
+    var brief=pack.trim()?pack.trim().slice(0,280):'';
     return (
-      '请根据以下爆款文案框架生成一张知识图文笔记配图（竖版优先），风格高级、信息层次清晰：\n\n'+
-      (pack.trim()||('主题：'+String(topic).trim()))+
-      '\n\n品类参考：'+String(cat).trim()
+      '主题：'+topic+
+      (brief?'\n\n文案要点摘录：\n'+brief:'')+
+      '\n\n品类：'+String(cat).trim()+
+      '\n【要求】画面必须紧扣「'+topic+'」主体，生成知识图文竖版配图提示词。'
     );
   }
   var picGo=document.getElementById('ds-pic-go');
   if(picGo) picGo.addEventListener('click',function(){
-    var s=buildPicPromptFromDs();
-    if(!s.trim()){alert('请先生成或填写文案');return;}
+    var topic=resolveDsPicCoreTopic();
+    if(!topic){alert('请先在笔记区填写主题');return;}
     var ta=document.getElementById('main-textarea');
     if(ta){
-      ta.value=s.trim();
+      ta.value=topic;
       ta.classList.add('ds-pic-flash');
       setTimeout(function(){try{ta.classList.remove('ds-pic-flash');}catch(e){}},1000);
     }
+    sessionContext.coreTopic=topic;
+    sessionContext.userNotes=buildPicPromptFromDs();
     setDsCopyOpen(false);
     setCaseSidebarOpen(false);
     try{if(typeof runEngine==='function') runEngine();}catch(e2){alert('已填入主题，请点击主区域「启动大脑」生成');}
@@ -2876,8 +2943,24 @@ function buildUserQuery(topic){
   if(isFileAttached&&!getDocumentContent()&&!topic) fileNotice+='\n【请识别上传的图片或文件内容】';
   return (topic||'请识别上传文件内容')+bubbleStr+fileNotice;
 }
+function extractCoreTopicFromInput(topic){
+  var t=String(topic||'').trim();
+  if(!t) return '';
+  var dsEl=document.getElementById('ds-topic');
+  var ds=dsEl?String(dsEl.value||'').trim():'';
+  if(ds&&(t===ds||t.indexOf(ds)>=0)) return ds;
+  var m=t.match(/主题[：:]\s*([^\n，。；;]{1,48})/);
+  if(m&&m[1]) return m[1].trim();
+  if(/爆款文案|配套出图|知识图文笔记配图/.test(t)&&ds) return ds;
+  if(t.length>56){
+    var line=t.split(/\n/).map(function(x){return x.trim();}).filter(Boolean)[0]||'';
+    if(line.length>=2&&line.length<=48) return line;
+    return t.slice(0,48);
+  }
+  return t;
+}
 function lockSessionFromInput(topic){
-  sessionContext.coreTopic=(topic||'').trim()||'上传文件内容识别';
+  sessionContext.coreTopic=extractCoreTopicFromInput(topic)||'上传文件内容识别';
   sessionContext.technique=selectedBubbles.length>0?selectedBubbles.join('、'):'爆款知识图解手法';
   sessionContext.style=getSelectedVisualStyleValue()||'';
   sessionContext.size='';
@@ -3846,8 +3929,8 @@ function requestPromptFromCoze(session,attempt){
   var topic=(sessionContext.coreTopic||'').trim()||'当前主题';
   var prompts=[
     '1',
-    '【系统指令】禁止输出方括号占位说明！必须围绕主题「'+topic+'」写出完整版（推荐）后紧跟一整段英文即梦Prompt（≥300英文字符，含 cinematic lighting, 8k, masterpiece, --v 6.0）。',
-    '【最后重试】你上次只输出了模板槽位。现在必须写真实英文描述「'+topic+'」的主体、环境、光影与材质，不要任何[对应品类…]类括号说明。'
+    '【系统指令】禁止输出方括号占位说明！必须围绕核心主题「'+topic+'」写出完整版（推荐）后紧跟一整段英文即梦Prompt（≥300英文字符，含 cinematic lighting, 8k, masterpiece, --v 6.0）。英文描述中必须出现与「'+topic+'」对应的可见主体（衣物/场景/物体），禁止只输出画质参数或比例数字。',
+    '【最后重试】你上次只输出了模板槽位或纯参数。现在必须写真实英文描述「'+topic+'」的主体、环境、光影与材质，不要任何[对应品类…]类括号说明。'
   ];
   var query=prompts[Math.min(attempt||0,prompts.length-1)];
   var statusEl=document.getElementById('t-status');
@@ -4024,20 +4107,49 @@ function stripJimengKnownBrands(s){
   while(i<reps.length){s=s.replace(reps[i],' ');i++;}
   return s.replace(/\s{2,}/g,' ').trim();
 }
+function isPromptMostlyBoilerplate(prompt){
+  var s=String(prompt||'').trim();
+  if(!s||s.length<30) return true;
+  var cn=(s.match(/[\u4e00-\u9fff]/g)||[]).length;
+  if(cn>=4) return false;
+  var topic=String(sessionContext.coreTopic||'').trim();
+  if(topic&&s.indexOf(topic)>=0) return false;
+  var tokens=s.toLowerCase().split(/[\s,]+/).filter(Boolean);
+  var boiler=/^(9|16|9:16|cinematic|lighting|8k|masterpiece|resolution|sharp|text|blurry|professional|editorial|design|v|6|0|no|real|world|brand|names|trademarked|products|recognizable|packaging|generic|unbranded|objects|only|blank|areas|manual|overlay|typography|watermark|letters|words)$/i;
+  var meaningful=0;
+  var i=0;
+  for(;i<tokens.length;i++){
+    if(!boiler.test(tokens[i])&&tokens[i].length>2) meaningful++;
+  }
+  return meaningful<3;
+}
+function ensurePromptAnchoredToTopic(prompt){
+  var p=String(prompt||'').trim();
+  var topic=String(sessionContext.coreTopic||'').trim();
+  if(!p||!topic) return p;
+  if(p.indexOf(topic)>=0) return p;
+  if(!isPromptMostlyBoilerplate(p)) return p;
+  return (
+    'Main visual subject must depict 「'+topic+'」 as the clear focal point, '+
+    'faithful to user theme, vertical knowledge infographic composition, '+p
+  );
+}
 function sanitizeJimengPrompt(prompt){
   if(!prompt) return '';
   var s=String(prompt);
-  s=s.replace(/\b(with\s+text|text\s+saying|letters?|words?|typography|caption|subtitle|watermark|logo|signage|readable\s+text|banner\s+text|title\s+text|font|writing\s+on|labeled|label\s+text)\b/gi,' ');
+  s=s.replace(/\b(with\s+text|text\s+saying|typography|caption|subtitle|watermark|logo|signage|readable\s+text|banner\s+text|title\s+text|font|writing\s+on|labeled|label\s+text)\b/gi,' ');
   s=s.replace(/'[^']{2,120}'/g,' ');
   s=s.replace(/"[^"]{2,120}"/g,' ');
-  s=s.replace(/\b(title|headline|subheadline|banner|label|tagline|caption|typography|lettering|calligraphy|handwriting|brush\s+script|script\s+font|readable|legible|watermark|logo|signage|subtitle|font|writing)\b/gi,' ');
   s=s.replace(/\b(showing|displaying|featuring|with)\s+[^,.]{0,100}(time|minute|min|difficulty|serves?|people|servings|cooking)\b/gi,' ');
   s=s.replace(/\b(top|upper|bottom)\s+(area|section|part)\s+has\s+[^,.]{0,120}/gi,'clean reserved layout area without any characters, ');
   s=stripJimengKnownBrands(s);
+  s=s.replace(/(?:,\s*no\s*){2,}/gi,', ');
+  s=s.replace(/,\s*,+/g,', ');
   s=s.replace(/\s{2,}/g,' ').trim();
-  if(s.indexOf('no text')<0) s=s+', no text, no letters, no words, no typography, no watermark, no real-world brand names or trademarked products, no recognizable branded packaging, generic unbranded objects only, blank areas for manual text overlay only';
+  var tail=', no text, no letters, no words, no typography, no watermark, no real-world brand names or trademarked products, no recognizable branded packaging, generic unbranded objects only, blank areas for manual text overlay only';
+  if(!/no text/i.test(s)) s=s+tail;
   else if(!/no (real-world )?brand|trademarked products|generic unbranded/i.test(s)) s=s+', no real-world brand names or trademarked products, no recognizable branded packaging, generic unbranded objects only';
-  return s;
+  return ensurePromptAnchoredToTopic(s);
 }
 function showResult(raw,retryCount,fromConfirm){
   retryCount=retryCount||0;
@@ -4149,6 +4261,17 @@ function showResult(raw,retryCount,fromConfirm){
     document.getElementById('analysis-stage').style.display='block';
     return;
   }
+  extracted=ensurePromptAnchoredToTopic(extracted);
+  if(isPromptMostlyBoilerplate(extracted)&&retryCount<2){
+    var sessionTopic=getCurrentSession();
+    if(sessionTopic){
+      if(statusEl) statusEl.innerHTML='🔄 提示词未体现主题「'+String(sessionContext.coreTopic||'')+'」，正在重新生成…';
+      requestPromptFromCoze(sessionTopic,retryCount+1).then(function(c){showResult(c,retryCount+1,fromConfirm);}).catch(function(e){
+        if(statusEl){statusEl.style.color='#ef4444';statusEl.textContent='❌ '+resolveUserFacingApiError(e);}
+      });
+      return;
+    }
+  }
   cachedPrompt=extracted;
   promptReadyTopic=(sessionContext.coreTopic||'').trim();
   copywriteGenToken=Date.now();
@@ -4171,7 +4294,7 @@ function showResult(raw,retryCount,fromConfirm){
     document.getElementById('output-section').scrollIntoView({behavior:'smooth'});
   },800);
 }
-function getCopywrite(retryCount){retryCount=retryCount||0;if(!cachedPrompt){alert('请先生成提示词！');return;}var topic=(sessionContext.coreTopic||'').trim();if(!topic){alert('缺少当前主题，请重新「启动大脑」。');return;}var inputTopic=((document.getElementById('main-textarea')||{}).value||'').trim();if(inputTopic&&inputTopic!==topic){topic=inputTopic;sessionContext.coreTopic=topic;}var genToken=copywriteGenToken;document.getElementById('copywrite-ask').style.display='none';clearCopywriteOutputs();hideCopywriteSection();var loading=document.getElementById('copywrite-loading');if(!loading){loading=document.createElement('div');loading.id='copywrite-loading';loading.style.cssText='text-align:center;padding:20px;color:var(--tx2);font-size:13px;';document.getElementById('output-section').appendChild(loading);}loading.textContent='✍️ 正在为【'+topic+'】生成配套爆款文案…'+(retryCount>0?'（第'+(retryCount+1)+'次校正）':'');syncSessionRecommendations();callCoze(buildCopywriteQuery(topic),null,false,'✍️ 爆款文案生成中…',{intent:'copywrite',forceNewSession:true}).then(function(res){if(genToken&&genToken!==copywriteGenToken)return;currentConversationId=res.conversation_id||currentConversationId;currentChatId=res.chat_id||currentChatId;var content=purifyCopywriteBlocks(extractAssistantContent(res));var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();if(!content||isWelcome(content)){if(retryCount<2)return getCopywrite(retryCount+1);document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败，请重试');return;}if(copywriteTopicMismatch(content,topic)){if(retryCount<2)return getCopywrite(retryCount+1);alert('文案主题与「'+topic+'」不一致，请重新「启动大脑」后再生成文案。');document.getElementById('copywrite-ask').style.display='block';return;}renderCopywriteResult(content);}).catch(function(e){var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败：'+e.message);});}
+function getCopywrite(retryCount){retryCount=retryCount||0;if(!cachedPrompt){alert('请先生成提示词！');return;}var topic=(sessionContext.coreTopic||'').trim();if(!topic){alert('缺少当前主题，请重新「启动大脑」。');return;}var inputTopic=extractCoreTopicFromInput(((document.getElementById('main-textarea')||{}).value||'').trim());if(inputTopic) topic=inputTopic;sessionContext.coreTopic=topic;if(getFreeTrialsRemaining()<=0&&!hasValidCardKey()){handleFreeTrialExhausted();return;}if(canUseFreeTrialWithoutCardKey()){var leftCw=consumeFreeTrial();showFreeTrialToast(leftCw);}var genToken=copywriteGenToken;document.getElementById('copywrite-ask').style.display='none';clearCopywriteOutputs();hideCopywriteSection();var loading=document.getElementById('copywrite-loading');if(!loading){loading=document.createElement('div');loading.id='copywrite-loading';loading.style.cssText='text-align:center;padding:20px;color:var(--tx2);font-size:13px;';document.getElementById('output-section').appendChild(loading);}loading.textContent='✍️ 正在为【'+topic+'】生成配套爆款文案…'+(retryCount>0?'（第'+(retryCount+1)+'次校正）':'');syncSessionRecommendations();callCoze(buildCopywriteQuery(topic),null,false,'✍️ 爆款文案生成中…',{intent:'copywrite',forceNewSession:true}).then(function(res){if(genToken&&genToken!==copywriteGenToken)return;currentConversationId=res.conversation_id||currentConversationId;currentChatId=res.chat_id||currentChatId;var content=purifyCopywriteBlocks(extractAssistantContent(res));var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();if(!content||isWelcome(content)){if(retryCount<2)return getCopywrite(retryCount+1);document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败，请重试');return;}if(copywriteTopicMismatch(content,topic)){if(retryCount<2)return getCopywrite(retryCount+1);alert('文案主题与「'+topic+'」不一致，请重新「启动大脑」后再生成文案。');document.getElementById('copywrite-ask').style.display='block';return;}renderCopywriteResult(content);}).catch(function(e){var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败：'+e.message);});}
 function showToast(){var t=document.getElementById('clip-toast');if(!t)return;t.style.display='block';setTimeout(function(){t.style.display='none';},1200);}
 function copyBlock(id){var el=document.getElementById(id);if(!el||!el.textContent.trim()){alert('内容为空，请先生成！');return;}navigator.clipboard.writeText(el.textContent).then(function(){showToast();});}
 function copyAndGo(url){if(!cachedPrompt){alert('请先生成提示词！');return;}// 静默复制+直接跳转，不弹阻断弹窗
