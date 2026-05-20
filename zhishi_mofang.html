@@ -204,7 +204,7 @@ body{
   max-width:min(640px,90vw);max-height:min(72vh,720px);width:auto;height:auto;
   object-fit:contain;border-radius:12px;box-shadow:0 12px 48px rgba(0,0,0,0.55);
   cursor:pointer;-webkit-tap-highlight-color:transparent;
-  opacity:0;transition:opacity .2s ease;
+  opacity:1;transition:opacity .15s ease;
 }
 #img-zoom .img-zoom-inner img.is-ready{opacity:1;}
 #img-zoom .img-zoom-inner.is-busy::after{
@@ -2346,8 +2346,17 @@ function lcCaseImgZoomUrl(url){
   if(!full) return '';
   var iw=window.innerWidth||390;
   var ih=window.innerHeight||700;
-  var w=Math.round(Math.min(680,Math.max(360,Math.min(iw*1.35,ih*0.65))));
-  return lcCaseImgUrl(full,{w:w,q:82,maxW:960});
+  var w=Math.round(Math.min(560,Math.max(320,Math.min(iw*1.1,ih*0.55))));
+  return lcCaseImgUrl(full,{w:w,q:80,maxW:720});
+}
+var _lcZoomPreload={};
+function lcPreloadZoomUrl(url){
+  var zurl=lcCaseImgZoomUrl(url);
+  if(!zurl||_lcZoomPreload[zurl]) return;
+  _lcZoomPreload[zurl]=1;
+  var im=new Image();
+  im.decoding='async';
+  im.src=zurl;
 }
 function lcAttachCaseImg(img,fullUrl,opt){
   if(!img||!fullUrl) return;
@@ -2368,11 +2377,11 @@ function preloadCaseGalleryImages(){
   if(window._lcGalleryPreloaded) return;
   window._lcGalleryPreloaded=1;
   GALLERY_IMGS.forEach(function(item,idx){
-    if(idx>5) return;
     var im=new Image();
     im.decoding='async';
-    if(idx<2&&'fetchPriority' in im) im.fetchPriority='high';
+    if(idx<3&&'fetchPriority' in im) im.fetchPriority='high';
     im.src=lcCaseImgUrl(item.url,{w:idx<4?300:260,q:78});
+    lcPreloadZoomUrl(item.url);
   });
 }
 var GALLERY_IMGS=[
@@ -2480,12 +2489,13 @@ function initGallery(){
     card.className='g-card';
     var imgWrap=document.createElement('div');
     imgWrap.className='g-img is-loading';
+    imgWrap.addEventListener('mouseenter',function(){lcPreloadZoomUrl(item.url);});
     imgWrap.addEventListener('click',function(){
-      try{openImgZoom(lcCaseImgFull(item.url));}catch(e){}
+      try{var thumb=imgWrap.querySelector('img');openImgZoom(lcCaseImgFull(item.url),thumb&&thumb.src?thumb.src:'');}catch(e){}
     });
     var img=document.createElement('img');
     img.alt=item.label||'出图案例';
-    img.loading=idx<4?'eager':'lazy';
+    img.loading='eager';
     img.decoding='async';
     if(idx<2&&'fetchPriority' in img) img.fetchPriority='high';
     lcAttachCaseImg(img,item.url,{w:300,q:78});
@@ -2614,13 +2624,14 @@ function renderCaseGrid(category){
     if(item.img){
       var img=document.createElement('img');
       img.alt=item.title;
-      img.loading=idx<4?'eager':'lazy';
+      img.loading='eager';
       img.decoding='async';
       lcAttachCaseImg(img,item.img,{w:200,q:76});
       thumb.appendChild(img);
+      thumb.addEventListener('mouseenter',function(){lcPreloadZoomUrl(item.img);});
       thumb.addEventListener('click',function(e){
         e.stopPropagation();
-        try{openImgZoom(lcCaseImgFull(item.img));}catch(e2){}
+        try{openImgZoom(lcCaseImgFull(item.img),img.src||'');}catch(e2){}
       });
     }
     var body=document.createElement('d'+'iv');
@@ -2709,6 +2720,7 @@ function setCaseSidebarOpen(open){
       setTimeout(lcRevealMobileCaseCards,80);
       setTimeout(lcRevealMobileCaseCards,280);
     }
+    CASE_LIBRARY.forEach(function(c){if(c.img) lcPreloadZoomUrl(c.img);});
   }else{
     wrap.classList.remove('is-open');
     btn.setAttribute('aria-expanded','false');
@@ -2912,38 +2924,59 @@ function initCaseSidebar(){
   renderCaseGrid(CASE_ACTIVE_TAB);
   try{setCaseSidebarOpen(false);syncLcMobileBackdrop();}catch(e){}
 }
-function openImgZoom(src){
+function openImgZoom(src,instantSrc){
   var z=document.getElementById('img-zoom');
   var im=document.getElementById('img-zoom-src');
   var inner=z?z.querySelector('.img-zoom-inner'):null;
   if(!z||!im) return;
   var full=lcCaseImgFull(src||'');
   var preview=full?lcCaseImgZoomUrl(full):'';
+  var instant=String(instantSrc||'').trim();
   im.classList.remove('is-ready');
   im.dataset.lcZoomFb='';
-  if(inner) inner.classList.add('is-busy');
+  im.loading='eager';
   function zoomDone(){
     if(inner) inner.classList.remove('is-busy');
     im.classList.add('is-ready');
   }
-  im.onload=function(){ zoomDone(); };
-  im.onerror=function(){
-    if(im.dataset.lcZoomFb==='1'){
-      im.dataset.lcZoomFb='2';
-      im.src=lcCaseImgUrl(full,{w:400,q:74,maxW:960});
+  z.classList.add('is-open');
+  z.setAttribute('aria-hidden','false');
+  if(instant){
+    im.src=instant;
+    im.classList.add('is-ready');
+    if(inner) inner.classList.remove('is-busy');
+  }else if(inner){
+    inner.classList.add('is-busy');
+  }
+  var hd=preview||full||'';
+  if(!hd){
+    if(!instant) zoomDone();
+    return;
+  }
+  if(hd===instant){
+    return;
+  }
+  if(!instant&&inner) inner.classList.add('is-busy');
+  var loader=new Image();
+  loader.decoding='async';
+  loader.onload=function(){
+    im.src=hd;
+    zoomDone();
+  };
+  loader.onerror=function(){
+    if(im.dataset.lcZoomFb!=='1'&&full){
+      im.dataset.lcZoomFb='1';
+      loader.src=lcCaseImgUrl(full,{w:420,q:74,maxW:720});
       return;
     }
-    if(im.dataset.lcZoomFb!=='3'&&full){
-      im.dataset.lcZoomFb='3';
-      im.src=full;
+    if(im.dataset.lcZoomFb!=='2'&&full){
+      im.dataset.lcZoomFb='2';
+      loader.src=full;
       return;
     }
     zoomDone();
   };
-  im.src=preview||full||'';
-  if(im.complete&&im.naturalWidth>0) zoomDone();
-  z.classList.add('is-open');
-  z.setAttribute('aria-hidden','false');
+  loader.src=hd;
 }
 function closeImgZoom(){
   var z=document.getElementById('img-zoom');
@@ -3512,7 +3545,10 @@ function parseApiResponse(r){
       var errMsg=(data&&(data.msg||data.error))||'';
       if(r.status===413) errMsg=errMsg||'上传文件过大，请换更小图片（建议单张＜2MB）或只上传文档文字';
       else if((r.status===504||r.status===502)&&!errMsg) errMsg='云端分析超时（双图更慢），请换更小图片或稍后重试';
-      else if(r.status===500&&!errMsg) errMsg='服务器内部错误：请检查 Vercel 是否已配置 COZE_TOKEN、COZE_BOT_ID、DEEPSEEK_API_KEY';
+      else if(r.status===500&&!errMsg){
+        if(/deepseek/i.test(text||'')) errMsg='未配置或无效 DEEPSEEK_API_KEY，请在 Vercel 环境变量添加后重新部署';
+        else errMsg='服务器内部错误：请检查 Vercel 环境变量（COZE_TOKEN、COZE_BOT_ID、DEEPSEEK_API_KEY）及 api 文件是否已上传';
+      }
       else if(!errMsg) errMsg='HTTP '+r.status;
       throw new Error(errMsg);
     }
@@ -3608,14 +3644,27 @@ function fetchDeepseekCopywriteApi(){
   var payload=buildLcDsChatFromForm();
   if(!payload) return Promise.reject(new Error('请填写主题'));
   var base=(typeof API_BASE==='string'&&API_BASE)?String(API_BASE).replace(/\/$/,''):'';
-  var url=(base?base:'')+'/api/generate';
-  if(!base) url='/api/generate';
+  var urls=[];
+  if(base){
+    urls.push(base+'/api/deepseek-copy');
+    urls.push(base+'/api/generate');
+  }else{
+    urls.push('/api/deepseek-copy');
+    urls.push('/api/generate');
+  }
   var opts={
     method:'POST',
     headers:{'Content-Type':'application/json;charset=UTF-8'},
     body:JSON.stringify(payload)
   };
-  return fetch(url,opts).then(parseApiResponse);
+  function tryUrl(i){
+    if(i>=urls.length) return Promise.reject(new Error('文案接口不可用'));
+    return lcFetchJson(urls[i],opts,90000).then(parseApiResponse).catch(function(err){
+      if(i+1<urls.length&&(err&&(/500|502|503|504|fetch/i.test(String(err.message||''))))) return tryUrl(i+1);
+      throw err;
+    });
+  }
+  return tryUrl(0);
 }
 function compressImageFileForUpload(file){
   return new Promise(function(resolve){
