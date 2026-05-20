@@ -399,6 +399,11 @@ body{
 .case-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(243,175,66,0.2);}
 .case-thumb{position:relative;width:100%;height:72px;overflow:hidden;cursor:zoom-in;background:linear-gradient(135deg,rgba(243,175,66,0.12),rgba(15,16,26,0.95));}
 .case-thumb img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(0.92);transition:filter .25s ease,opacity .25s ease;}
+.case-thumb-ph{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:8px;
+  font-size:11px;font-weight:700;color:rgba(243,175,66,0.85);text-align:center;line-height:1.35;
+  background:linear-gradient(145deg,rgba(30,28,20,0.95),rgba(12,12,18,0.98));pointer-events:none;
+}
 .case-card:hover .case-thumb img{filter:brightness(1);}
 .case-body{padding:8px 8px 10px;}
 .case-title{font-size:12px;font-weight:600;color:var(--tx);line-height:1.35;margin-bottom:4px;}
@@ -1308,7 +1313,8 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
     border:1px solid rgba(243,175,66,0.28)!important;
     opacity:1!important;visibility:visible!important;
   }
-  .case-thumb{background:#1a1a28!important;}
+  .case-thumb{background:#1a1a28!important;height:96px;min-height:96px;}
+  .case-thumb img{opacity:1!important;filter:none!important;}
   .case-title{color:#f8fafc!important;}
   .case-tag{color:#cbd5e1!important;}
   .case-meta{color:rgba(243,175,66,0.85)!important;}
@@ -2555,29 +2561,39 @@ var CASE_TABS=[
 var CASE_LIBRARY=[
   {id:'edu_01',category:'edu',title:'数学口诀图',img:CASE_IMG.suzhou,defaultTheme:'一年级加减法口诀',style:'卡通彩色插画',size:'9:16竖版',tag:'教育类',count:2341},
   {id:'edu_02',category:'edu',title:'语文古诗图',img:CASE_IMG.osmanthus,defaultTheme:'静夜思全文解析',style:'国风水墨插画',size:'9:16竖版',tag:'教育类',count:1892},
-  {id:'edu_03',category:'edu',title:'英语单词卡',img:'',defaultTheme:'常见动物英语单词',style:'萌系卡通',size:'1:1方图',tag:'教育类',count:1567},
+  {id:'edu_03',category:'edu',title:'英语单词卡',img:CASE_IMG.knowledge,defaultTheme:'常见动物英语单词',style:'萌系卡通',size:'1:1方图',tag:'教育类',count:1567},
   {id:'edu_04',category:'edu',title:'科学探索图',img:CASE_IMG.lotus,defaultTheme:'植物光合作用原理',style:'科普信息图',size:'9:16竖版',tag:'教育类',count:2103},
   {id:'edu_05',category:'edu',title:'历史时间轴',img:CASE_IMG.changsha,defaultTheme:'中国朝代顺序',style:'古典图文风',size:'16:9横版',tag:'教育类',count:1432},
-  {id:'edu_06',category:'edu',title:'思维导图',img:'',defaultTheme:'语文阅读理解方法',style:'简约色块风',size:'9:16竖版',tag:'教育类',count:987},
+  {id:'edu_06',category:'edu',title:'思维导图',img:CASE_IMG.changsha,defaultTheme:'语文阅读理解方法',style:'简约色块风',size:'9:16竖版',tag:'教育类',count:987},
   {id:'ecom_01',category:'ecom',title:'促销爆款海报',img:CASE_IMG.hotpot,defaultTheme:'夏季护肤品限时5折',style:'电商红金风',size:'9:16竖版',tag:'电商类',count:3210},
-  {id:'ecom_02',category:'ecom',title:'产品主图',img:'',defaultTheme:'玻尿酸精华液产品图',style:'高端白底风',size:'1:1方图',tag:'电商类',count:2788},
-  {id:'ecom_03',category:'ecom',title:'节日活动图',img:'',defaultTheme:'618大促活动海报',style:'节日喜庆风',size:'16:9横版',tag:'电商类',count:1956},
-  {id:'ecom_04',category:'ecom',title:'种草笔记封面',img:'',defaultTheme:'平价好物推荐清单',style:'小红书清新风',size:'3:4竖版',tag:'电商类',count:2644},
-  {id:'ecom_05',category:'ecom',title:'带货视频封面',img:'',defaultTheme:'今日必买好物',style:'直播带货风',size:'9:16竖版',tag:'电商类',count:1833},
-  {id:'ecom_06',category:'ecom',title:'品牌宣传图',img:'',defaultTheme:'国货护肤品牌故事',style:'国潮设计风',size:'16:9横版',tag:'电商类',count:1204},
-  {id:'3d_01',category:'3d',title:'3D文字海报',img:'',defaultTheme:'灵创星球品牌3D字',style:'金属质感3D',size:'9:16竖版',tag:'3D类',count:1560},
-  {id:'3d_02',category:'3d',title:'科技感场景',img:'',defaultTheme:'AI数字宇宙空间站',style:'赛博朋克',size:'16:9横版',tag:'3D类',count:1899},
-  {id:'3d_03',category:'3d',title:'产品3D展示',img:'',defaultTheme:'高端香水瓶3D渲染',style:'奢华3D渲染',size:'1:1方图',tag:'3D类',count:1345},
+  {id:'ecom_02',category:'ecom',title:'产品主图',img:CASE_IMG.knowledge,defaultTheme:'玻尿酸精华液产品图',style:'高端白底风',size:'1:1方图',tag:'电商类',count:2788},
+  {id:'ecom_03',category:'ecom',title:'节日活动图',img:CASE_IMG.hotpot,defaultTheme:'618大促活动海报',style:'节日喜庆风',size:'16:9横版',tag:'电商类',count:1956},
+  {id:'ecom_04',category:'ecom',title:'种草笔记封面',img:CASE_IMG.osmanthus,defaultTheme:'平价好物推荐清单',style:'小红书清新风',size:'3:4竖版',tag:'电商类',count:2644},
+  {id:'ecom_05',category:'ecom',title:'带货视频封面',img:CASE_IMG.lotus,defaultTheme:'今日必买好物',style:'直播带货风',size:'9:16竖版',tag:'电商类',count:1833},
+  {id:'ecom_06',category:'ecom',title:'品牌宣传图',img:CASE_IMG.huangshan,defaultTheme:'国货护肤品牌故事',style:'国潮设计风',size:'16:9横版',tag:'电商类',count:1204},
+  {id:'3d_01',category:'3d',title:'3D文字海报',img:CASE_IMG.suzhou,defaultTheme:'灵创星球品牌3D字',style:'金属质感3D',size:'9:16竖版',tag:'3D类',count:1560},
+  {id:'3d_02',category:'3d',title:'科技感场景',img:CASE_IMG.suzhou,defaultTheme:'AI数字宇宙空间站',style:'赛博朋克',size:'16:9横版',tag:'3D类',count:1899},
+  {id:'3d_03',category:'3d',title:'产品3D展示',img:CASE_IMG.lotus,defaultTheme:'高端香水瓶3D渲染',style:'奢华3D渲染',size:'1:1方图',tag:'3D类',count:1345},
   {id:'3d_04',category:'3d',title:'悬浮岛场景',img:CASE_IMG.suzhou,defaultTheme:'云端上的微缩城市',style:'奇幻3D',size:'9:16竖版',tag:'3D类',count:2456},
-  {id:'3d_05',category:'3d',title:'水晶球场景',img:'',defaultTheme:'水晶球里的四季森林',style:'魔法3D',size:'1:1方图',tag:'3D类',count:1678},
-  {id:'3d_06',category:'3d',title:'机甲战士',img:'',defaultTheme:'未来机甲战士全身像',style:'硬核科幻3D',size:'9:16竖版',tag:'3D类',count:2234},
+  {id:'3d_05',category:'3d',title:'水晶球场景',img:CASE_IMG.osmanthus,defaultTheme:'水晶球里的四季森林',style:'魔法3D',size:'1:1方图',tag:'3D类',count:1678},
+  {id:'3d_06',category:'3d',title:'机甲战士',img:CASE_IMG.huangshan,defaultTheme:'未来机甲战士全身像',style:'硬核科幻3D',size:'9:16竖版',tag:'3D类',count:2234},
   {id:'card_01',category:'card',title:'干货清单图',img:CASE_IMG.knowledge,defaultTheme:'普通人3个副业方向',style:'商务简约风',size:'9:16竖版',tag:'知识类',count:3122},
-  {id:'card_02',category:'card',title:'对比卡片',img:'',defaultTheme:'高效率vs低效率的区别',style:'撞色设计风',size:'1:1方图',tag:'知识类',count:1789},
-  {id:'card_03',category:'card',title:'步骤流程图',img:'',defaultTheme:'5步学会时间管理',style:'信息图表风',size:'9:16竖版',tag:'知识类',count:2045},
-  {id:'card_04',category:'card',title:'金句海报',img:'',defaultTheme:'每天进步1%的力量',style:'极简文字风',size:'3:4竖版',tag:'知识类',count:1433},
+  {id:'card_02',category:'card',title:'对比卡片',img:CASE_IMG.knowledge,defaultTheme:'高效率vs低效率的区别',style:'撞色设计风',size:'1:1方图',tag:'知识类',count:1789},
+  {id:'card_03',category:'card',title:'步骤流程图',img:CASE_IMG.changsha,defaultTheme:'5步学会时间管理',style:'信息图表风',size:'9:16竖版',tag:'知识类',count:2045},
+  {id:'card_04',category:'card',title:'金句海报',img:CASE_IMG.osmanthus,defaultTheme:'每天进步1%的力量',style:'极简文字风',size:'3:4竖版',tag:'知识类',count:1433},
   {id:'card_05',category:'card',title:'数据可视化',img:CASE_IMG.huangshan,defaultTheme:'新媒体用户画像',style:'科技数据风',size:'16:9横版',tag:'知识类',count:1677},
-  {id:'card_06',category:'card',title:'避坑指南',img:'',defaultTheme:'新手做自媒体的5个坑',style:'警示红色风',size:'9:16竖版',tag:'知识类',count:1988}
+  {id:'card_06',category:'card',title:'避坑指南',img:CASE_IMG.hotpot,defaultTheme:'新手做自媒体的5个坑',style:'警示红色风',size:'9:16竖版',tag:'知识类',count:1988}
 ];
+function resolveCaseItemImg(item){
+  if(!item) return '';
+  if(item.img) return item.img;
+  var cat=item.category||'';
+  if(cat==='edu') return CASE_IMG.knowledge;
+  if(cat==='ecom') return CASE_IMG.hotpot;
+  if(cat==='3d') return CASE_IMG.suzhou;
+  if(cat==='card') return CASE_IMG.knowledge;
+  return CASE_IMG.knowledge;
+}
 var VISUAL_STYLES=[
   {id:'neo',emoji:'🎋',label:'新中式',value:'新中式极简风（留白+浅灰+墨色线条）'},
   {id:'cyber',emoji:'⚡',label:'赛博朋克',value:'赛博朋克城市风（深色+霓虹线条+科技感）'},
@@ -2769,18 +2785,33 @@ function renderCaseGrid(category){
     card.setAttribute('data-case-id',item.id);
     var thumb=document.createElement('d'+'iv');
     thumb.className='case-thumb';
-    if(item.img){
+    var imgUrl=resolveCaseItemImg(item);
+    if(imgUrl){
       var img=document.createElement('img');
       img.alt=item.title;
       img.loading='eager';
       img.decoding='async';
-      lcAttachCaseImg(img,item.img,{w:200,q:76});
+      lcAttachCaseImg(img,imgUrl,{w:lcIsMobileDrawer()?280:200,q:lcIsMobileDrawer()?82:76});
+      img.addEventListener('error',function(){
+        if(img.dataset.lcPhDone==='1') return;
+        img.dataset.lcPhDone='1';
+        img.style.display='none';
+        var ph=document.createElement('span');
+        ph.className='case-thumb-ph';
+        ph.textContent=item.title;
+        thumb.appendChild(ph);
+      });
       thumb.appendChild(img);
-      thumb.addEventListener('mouseenter',function(){lcPreloadZoomUrl(item.img);});
+      thumb.addEventListener('mouseenter',function(){lcPreloadZoomUrl(imgUrl);});
       thumb.addEventListener('click',function(e){
         e.stopPropagation();
-        try{openImgZoom(lcCaseImgFull(item.img),img.src||'');}catch(e2){}
+        try{openImgZoom(lcCaseImgFull(imgUrl),img.src||'');}catch(e2){}
       });
+    }else{
+      var ph0=document.createElement('span');
+      ph0.className='case-thumb-ph';
+      ph0.textContent=item.title;
+      thumb.appendChild(ph0);
     }
     var body=document.createElement('d'+'iv');
     body.className='case-body';
@@ -2870,7 +2901,7 @@ function setCaseSidebarOpen(open){
       setTimeout(lcRevealMobileCaseCards,80);
       setTimeout(lcRevealMobileCaseCards,280);
     }
-    CASE_LIBRARY.forEach(function(c){if(c.img) lcPreloadZoomUrl(c.img);});
+    CASE_LIBRARY.forEach(function(c){var u=resolveCaseItemImg(c);if(u) lcPreloadZoomUrl(u);});
   }else{
     wrap.classList.remove('is-open');
     btn.setAttribute('aria-expanded','false');
