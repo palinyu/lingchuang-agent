@@ -1,9 +1,7 @@
 /** Vercel API · 与 prompt-engine 同步（文案主题校验 copywriteTopicMismatch 等）— 保存即更新部署时间戳 */
-import fs from 'fs';
-import path from 'path';
-import { createRequire } from 'module';
-
-const require = createRequire(import.meta.url);
+const fs = require('fs');
+const path = require('path');
+const ROOT = process.cwd();
 const {
   buildCozeMessage,
   purifyAssistantText,
@@ -15,13 +13,10 @@ const {
   buildPromptRetryBlockForTopic,
   validateAnalyzeResponse,
   buildAnalyzeRetryBlock,
-} = require(path.join(process.cwd(), 'prompt-engine.js'));
-
-const { fetchDeepseekCopywrite } = require(path.join(process.cwd(), 'deepseek-copy-util.js'));
-const { initStyleLib, getStyleLibStatus } = require(path.join(process.cwd(), 'style-lib-loader.js'));
-const { finalizeCozeResponse } = require(path.join(process.cwd(), 'coze-response-pipeline.js'));
-
-const ROOT = process.cwd();
+} = require(path.join(ROOT, 'prompt-engine.js'));
+const { fetchDeepseekCopywrite } = require(path.join(ROOT, 'deepseek-copy-util.js'));
+const { initStyleLib, getStyleLibStatus } = require(path.join(ROOT, 'style-lib-loader.js'));
+const { finalizeCozeResponse } = require(path.join(ROOT, 'coze-response-pipeline.js'));
 const PROMPT_QUALITY_INTENTS = ['prompt', 'custom'];
 const MAX_MASTERS_PROMPT_RETRIES = 2;
 const MAX_ANALYZE_RETRIES = 2;
@@ -152,7 +147,7 @@ async function handleDeepseekCopywriter(res, body) {
   });
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // 强行锁死跨域，防止前端拿不到真实死因
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
