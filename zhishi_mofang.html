@@ -868,43 +868,6 @@ html.lc-await-intro #lc-mobile-legal-bar{visibility:hidden!important;pointer-eve
 .bubble-chip.selected{background:var(--gold-dim);border-color:var(--gold);color:var(--gold);}
 .bubble-hint{font-size:11px;color:var(--tx3);margin-top:6px;display:none;}
 .bubble-hint span{color:var(--gold);}
-/* 视觉风格选择 · 4×3 黑金网格 */
-.style-pick-section{
-  margin-bottom:32px;padding:20px 18px 18px;
-  background:linear-gradient(165deg,rgba(18,19,26,0.92),rgba(8,8,12,0.88));
-  border:1px solid rgba(243,175,66,0.18);border-radius:16px;
-  box-shadow:0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.04);
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-}
-.style-pick-label{font-size:12px;font-weight:800;color:rgba(243,175,66,0.85);letter-spacing:0.8px;margin-bottom:14px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;}
-.style-pick-label .style-pick-hint{font-size:10px;font-weight:600;color:#E2C07D;letter-spacing:0.2px;line-height:1.5;text-shadow:0 0 14px rgba(226,192,125,0.35);}
-.style-pick-label span{font-size:11px;font-weight:500;color:var(--tx3);}
-.style-pick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
-.style-pick-cell{
-  position:relative;min-height:52px;padding:10px 8px;cursor:pointer;text-align:center;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-  background:rgba(12,13,18,0.75);border:1px solid rgba(255,255,255,0.06);border-radius:12px;
-  transition:border-color .35s,box-shadow .35s,transform .1s cubic-bezier(0.4,0,0.2,1),background .35s;
-  user-select:none;
-}
-.style-pick-cell .sp-emoji{font-size:18px;line-height:1;}
-.style-pick-cell .sp-name{font-size:11px;font-weight:700;color:rgba(203,213,225,0.85);letter-spacing:0.2px;}
-.style-pick-cell:hover:not(:active){border-color:rgba(243,175,66,0.4);transform:translateY(-2px);box-shadow:0 0 20px rgba(243,175,66,0.12);}
-.style-pick-cell:active{transform:scale(0.97);}
-.style-pick-cell.active{
-  border-color:rgba(243,175,66,0.85);
-  background:linear-gradient(145deg,rgba(243,175,66,0.16),rgba(12,13,18,0.9));
-  box-shadow:0 0 28px rgba(243,175,66,0.28),inset 0 0 20px rgba(243,175,66,0.08);
-}
-.style-pick-cell.active .sp-name{color:#ffe8b8;}
-.style-pick-cell.active::after{
-  content:"";position:absolute;inset:-1px;border-radius:12px;padding:1px;
-  background:linear-gradient(135deg,rgba(243,175,66,0.6),transparent,rgba(243,175,66,0.35));
-  -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
-  -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;
-}
-@media(max-width:640px){.style-pick-grid{grid-template-columns:repeat(3,1fr);}}
-@media(max-width:420px){.style-pick-grid{grid-template-columns:repeat(2,1fr);}}
 /* 生成按钮 */
 .gen-launch-wrap{position:relative;margin-bottom:32px;}
 .gen-launch-wrap .btn-generate{margin-bottom:8px;}
@@ -1434,14 +1397,6 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
       <input type="file" id="file-input" style="display:none;" accept="image/*,.pdf,.doc,.docx,.txt" multiple onchange="handleFile(this)">
       <button class="btn-attach" onclick="document.getElementById('file-input').click()">📎 上传参考图 / 文档 / 手写稿</button>
     </div>
-  </div>
-  <div class="style-pick-section" id="style-pick-section">
-    <div class="style-pick-label">
-      <span>🔥 全网实时检索：当下爆款风格推荐</span>
-      <span class="style-pick-hint">（注：若无满意风格，可直接点击下方「自定义尺寸/风格」进入进阶设置）</span>
-      <span>· 单击选中 · 再次点击可取消</span>
-    </div>
-    <div class="style-pick-grid" id="style-pick-grid"></div>
   </div>
   <div class="gen-launch-wrap" id="gen-launch-wrap">
     <button type="button" id="gen-btn" class="btn-generate lux-tap" onclick="runEngine()">🔮 启动大脑 · 开始全行业智能生图充能</button>
@@ -2437,31 +2392,6 @@ function updateStyleDisplays(){
   if(rec){rec.textContent='🎨 '+label;rec.style.display='inline-flex';rec.style.visibility='visible';}
 }
 function initStylePicker(){
-  var grid=document.getElementById('style-pick-grid');
-  if(!grid) return;
-  grid.innerHTML='';
-  VISUAL_STYLES.forEach(function(st){
-    var cell=document.createElement('div');
-    cell.className='style-pick-cell lux-tap'+(selectedVisualStyleId===st.id?' active':'');
-    cell.setAttribute('data-style-id',st.id);
-    cell.innerHTML='<span class="sp-emoji">'+st.emoji+'</span><span class="sp-name">'+st.label+'</span>';
-    cell.onclick=function(){onStyleCellClick(st.id);};
-    grid.appendChild(cell);
-  });
-  updateStyleDisplays();
-}
-function onStyleCellClick(styleId){
-  if(selectedVisualStyleId===styleId){
-    selectedVisualStyleId=null;
-    sessionContext.style='';
-    userCustomStyle='';
-  }else{
-    selectedVisualStyleId=styleId;
-    userCustomStyle='';
-    sessionContext.style=getSelectedVisualStyleValue();
-    aiRecStyle=sessionContext.style;
-  }
-  initStylePicker();
   updateStyleDisplays();
 }
 function syncSessionRecommendations(){
@@ -4888,7 +4818,7 @@ function bootApp(){
   try{setupLcMobileChrome();}catch(e){}
   try{initGallery();}catch(e){}
   try{initKeywords();}catch(e){}
-  try{initStylePicker();}catch(e){}
+  try{updateStyleDisplays();}catch(e){}
   try{setupBubbles();}catch(e){}
   try{handleCustomStyleChange();}catch(e){}
   try{initCockpitDecor();}catch(e){}
