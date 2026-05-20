@@ -774,6 +774,28 @@ html.lc-await-intro #lc-mobile-legal-bar{visibility:hidden!important;pointer-eve
   margin-top:10px;padding:10px 12px;border-radius:8px;font-size:11px;line-height:1.6;
   color:#fdba74;background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.35);
 }
+.ds-ref-block{
+  margin-top:12px;padding:10px 10px 8px;border-radius:10px;
+  border:1px dashed rgba(243,175,66,0.28);background:rgba(8,9,14,0.45);
+}
+.ds-ref-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:8px;}
+.ds-ref-preview{
+  position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;
+  border:1px solid rgba(243,175,66,0.35);flex-shrink:0;
+}
+.ds-ref-preview img{width:100%;height:100%;object-fit:cover;display:block;}
+.ds-ref-rm{
+  position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;
+  border:none;background:rgba(0,0,0,0.72);color:#fff;font-size:11px;cursor:pointer;line-height:1;
+}
+.ds-ref-pick{
+  flex:1 1 140px;min-width:120px;padding:8px 10px;border-radius:8px;font-size:11px;font-weight:700;
+  border:1px dashed rgba(243,175,66,0.35);background:rgba(243,175,66,0.06);color:var(--gold);cursor:pointer;
+}
+.ds-ref-pick:hover{background:rgba(243,175,66,0.14);}
+.ds-ref-status{display:block;margin-top:6px;font-size:10px;color:#93c5fd;line-height:1.4;}
+.ds-ref-status.is-err{color:#fca5a5;}
+.ds-ref-status.is-ok{color:#86efac;}
 .btn-ds-redgold{
   background:linear-gradient(135deg,#ef4444 0%,#b91c1c 40%,#f3af42 100%)!important;
   color:#fff!important;border-color:rgba(255,255,255,0.2)!important;
@@ -1903,6 +1925,19 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
           <textarea class="ds-out-ta ds-tags" id="ds-ta-tags" rows="3" placeholder="#话题1 #话题2 …"></textarea>
           <button type="button" class="lux-tap" style="margin-top:6px;width:100%;padding:6px;font-size:11px;" id="ds-copy-tags">复制话题</button>
         </div>
+        <div class="ds-ref-block" id="ds-ref-block">
+          <div class="ds-ol">🖼️ 产品参考图（配套出图建议上传）</div>
+          <span class="ds-copy-hint">图文笔记请上传实拍产品图，AI 会按图识别主体，避免画成无关示意款。</span>
+          <div class="ds-ref-row">
+            <div class="ds-ref-preview" id="ds-ref-preview" style="display:none;">
+              <img id="ds-ref-img" src="" alt="产品参考图">
+              <button type="button" class="ds-ref-rm" id="ds-ref-rm" aria-label="移除参考图">✕</button>
+            </div>
+            <button type="button" class="ds-ref-pick lux-tap" id="ds-ref-pick">📎 上传产品参考图</button>
+            <input type="file" id="ds-ref-input" accept="image/*" style="display:none;">
+          </div>
+          <span class="ds-ref-status" id="ds-ref-status">单张 ≤2MB · JPG/PNG</span>
+        </div>
         <div class="ds-orange-tip" id="ds-orange-tip">
           ⚠️ AI生成内容框架，灰色/占位部分请填入真实体验；商业推广发布时须标注「广告」或「品牌合作」。
         </div>
@@ -2328,6 +2363,7 @@ var docParsePromise=Promise.resolve(),docParseResolve=null,pendingUploadPromises
 var promptReadyTopic='',copywriteGenToken=0;
 var aiRecSize='',aiRecStyle='',userCustomSize='',userCustomStyle='';
 var docTextContent='',attachedFileName='';
+var dsRefFileId=null,dsRefSlot=null,dsRefUploadPromise=null,dsRefPreviewUrl=null;
 var WELCOME_KW=['支持四种输入方式','发送任意内容，自动启动','我是灵创星球','专注把知识变成','直接输入主题','上传文档（PDF','上传图片（截图','告诉我你想做','自动启动生图链路','灵创星球·知识图文魔方','四种输入方式','欢迎使用'];
 var KW_CATS=[
   {name:'古诗图解',icon:'📜',rec:true,words:['静夜思图解','春晓古诗解析','望庐山瀑布知识卡','将进酒逐句解析','床前明月光做成图','帮我做一张古诗图']},
@@ -2782,6 +2818,103 @@ function parseDsCopyAnswer(raw){
   if(!title&&!body&&!tags) body=text.trim();
   return {title:title,body:body,tags:tags,raw:text};
 }
+function setDsRefStatus(text,isErr,isOk){
+  var el=document.getElementById('ds-ref-status');
+  if(!el) return;
+  el.textContent=text||'';
+  el.classList.remove('is-err','is-ok');
+  if(isErr) el.classList.add('is-err');
+  if(isOk) el.classList.add('is-ok');
+}
+function revokeDsRefPreview(){
+  if(dsRefPreviewUrl){
+    try{URL.revokeObjectURL(dsRefPreviewUrl);}catch(e){}
+    dsRefPreviewUrl=null;
+  }
+}
+function renderDsRefPreview(){
+  var box=document.getElementById('ds-ref-preview');
+  var im=document.getElementById('ds-ref-img');
+  if(!box||!im) return;
+  if(dsRefPreviewUrl){
+    im.src=dsRefPreviewUrl;
+    box.style.display='block';
+  }else{
+    im.src='';
+    box.style.display='none';
+  }
+}
+function removeDsRefImage(){
+  dsRefFileId=null;
+  dsRefSlot=null;
+  dsRefUploadPromise=null;
+  revokeDsRefPreview();
+  renderDsRefPreview();
+  setDsRefStatus('单张 ≤2MB · JPG/PNG',false,false);
+  var inp=document.getElementById('ds-ref-input');
+  if(inp) inp.value='';
+}
+function addDsRefImage(file){
+  if(!file||String(file.type||'').indexOf('image/')!==0){
+    alert('请上传 JPG/PNG 图片');
+    return;
+  }
+  if(!checkUploadSize(file)) return;
+  revokeDsRefPreview();
+  try{
+    dsRefPreviewUrl=URL.createObjectURL(file);
+  }catch(e){
+    dsRefPreviewUrl=null;
+  }
+  dsRefSlot={name:file.name,type:file.type,size:file.size,fromDsRef:true};
+  dsRefFileId=null;
+  renderDsRefPreview();
+  setDsRefStatus('压缩并上传中…',false,false);
+  dsRefUploadPromise=compressImageFileForUpload(file).then(function(safe){
+    return uploadFile(safe,'dsref');
+  }).then(function(fid){
+    if(fid){
+      dsRefFileId=String(fid);
+      setDsRefStatus('✅ 参考图已就绪，可点「配套出图」',false,true);
+      return fid;
+    }
+    setDsRefStatus('上传失败，请换更小图片重试',true,false);
+    return null;
+  }).catch(function(err){
+    setDsRefStatus((err&&err.message)?String(err.message).slice(0,36):'上传失败',true,false);
+    return null;
+  });
+}
+function syncDsRefToMainUpload(){
+  if(!dsRefFileId&&!dsRefUploadPromise) return Promise.resolve(false);
+  if(dsRefUploadPromise&&!dsRefFileId){
+    return dsRefUploadPromise.then(function(){
+      return syncDsRefToMainUpload();
+    });
+  }
+  if(!dsRefFileId) return Promise.resolve(false);
+  uploadedImageSlots[0]=dsRefSlot||{name:'产品参考图',type:'image/jpeg',fromDsRef:true};
+  uploadedImageFileIds[0]=dsRefFileId;
+  isFileAttached=true;
+  var pa=document.getElementById('img-preview-area');
+  var slot0=document.getElementById('preview-slot-0');
+  var img0=document.getElementById('preview-img-0');
+  var pd=document.getElementById('preview-doc');
+  if(pa) pa.style.display='block';
+  if(pd) pd.style.display='none';
+  if(slot0&&img0){
+    revokeSlotPreviewUrl(img0);
+    if(dsRefPreviewUrl){
+      img0._lcObjectUrl=dsRefPreviewUrl;
+      img0.src=dsRefPreviewUrl;
+    }
+    slot0.style.display='block';
+    setSlotUploadStatus(0,'✅ 笔记参考图',false,true);
+  }
+  refreshImagePreviewUI();
+  rebuildUploadedFileIds();
+  return Promise.resolve(true);
+}
 function setDsCopyOpen(open){
   var wrap=document.getElementById('ds-copy-wrap');
   var btn=document.getElementById('ds-copy-toggle');
@@ -2856,30 +2989,71 @@ function setupDsCopyPanel(){
     var title=titleEl?String(titleEl.value||'').trim():'';
     var brief=pack.trim()?pack.trim().slice(0,1200):'';
     sessionContext.fromDsNotes=true;
+    var refNote='';
+    if(dsRefFileId||dsRefSlot){
+      refNote='\n【已附产品参考图·图B产品】必须以附件实物为画面主体，保留包装/品类/颜色/材质，禁止换成无关商品或纯示意款。';
+    }
     return (
       '【知识图文笔记配图·用户已写好笔记框架】\n'+
       '核心主题：'+topic+
       (title?'\n笔记标题：'+title:'')+
       (brief?'\n\n文案要点摘录（画面须与下列卖点、场景一致）：\n'+brief:'')+
       '\n品类：'+String(cat).trim()+
+      refNote+
       '\n【铁律】必须输出 STEP2 完整包；完整版英文≥380字符，含主体/版式模块/场景/光影/Chinese typography zones；禁止只写 no text 合规句。'
     );
   }
+  var refPick=document.getElementById('ds-ref-pick');
+  var refInp=document.getElementById('ds-ref-input');
+  var refRm=document.getElementById('ds-ref-rm');
+  if(refPick&&refInp){
+    refPick.addEventListener('click',function(){refInp.click();});
+    refInp.addEventListener('change',function(){
+      var f=refInp.files&&refInp.files[0];
+      if(f) addDsRefImage(f);
+      refInp.value='';
+    });
+  }
+  if(refRm) refRm.addEventListener('click',function(e){e.preventDefault();removeDsRefImage();});
   var picGo=document.getElementById('ds-pic-go');
   if(picGo) picGo.addEventListener('click',function(){
     var topic=resolveDsPicCoreTopic();
     if(!topic){alert('请先在笔记区填写主题');return;}
-    var ta=document.getElementById('main-textarea');
-    if(ta){
-      ta.value=topic;
-      ta.classList.add('ds-pic-flash');
-      setTimeout(function(){try{ta.classList.remove('ds-pic-flash');}catch(e){}},1000);
+    function launchPicEngine(){
+      var ta=document.getElementById('main-textarea');
+      if(ta){
+        ta.value=topic;
+        ta.classList.add('ds-pic-flash');
+        setTimeout(function(){try{ta.classList.remove('ds-pic-flash');}catch(e){}},1000);
+      }
+      sessionContext.coreTopic=topic;
+      sessionContext.userNotes=buildPicPromptFromDs();
+      setDsCopyOpen(false);
+      setCaseSidebarOpen(false);
+      try{if(typeof runEngine==='function') runEngine();}catch(e2){alert('已填入主题，请点击主区域「启动大脑」生成');}
     }
-    sessionContext.coreTopic=topic;
-    sessionContext.userNotes=buildPicPromptFromDs();
-    setDsCopyOpen(false);
-    setCaseSidebarOpen(false);
-    try{if(typeof runEngine==='function') runEngine();}catch(e2){alert('已填入主题，请点击主区域「启动大脑」生成');}
+    syncDsRefToMainUpload().then(function(hasRef){
+      if(!hasRef&&!dsRefFileId){
+        if(!confirm('未上传产品参考图，出图可能不像你的实拍产品。\n\n建议先点「上传产品参考图」再配套出图。\n\n仍要继续吗？')) return;
+      }
+      if(dsRefUploadPromise&&!dsRefFileId){
+        setDsRefStatus('参考图上传中，请稍候…',false,false);
+        picGo.disabled=true;
+        dsRefUploadPromise.finally(function(){
+          picGo.disabled=false;
+          syncDsRefToMainUpload().then(function(ok){
+            if(!ok&&!confirm('参考图仍未上传成功，可能只能按文字出图。是否继续？')) return;
+            launchPicEngine();
+          });
+        });
+        return;
+      }
+      if(dsRefFileId&&!uploadedImageFileIds[0]){
+        alert('参考图上传失败，请换更小图片（≤2MB）后重试');
+        return;
+      }
+      launchPicEngine();
+    });
   });
   var cpAll=document.getElementById('ds-copy-all');
   if(cpAll) cpAll.addEventListener('click',function(){
@@ -3791,6 +3965,7 @@ function uploadFile(file,slotKey){
     if(data&&data.code===0&&data.data&&data.data.id){
       var fid=String(data.data.id);
       if(slotKey==='doc'){docUploadFileId=fid;}
+      else if(slotKey==='dsref'){dsRefFileId=String(fid);}
       else if(typeof slotKey==='number'){uploadedImageFileIds[slotKey]=fid;}
       else{uploadedFileIds.push(fid);}
       rebuildUploadedFileIds();
