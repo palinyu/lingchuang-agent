@@ -267,8 +267,7 @@ body{
 .app-marquee-track span{font-size:10px;font-weight:600;color:rgba(226,192,125,0.82);letter-spacing:0.35px;white-space:nowrap;padding:8px 48px 8px 0;}
 .app-marquee-track .marquee-dot{color:#4ade80;margin-right:6px;}
 @keyframes app-marquee-scroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
-/* 桌面双栏布局 */
-.app-layout{max-width:1320px;margin:0 auto;padding:0 16px 80px;position:relative;z-index:2;}
+/* 桌面 / 手机 布局 v4：左 260 默认展开；右 300 默认收起；手机全屏抽屉 + 悬浮钮 */
 .case-sidebar-wrap{display:none;}
 .ds-copy-wrap{display:none;}
 .ds-copy-rail{display:none;}
@@ -276,8 +275,8 @@ body{
   display:block;position:relative;overflow:hidden;
   background:rgba(15,16,26,0.95);border:1px solid rgba(243,175,66,0.15);border-radius:0 16px 16px 0;
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  flex:0 0 300px;width:300px;min-width:300px;
-  transform:translateX(100%);transition:transform .32s ease;
+  flex:0 0 260px;width:260px;min-width:260px;
+  transform:translateX(0);transition:transform .32s ease;
   border-left:none;
 }
 .case-sidebar-wrap.is-open .case-sidebar{transform:translateX(0);}
@@ -291,6 +290,7 @@ body{
   writing-mode:vertical-rl;text-orientation:mixed;text-align:center;line-height:1.4;
   transition:background .2s,color .2s,box-shadow .2s;
 }
+.app-layout{max-width:1320px;margin:0 auto;padding:0 16px 80px;position:relative;z-index:2;}
 .case-sidebar-rail:hover{background:rgba(243,175,66,0.1);color:#fff;box-shadow:4px 0 28px rgba(243,175,66,0.12);}
 .case-sidebar-rail-text{pointer-events:none;}
 .case-sidebar-rail.is-active{background:rgba(243,175,66,0.14);color:#fff;}
@@ -378,75 +378,73 @@ body{
 }
 @media(min-width:769px){
   .app-layout{display:flex;align-items:flex-start;gap:16px;padding-top:8px;}
+  /* v4 左栏 260px 默认展开：收起时仅保留左侧竖条 */
   .case-sidebar-wrap{
-    display:flex;flex-direction:row;flex-shrink:0;align-items:flex-start;position:sticky;top:12px;
-    max-height:none;overflow:hidden;width:44px;min-width:44px;
-    transition:width .32s ease,min-width .32s ease,box-shadow .25s ease;
-    border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.25);
+    display:flex;flex-direction:row;flex-shrink:0;align-items:stretch;position:sticky;top:12px;
+    width:260px;min-width:260px;max-height:calc(100vh - 24px);overflow:hidden;
+    border-radius:0 16px 16px 0;box-shadow:0 8px 32px rgba(0,0,0,0.25);
+    transition:width .3s ease,min-width .3s ease,box-shadow .25s ease;
   }
+  .case-sidebar-wrap:not(.is-open){width:48px;min-width:48px;}
   .case-sidebar-wrap:not(.is-open) .case-sidebar{
-    position:absolute;left:44px;top:0;width:300px;min-width:300px;z-index:2;
-    max-height:calc(100vh - 24px);
-    transform:translateX(100%);
-  }
-  .case-sidebar-wrap.is-open{
-    align-items:stretch;max-height:calc(100vh - 24px);overflow:hidden;
+    position:absolute;left:48px;top:0;width:260px;min-width:260px;z-index:2;
+    transform:translateX(-100%);opacity:0;pointer-events:none;
   }
   .case-sidebar-wrap.is-open .case-sidebar{
-    position:relative;left:auto;top:auto;flex:0 0 300px;z-index:1;
+    position:relative;left:auto;top:auto;opacity:1;pointer-events:auto;
+    transform:translateX(0);
   }
-  .case-sidebar-wrap.is-open .case-sidebar-rail{
-    align-self:stretch;max-height:none;overflow:visible;
+  .case-sidebar-rail{
+    display:flex;align-items:center;justify-content:center;flex:0 0 48px;width:48px;min-width:48px;
+    align-self:stretch;padding:12px 0;border:none;cursor:pointer;font-family:inherit;
+    background:linear-gradient(180deg,rgba(22,23,32,0.98),rgba(12,13,18,0.98));
+    border:1px solid rgba(243,175,66,0.22);border-radius:0 12px 12px 0;border-left:none;
+    color:rgba(243,175,66,0.92);font-size:11px;font-weight:800;letter-spacing:0.1em;
+    writing-mode:vertical-rl;text-orientation:mixed;text-align:center;line-height:1.35;
   }
-  .case-sidebar-wrap.is-open{width:344px;min-width:344px;box-shadow:0 12px 40px rgba(0,0,0,0.35);}
   .case-sidebar-wrap.is-open .case-sidebar-rail{border-radius:0;border-right:1px solid rgba(243,175,66,0.15);}
-  .case-sidebar-rail{display:flex;align-items:center;justify-content:center;}
   .case-sidebar{
-    max-height:calc(100vh - 24px);overflow-y:auto;border-radius:0 16px 16px 0;
+    flex:0 0 260px;width:260px;min-width:260px;max-height:calc(100vh - 24px);overflow-y:auto;
+    border-radius:0 16px 16px 0;transition:transform .3s ease,opacity .25s ease;
   }
   .case-sidebar::-webkit-scrollbar{width:4px;}
   .case-sidebar::-webkit-scrollbar-thumb{background:rgba(243,175,66,0.25);border-radius:4px;}
   .app-main{flex:1;min-width:0;transition:flex-basis .32s ease;}
-  /* 右侧 DeepSeek 爆款文案区（文档 v3 · 竖条 + 300px 面板） */
+  /* v4 右栏 300px 默认收起 */
   .ds-copy-wrap{
-    display:flex;flex-direction:row;flex-shrink:0;align-items:flex-start;position:sticky;top:12px;
-    max-height:none;overflow:hidden;width:44px;min-width:44px;
-    transition:width .32s ease,min-width .32s ease,box-shadow .25s ease;
+    display:flex;flex-direction:row;flex-shrink:0;align-items:stretch;position:sticky;top:12px;
+    max-height:calc(100vh - 24px);overflow:hidden;width:48px;min-width:48px;
+    transition:width .3s ease,min-width .3s ease,box-shadow .25s ease;
     border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.25);
   }
+  .ds-copy-wrap.is-open{width:348px;min-width:348px;box-shadow:0 12px 40px rgba(0,0,0,0.35);}
   .ds-copy-wrap:not(.is-open) .ds-copy-panel{
-    position:absolute;right:44px;top:0;width:300px;min-width:300px;z-index:2;
-    max-height:calc(100vh - 24px);
-    transform:translateX(-100%);
+    position:absolute;right:48px;top:0;width:300px;min-width:300px;z-index:2;
+    transform:translateX(100%);opacity:0;pointer-events:none;
   }
-  .ds-copy-wrap.is-open{align-items:stretch;max-height:calc(100vh - 24px);overflow:hidden;}
   .ds-copy-wrap.is-open .ds-copy-panel{
-    position:relative;right:auto;top:auto;flex:0 0 300px;z-index:1;
-    transform:translateX(0);
+    position:relative;right:auto;top:auto;opacity:1;pointer-events:auto;transform:translateX(0);
   }
-  .ds-copy-wrap.is-open .ds-copy-rail{align-self:stretch;max-height:none;overflow:visible;}
-  .ds-copy-wrap.is-open{width:344px;min-width:344px;box-shadow:0 12px 40px rgba(0,0,0,0.35);}
   .ds-copy-wrap.is-open .ds-copy-rail{border-radius:0;border-left:1px solid rgba(243,175,66,0.15);}
   .ds-copy-rail{
-    display:flex;flex:0 0 44px;width:44px;min-width:44px;align-items:center;justify-content:center;
-    align-self:flex-start;padding:18px 0;border:none;cursor:pointer;font-family:inherit;
-    background:linear-gradient(180deg,rgba(22,23,32,0.98),rgba(12,13,18,0.98));
-    border:1px solid rgba(243,175,66,0.22);border-radius:0 16px 16px 0;border-left:none;
+    display:flex;flex:0 0 48px;width:48px;min-width:48px;align-items:center;justify-content:center;
+    align-self:stretch;padding:12px 0;border:none;cursor:pointer;font-family:inherit;
+    background:linear-gradient(180deg,#3f1010 0%,#1a0a0a 45%,#2a1810 100%);
+    border:1px solid rgba(243,175,66,0.35);border-radius:12px 0 0 12px;border-right:none;
     box-shadow:-4px 0 24px rgba(0,0,0,0.35);
-    color:rgba(243,175,66,0.92);font-size:11px;font-weight:800;letter-spacing:0.1em;
-    writing-mode:vertical-rl;text-orientation:mixed;text-align:center;line-height:1.4;
-    transition:background .2s,color .2s,box-shadow .2s;
+    color:#fecaca;font-size:11px;font-weight:800;letter-spacing:0.1em;
+    writing-mode:vertical-rl;text-orientation:mixed;text-align:center;line-height:1.35;
+    transition:filter .2s,box-shadow .2s;
   }
-  .ds-copy-rail:hover{background:rgba(243,175,66,0.1);color:#fff;box-shadow:-4px 0 28px rgba(243,175,66,0.12);}
+  .ds-copy-rail:hover{filter:brightness(1.12);}
   .ds-copy-rail-text{pointer-events:none;}
-  .ds-copy-rail.is-active{background:rgba(243,175,66,0.14);color:#fff;}
+  .ds-copy-rail.is-active{background:linear-gradient(180deg,#5c1c1c 0%,#2a0f0f 50%,#3d2418 100%);}
   .ds-copy-panel{
     display:block;position:relative;overflow:hidden;
     background:rgba(15,16,26,0.95);border:1px solid rgba(243,175,66,0.15);border-radius:16px 0 0 16px;
     backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
     flex:0 0 300px;width:300px;min-width:300px;
-    transform:translateX(0);transition:transform .32s ease;
-    border-right:none;
+    transition:transform .3s ease,opacity .25s ease;border-right:none;
   }
   .ds-copy-inner{position:relative;z-index:1;padding:14px 12px 16px;max-height:calc(100vh - 24px);overflow-y:auto;}
   .ds-copy-inner::-webkit-scrollbar{width:4px;}
@@ -464,8 +462,11 @@ body{
   .ds-copy-field select,.ds-copy-field input[type="text"]{
     width:100%;box-sizing:border-box;padding:8px 10px;border-radius:8px;
     border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.35);color:var(--tx2);
-    font-size:12px;font-family:inherit;
+    font-size:12px;font-family:inherit;color-scheme:dark;
   }
+  .ds-copy-field select option,.ds-copy-field select optgroup{background:#14141c;color:#f1f5f9;}
+  .ds-copy-field select:focus{outline:2px solid rgba(243,175,66,0.35);outline-offset:1px;}
+  .ds-copy-hint{display:block;font-size:10px;color:rgba(148,163,184,0.85);margin-top:4px;line-height:1.4;}
   .ds-copy-field input[type="text"]::placeholder{color:rgba(148,163,184,0.55);}
   .ds-copy-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
   .ds-copy-actions button{
@@ -473,17 +474,146 @@ body{
     background:rgba(243,175,66,0.12);color:var(--gold);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;
   }
   .ds-copy-actions button:hover{background:rgba(243,175,66,0.2);color:#fff;}
-  .ds-copy-actions button.ds-gen-primary{flex:1 1 100%;background:linear-gradient(135deg,rgba(243,175,66,0.35),rgba(243,175,66,0.12));color:#fff;border-color:rgba(243,175,66,0.45);}
+  .ds-copy-actions button.ds-gen-primary{flex:1 1 100%;}
   .ds-copy-actions button:disabled{opacity:0.55;cursor:not-allowed;}
   .ds-copy-out{margin-top:12px;padding-top:12px;border-top:1px solid rgba(243,175,66,0.12);}
   .ds-copy-out-block{margin-bottom:10px;}
   .ds-copy-out-block .ds-ol{font-size:10px;font-weight:700;color:var(--tx3);margin-bottom:4px;}
-  .ds-copy-out-block .ds-ot{
-    font-size:12px;color:var(--tx2);line-height:1.55;white-space:pre-wrap;word-break:break-word;
-    background:rgba(0,0,0,0.28);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:8px 10px;min-height:2.4em;
-  }
   .ds-copy-disclaimer{font-size:9px;color:var(--tx3);line-height:1.45;margin-top:10px;}
 }
+/* ========== v4 入场 / 协议 / 手机悬浮钮 / 微动效 ========== */
+#lc-intro-overlay{
+  position:fixed;inset:0;z-index:200000;display:none;flex-direction:column;align-items:center;justify-content:center;
+  background:#09090d;overflow:hidden;font-family:system-ui,sans-serif;
+}
+#lc-intro-overlay.is-visible{display:flex;}
+.lc-intro-circuit{
+  position:absolute;inset:0;pointer-events:none;opacity:0;
+  background-image:repeating-linear-gradient(90deg,rgba(243,175,66,0.08) 0 1px,transparent 1px 44px),
+    repeating-linear-gradient(0deg,rgba(243,175,66,0.08) 0 1px,transparent 1px 44px);
+  animation:lc-circuit-in .5s ease-out forwards;
+}
+@keyframes lc-circuit-in{to{opacity:1;}}
+.lc-intro-brand{font-size:clamp(28px,8vw,48px);font-weight:900;letter-spacing:8px;color:#f3af42;text-shadow:0 0 24px rgba(243,175,66,0.6);opacity:0;animation:lc-brand-in 1.2s ease-out .35s forwards;}
+@keyframes lc-brand-in{0%{opacity:0;letter-spacing:24px;filter:blur(6px);}60%{opacity:1;filter:blur(0);}100%{opacity:1;letter-spacing:8px;}}
+.lc-intro-sub{margin-top:16px;font-size:16px;font-weight:400;letter-spacing:2px;color:rgba(226,232,240,0.85);min-height:1.4em;}
+.lc-intro-sub .lc-cursor{display:inline-block;width:2px;height:1em;background:#f3af42;margin-left:2px;animation:lc-cursor-blink .8s step-end infinite;vertical-align:-2px;}
+@keyframes lc-cursor-blink{50%{opacity:0;}}
+.lc-intro-tags{margin-top:28px;display:flex;flex-direction:column;gap:10px;align-items:flex-start;}
+.lc-intro-tag{font-size:14px;font-weight:600;color:rgba(243,175,66,0.9);opacity:0;transform:translateX(-40px);animation:lc-tag-fly .45s ease-out forwards;}
+.lc-intro-tag:nth-child(1){animation-delay:1.15s;}
+.lc-intro-tag:nth-child(2){animation-delay:1.25s;}
+@keyframes lc-tag-fly{to{opacity:1;transform:translateX(0);}}
+.lc-intro-slogan{margin-top:22px;font-size:clamp(22px,5vw,32px);font-weight:700;letter-spacing:4px;color:#f3af42;opacity:0;animation:lc-slogan-in .5s ease-out 1.75s forwards;position:relative;overflow:hidden;}
+@keyframes lc-slogan-in{to{opacity:1;}}
+.lc-intro-slogan::after{
+  content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);
+  animation:lc-slogan-sweep .45s ease-out 1.78s forwards;
+}
+@keyframes lc-slogan-sweep{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+.lc-intro-skip{
+  position:absolute;right:16px;bottom:16px;padding:6px 10px;border:none;background:transparent;
+  color:rgba(255,255,255,0.45);font-size:12px;cursor:pointer;font-family:inherit;z-index:2;
+}
+.lc-intro-skip:hover{color:#fff;}
+#lc-terms-overlay{
+  position:fixed;inset:0;z-index:199000;display:none;align-items:flex-end;justify-content:center;
+  background:rgba(2,2,8,0.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+#lc-terms-overlay.is-visible{display:flex;}
+.lc-terms-panel{
+  width:100%;max-width:520px;max-height:min(88vh,640px);margin:0 auto;
+  background:linear-gradient(168deg,#1c1c22 0%,#0a0a0e 100%);
+  border:1px solid rgba(243,175,66,0.28);border-radius:18px 18px 0 0;
+  padding:18px 18px calc(16px + env(safe-area-inset-bottom,0px));
+  transform:translateY(110%);transition:transform .4s cubic-bezier(.22,1,.36,1);
+  box-shadow:0 -24px 80px rgba(0,0,0,0.65);
+}
+#lc-terms-overlay.is-visible .lc-terms-panel{transform:translateY(0);}
+.lc-terms-title{font-size:17px;font-weight:900;color:#fff;margin-bottom:12px;}
+.lc-terms-scroll{
+  max-height:42vh;overflow-y:auto;padding:12px;border-radius:10px;background:rgba(0,0,0,0.35);
+  border:1px solid rgba(255,255,255,0.06);font-size:12px;line-height:1.75;color:var(--tx2);margin-bottom:12px;
+}
+.lc-terms-scroll p{margin-bottom:10px;}
+.lc-terms-row{display:flex;align-items:flex-start;gap:10px;margin:12px 0;font-size:13px;color:var(--tx);}
+.lc-terms-row input{margin-top:3px;}
+.lc-terms-btn{
+  width:100%;padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:900;font-family:inherit;cursor:not-allowed;
+  background:#2a2a32;color:rgba(255,255,255,0.35);transition:background .3s,color .3s,box-shadow .3s;
+}
+.lc-terms-btn.is-ready{
+  cursor:pointer;color:#0c0a06;
+  background:linear-gradient(135deg,#E2C07D 0%,#c9a24d 48%,#b8923f 100%);
+  box-shadow:0 10px 32px rgba(226,192,125,0.28);
+}
+.lc-mobile-fab{
+  display:none;position:fixed;z-index:86000;padding:10px 0;border:none;cursor:pointer;font-family:inherit;
+  writing-mode:vertical-rl;text-orientation:mixed;text-align:center;line-height:1.25;
+  min-height:88px;width:56px;box-sizing:border-box;font-size:11px;font-weight:800;letter-spacing:0.12em;
+  top:50%;transform:translateY(-50%);transition:filter .2s,box-shadow .2s;
+}
+.lc-mobile-fab-case{
+  left:0;border-radius:0 14px 14px 0;
+  background:rgba(8,8,12,0.88);border:2px solid rgba(243,175,66,0.55);color:#f3af42;
+  box-shadow:4px 0 20px rgba(0,0,0,0.4);
+}
+.lc-mobile-fab-copy{
+  right:0;border-radius:14px 0 0 14px;
+  background:linear-gradient(180deg,#ef4444 0%,#991b1b 38%,#f3af42 100%);color:#fff;border:1px solid rgba(243,175,66,0.45);
+  box-shadow:-4px 0 20px rgba(0,0,0,0.35);
+}
+.lc-mobile-fab:hover{filter:brightness(1.08);}
+#lc-drawer-backdrop{display:none;position:fixed;inset:0;z-index:84900;background:rgba(0,0,0,0.45);backdrop-filter:blur(2px);}
+#lc-drawer-backdrop.is-open{display:block;}
+@keyframes badge-pulse-v4{
+  0%,100%{box-shadow:0 0 6px rgba(243,175,66,0.2);}
+  50%{box-shadow:0 0 20px rgba(243,175,66,0.55);}
+}
+.brand-badge{animation:badge-pulse-v4 3s ease-in-out infinite;}
+.hero h1 span.title-sweep{position:relative;display:inline-block;background:linear-gradient(90deg,#f3af42 0%,#ffe08a 40%,#f3af42 80%);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.hero h1 span.title-sweep::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.4) 50%,transparent 100%);
+  background-size:40px 100%;animation:title-gold-sweep 4s linear infinite;
+  mix-blend-mode:overlay;
+}
+@keyframes title-gold-sweep{0%{background-position:-60px 0;}100%{background-position:220px 0;}}
+.g-card:nth-child(1) .g-img{animation:gallery-float 4s ease-in-out infinite;}
+.g-card:nth-child(2) .g-img{animation:gallery-float 3.6s ease-in-out infinite .3s;}
+.g-card:nth-child(3) .g-img{animation:gallery-float 4.2s ease-in-out infinite .6s;}
+.g-card:nth-child(4) .g-img{animation:gallery-float 3.8s ease-in-out infinite .2s;}
+.g-card:nth-child(5) .g-img{animation:gallery-float 4.4s ease-in-out infinite .5s;}
+.g-card:nth-child(6) .g-img{animation:gallery-float 3.5s ease-in-out infinite .1s;}
+.g-card:nth-child(7) .g-img{animation:gallery-float 4.1s ease-in-out infinite .7s;}
+@keyframes gallery-float{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+.app-marquee-track .marquee-dot{animation:marquee-dot-blink 5s step-end infinite;}
+@keyframes marquee-dot-blink{0%,94%{opacity:1;}97%{opacity:0.2;}100%{opacity:1;}}
+.hero-tool-hint{font-size:11px;color:rgba(251,191,36,0.85);margin-top:8px;font-weight:600;}
+.ds-copy-subhint{font-size:10px;color:rgba(251,146,60,0.95);margin:-4px 0 10px;line-height:1.45;}
+.ds-copy-genwrap{position:relative;overflow:hidden;border-radius:10px;}
+.ds-copy-scanline{
+  display:none;pointer-events:none;position:absolute;left:0;right:0;top:0;height:3px;
+  background:linear-gradient(90deg,transparent,rgba(239,68,68,0.85),transparent);
+  animation:ds-scan-down 1.2s linear infinite;z-index:3;
+}
+.ds-copy-genwrap.is-busy .ds-copy-scanline{display:block;}
+@keyframes ds-scan-down{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(120px);opacity:.3;}}
+.ds-out-ta{
+  width:100%;min-height:4.5em;resize:vertical;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.55;
+  border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.45);color:var(--tx2);font-family:inherit;box-sizing:border-box;
+}
+.ds-out-ta.ds-tags{min-height:3em;}
+.ds-orange-tip{
+  margin-top:10px;padding:10px 12px;border-radius:8px;font-size:11px;line-height:1.6;
+  color:#fdba74;background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.35);
+}
+.btn-ds-redgold{
+  background:linear-gradient(135deg,#ef4444 0%,#b91c1c 40%,#f3af42 100%)!important;
+  color:#fff!important;border-color:rgba(255,255,255,0.2)!important;
+}
+#main-textarea.ds-pic-flash{animation:ds-ta-flash 1s ease;}
+@keyframes ds-ta-flash{0%,100%{box-shadow:inset 0 0 0 0 rgba(243,175,66,0);}40%{box-shadow:inset 0 0 0 2px rgba(243,175,66,0.45);}}
 /* 快捷关键词 · 黑金奢华胶囊 */
 @keyframes kw-gold-sweep{0%{transform:translateX(-120%) skewX(-18deg);opacity:0;}40%{opacity:1;}100%{transform:translateX(220%) skewX(-18deg);opacity:0;}}
 .keywords-section{
@@ -881,15 +1011,63 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
 .p-tag{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;display:inline-block;}
 .tag-gold{background:rgba(243,175,66,0.1);color:var(--gold);}.tag-green{background:rgba(34,197,94,0.1);color:#22c55e;}
 @media(max-width:768px){
-  .case-sidebar-wrap,.ds-copy-wrap,.app-top-bar{display:none!important;}
+  .lc-mobile-fab{display:block;}
+  .app-top-bar{display:block!important;padding:8px 10px 0;}
   .app-layout{padding:0;}
-  .app-main .shell{padding:20px 16px 80px;}
-  .analysis-grid{grid-template-columns:1fr 1fr;}.platform-grid{grid-template-columns:repeat(2,1fr);}.custom-selects{grid-template-columns:1fr;}.quantum-box{grid-template-columns:1fr;}.quantum-visual{border-left:none;border-top:1px solid rgba(255,255,255,0.04);padding-left:0;padding-top:12px;}
+  .app-main .shell{padding:20px 16px 96px;}
+  .case-sidebar-wrap,.ds-copy-wrap{
+    display:flex!important;position:fixed;top:0;bottom:0;margin:0;z-index:85500;
+    width:min(92vw,320px);max-width:100%;transition:transform .34s cubic-bezier(.22,1,.36,1);
+    box-shadow:0 0 48px rgba(0,0,0,0.55);border-radius:0;
+  }
+  .case-sidebar-wrap{left:0;flex-direction:row;transform:translateX(-105%);}
+  .case-sidebar-wrap.is-open{transform:translateX(0);}
+  .ds-copy-wrap{right:0;left:auto;flex-direction:row;transform:translateX(105%);}
+  .ds-copy-wrap.is-open{transform:translateX(0);}
+  .case-sidebar-rail,.ds-copy-rail{display:none!important;}
+  .case-sidebar-wrap .case-sidebar,.ds-copy-wrap .ds-copy-panel{
+    position:relative!important;left:auto!important;right:auto!important;
+    transform:none!important;opacity:1!important;pointer-events:auto!important;
+    flex:1 1 auto!important;width:100%!important;min-width:0!important;max-height:100vh;
+    border-radius:0;
+  }
+  .analysis-grid{grid-template-columns:1fr 1fr;}
+  .platform-grid{grid-template-columns:repeat(2,1fr);}
+  .custom-selects{grid-template-columns:1fr;}
+  .quantum-box{grid-template-columns:1fr;}
+  .quantum-visual{border-left:none;border-top:1px solid rgba(255,255,255,0.04);padding-left:0;padding-top:12px;}
 }
 @media(max-width:480px){.analysis-grid{grid-template-columns:1fr;}.analysis-actions{grid-template-columns:1fr;}.shell{padding:20px 14px 80px;}.hero h1{font-size:24px;letter-spacing:1px;}}
 </style>
 </head>
 <body>
+<div id="lc-intro-overlay" aria-hidden="true">
+  <div class="lc-intro-circuit" aria-hidden="true"></div>
+  <div class="lc-intro-brand" id="lc-intro-brand">灵创星球</div>
+  <div class="lc-intro-sub" id="lc-intro-sub"><span id="lc-intro-sub-txt"></span><span class="lc-cursor" id="lc-intro-cursor" style="display:none;"></span></div>
+  <div class="lc-intro-tags" aria-hidden="true">
+    <div class="lc-intro-tag">✦ 全品类覆盖</div>
+    <div class="lc-intro-tag">✦ 全平台适用</div>
+  </div>
+  <div class="lc-intro-slogan" id="lc-intro-slogan">心有所想，一键出图</div>
+  <button type="button" class="lc-intro-skip lux-tap" id="lc-intro-skip">跳过 →</button>
+</div>
+<div id="lc-terms-overlay" aria-hidden="true">
+  <div class="lc-terms-panel" role="dialog" aria-labelledby="lc-terms-title" aria-modal="true">
+    <div class="lc-terms-title" id="lc-terms-title">⚡ 使用须知</div>
+    <div class="lc-terms-scroll" id="lc-terms-scroll">
+      <p><strong>📋 关于本工具</strong><br>「灵创星球·图片提示词大师」是一款AI辅助内容创作工具。本工具生成的所有内容均为创作框架，供用户参考和修改使用，不构成任何商业宣传、广告代写或推广服务。</p>
+      <p><strong>✍️ 关于内容发布</strong><br>· 生成内容仅为框架，请结合您的真实体验修改后发布<br>· 若用于商业推广，发布时须依法标注「广告」或「品牌合作」<br>· 禁止发布虚假、夸大、误导消费者的内容<br>· 禁止将AI生成内容冒充真实个人体验直接发布<br>· 发布内容须符合所在平台的社区规范和相关法律法规</p>
+      <p><strong>⚖️ 关于法律责任</strong><br>用户对最终发布的内容承担全部法律责任。因用户使用本工具生成内容并发布所产生的任何法律纠纷、平台处罚、经济损失等，均与本工具及运营方无关。本工具不存储用户输入内容，不对外传播用户数据。</p>
+      <p style="padding-bottom:24px;">请下滑阅读全文后，方可勾选同意。</p>
+    </div>
+    <label class="lc-terms-row"><input type="checkbox" id="lc-terms-check" disabled> 我已阅读并同意以上使用须知</label>
+    <button type="button" class="lc-terms-btn lux-tap" id="lc-terms-btn" disabled>同意并开始使用</button>
+  </div>
+</div>
+<div id="lc-drawer-backdrop" aria-hidden="true"></div>
+<button type="button" class="lc-mobile-fab lc-mobile-fab-case lux-tap" id="lc-m-fab-case" aria-controls="case-sidebar-wrap" aria-expanded="false">📂<br>案例库</button>
+<button type="button" class="lc-mobile-fab lc-mobile-fab-copy lux-tap" id="lc-m-fab-copy" aria-controls="ds-copy-wrap" aria-expanded="false">🔥<br>文案</button>
 <div id="lux-bg-layer" aria-hidden="true">
   <span class="lux-meteor m1"></span>
   <span class="lux-meteor m2"></span>
@@ -928,21 +1106,21 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
 <div class="app-top-bar">
   <div class="app-marquee-wrap">
     <div class="app-marquee-track" id="app-marquee-track">
-      <span id="app-marquee-text"><span class="marquee-dot">●</span> 系统运行正常 · AI大脑已就绪 · 实时联网搜索 · 今日已生成 8,432 张</span>
-      <span class="app-marquee-dup" aria-hidden="true"><span class="marquee-dot">●</span> 系统运行正常 · AI大脑已就绪 · 实时联网搜索 · 今日已生成 8,432 张</span>
+      <span id="app-marquee-text"><span class="marquee-dot">●</span> 系统运行正常 · AI大脑已就绪 · 实时联网搜索 · 今日已生成 8,432 张 · 内容仅供创作参考</span>
+      <span class="app-marquee-dup" aria-hidden="true"><span class="marquee-dot">●</span> 系统运行正常 · AI大脑已就绪 · 实时联网搜索 · 今日已生成 8,432 张 · 内容仅供创作参考</span>
     </div>
   </div>
 </div>
 <div class="app-layout">
-<div class="case-sidebar-wrap" id="case-sidebar-wrap">
-  <button type="button" class="case-sidebar-rail lux-tap" id="case-sidebar-toggle" aria-expanded="false" aria-controls="case-sidebar" title="展开案例灵感库">
-    <span class="case-sidebar-rail-text">✨ 案例灵感库 · 点套用即生成</span>
+<div class="case-sidebar-wrap is-open" id="case-sidebar-wrap">
+  <button type="button" class="case-sidebar-rail lux-tap" id="case-sidebar-toggle" aria-expanded="true" aria-controls="case-sidebar" title="展开/收起案例灵感库">
+    <span class="case-sidebar-rail-text">📂 案例库</span>
   </button>
-  <aside class="case-sidebar" id="case-sidebar" aria-label="案例灵感库" aria-hidden="true">
+  <aside class="case-sidebar" id="case-sidebar" aria-label="案例灵感库" aria-hidden="false">
   <div class="case-sidebar-nebula" aria-hidden="true"></div>
   <div class="case-sidebar-inner">
     <div class="case-sidebar-head-row">
-      <div class="case-sidebar-head">✨ 案例灵感库 · 点套用即生成</div>
+      <div class="case-sidebar-head">📂 案例灵感库</div>
       <button type="button" class="case-sidebar-close lux-tap" id="case-sidebar-close" aria-label="收起案例库">×</button>
     </div>
     <div class="case-tabs" id="case-tabs" role="tablist"></div>
@@ -954,8 +1132,9 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
 <div class="shell">
   <div class="hero">
     <div class="brand-badge">🌐 灵创星球 · 图片提示词大师</div>
-    <h1>心有所想，<span>一键出图</span></h1>
+    <h1>心有所想，<span class="title-sweep">一键出图</span></h1>
     <p class="hero-sub">大白话描述你的想法 ➔ AI联网分析 ➔ 完整提示词直接生图</p>
+    <p class="hero-tool-hint">AI辅助创作工具 · 非广告代写服务</p>
     <p class="hero-feat">全品类覆盖<span>•</span>联网搜爆款<span>•</span>傻瓜式操作</p>
     <div id="system-notice-bar" class="system-notice-bar" aria-live="polite"></div>
   </div>
@@ -1308,48 +1487,48 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
   <aside class="ds-copy-panel" id="ds-copy-panel" aria-label="DeepSeek 爆款文案" aria-hidden="true">
     <div class="ds-copy-inner">
       <div class="ds-copy-head-row">
-        <h2 class="ds-copy-head">🔥 爆款文案 · DeepSeek</h2>
+        <h2 class="ds-copy-head">🔥 爆款文案</h2>
         <button type="button" class="ds-copy-close lux-tap" id="ds-copy-close" aria-label="收起文案区">×</button>
       </div>
+      <p class="ds-copy-subhint">AI辅助创作工具 · 非广告代写服务</p>
       <div class="ds-copy-field">
-        <label for="ds-category">品类</label>
+        <label for="ds-category">📂 品类</label>
         <select id="ds-category" aria-label="品类">
           <option value="知识科普">知识科普</option>
-          <option value="美妆护肤">美妆护肤</option>
-          <option value="美食探店">美食探店</option>
-          <option value="母婴育儿">母婴育儿</option>
-          <option value="家居家装">家居家装</option>
-          <option value="数码科技">数码科技</option>
-          <option value="职场成长">职场成长</option>
-          <option value="情感心理">情感心理</option>
-          <option value="健康养生">健康养生</option>
-          <option value="旅行出行">旅行出行</option>
-          <option value="健身运动">健身运动</option>
+          <option value="美食菜谱">美食菜谱</option>
+          <option value="护肤美妆">护肤美妆</option>
           <option value="穿搭时尚">穿搭时尚</option>
-          <option value="教育培训">教育培训</option>
-          <option value="金融理财">金融理财</option>
+          <option value="健身减脂">健身减脂</option>
+          <option value="财经理财">财经理财</option>
+          <option value="Citywalk">Citywalk</option>
+          <option value="职场副业">职场副业</option>
+          <option value="母婴育儿">母婴育儿</option>
+          <option value="萌宠">萌宠</option>
+          <option value="家居家装">家居家装</option>
+          <option value="情感生活">情感生活</option>
+          <option value="游戏数码">游戏数码</option>
         </select>
       </div>
       <div class="ds-copy-field">
-        <label for="ds-platform">平台</label>
+        <label for="ds-platform">📱 平台</label>
         <select id="ds-platform" aria-label="平台">
-          <option value="xiaohongshu">小红书</option>
-          <option value="douyin">抖音</option>
-          <option value="shipinhao">视频号</option>
+          <option value="xiaohongshu">🌸 小红书风格（种草图文）</option>
+          <option value="douyin">🎵 抖音风格（短视频口播）</option>
+          <option value="shipinhao">💬 视频号风格（熟人圈）</option>
         </select>
       </div>
       <div class="ds-copy-field">
-        <label for="ds-persona">人设语气</label>
+        <label for="ds-persona">🎭 人设（可选）</label>
         <select id="ds-persona" aria-label="人设">
-          <option value="qinqie">亲切闺蜜感</option>
-          <option value="zhuanye">专业理性</option>
-          <option value="dushe">毒舌犀利</option>
-          <option value="suren">素人接地气</option>
+          <option value="jiemei">亲切姐妹</option>
+          <option value="daren">专业达人</option>
+          <option value="dushe">毒舌测评</option>
+          <option value="suren">素人真实</option>
         </select>
       </div>
       <div class="ds-copy-field">
-        <label for="ds-copy-style">文案体裁</label>
-        <select id="ds-copy-style" aria-label="文案体裁">
+        <label for="ds-copy-style">文案类型</label>
+        <select id="ds-copy-style" aria-label="文案类型">
           <option value="ceping">测评体</option>
           <option value="ganhuo">干货体</option>
           <option value="gushi">故事体</option>
@@ -1359,36 +1538,45 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
         </select>
       </div>
       <div class="ds-copy-field">
-        <label for="ds-topic">主题</label>
-        <input type="text" id="ds-topic" maxlength="200" placeholder="输入本期笔记主题或关键词" autocomplete="off">
+        <label for="ds-topic">✍️ 主题</label>
+        <input type="text" id="ds-topic" maxlength="200" placeholder="本期笔记核心，如：保温杯密封测评" autocomplete="off">
+        <span class="ds-copy-hint">填写要写的主题、产品或观点；越具体，生成越贴题。</span>
       </div>
-      <div class="ds-copy-actions">
-        <button type="button" class="ds-gen-primary lux-tap" id="ds-gen-btn">一键生成（DeepSeek）</button>
-        <button type="button" class="lux-tap" id="ds-fill-main">填入主输入框</button>
-        <button type="button" class="lux-tap" id="ds-copy-pack">打包复制</button>
+      <div class="ds-copy-genwrap" id="ds-copy-genwrap">
+        <div class="ds-copy-scanline" aria-hidden="true"></div>
+        <div class="ds-copy-actions" style="margin-top:0;">
+          <button type="button" class="ds-gen-primary btn-ds-redgold lux-tap" id="ds-gen-btn">🚀 一键生成爆款文案</button>
+        </div>
       </div>
       <div class="ds-copy-out" id="ds-copy-out" style="display:none;">
         <div class="ds-copy-out-block">
-          <div class="ds-ol">【标题】</div>
-          <div class="ds-ot" id="ds-out-title"></div>
+          <div class="ds-ol">📌 标题（可改）</div>
+          <textarea class="ds-out-ta" id="ds-ta-title" rows="2" maxlength="120" placeholder="标题"></textarea>
           <button type="button" class="lux-tap" style="margin-top:6px;width:100%;padding:6px;font-size:11px;" id="ds-copy-title">复制标题</button>
         </div>
         <div class="ds-copy-out-block">
-          <div class="ds-ol">【正文】</div>
-          <div class="ds-ot" id="ds-out-body"></div>
+          <div class="ds-ol">📝 正文（含占位符）</div>
+          <textarea class="ds-out-ta" id="ds-ta-body" rows="10" placeholder="正文"></textarea>
           <button type="button" class="lux-tap" style="margin-top:6px;width:100%;padding:6px;font-size:11px;" id="ds-copy-body">复制正文</button>
         </div>
         <div class="ds-copy-out-block">
-          <div class="ds-ol">【话题标签】</div>
-          <div class="ds-ot" id="ds-out-tags"></div>
+          <div class="ds-ol"># 话题标签</div>
+          <textarea class="ds-out-ta ds-tags" id="ds-ta-tags" rows="3" placeholder="#话题1 #话题2 …"></textarea>
           <button type="button" class="lux-tap" style="margin-top:6px;width:100%;padding:6px;font-size:11px;" id="ds-copy-tags">复制话题</button>
         </div>
+        <div class="ds-orange-tip" id="ds-orange-tip">
+          ⚠️ AI生成内容框架，灰色/占位部分请填入真实体验；商业推广发布时须标注「广告」或「品牌合作」。
+        </div>
+        <div class="ds-copy-actions" style="margin-top:12px;">
+          <button type="button" class="lux-tap btn-ds-redgold" id="ds-pic-go">🖼️ 配套出图</button>
+          <button type="button" class="lux-tap" id="ds-copy-all">📦 全部复制</button>
+        </div>
       </div>
-      <p class="ds-copy-disclaimer" id="ds-copy-disclaimer">生成内容为创作框架，发布前请自行修改事实与合规表述；商业推广须依法标注广告。不涉及扣子主链路。</p>
+      <p class="ds-copy-disclaimer" id="ds-copy-disclaimer">文案由 DeepSeek 生成；与主生图扣子链路独立。生成内容仅供创作参考。</p>
     </div>
   </aside>
-  <button type="button" class="ds-copy-rail lux-tap" id="ds-copy-toggle" aria-expanded="false" aria-controls="ds-copy-panel" title="展开爆款文案区">
-    <span class="ds-copy-rail-text">🔥 爆款文案 · DeepSeek</span>
+  <button type="button" class="ds-copy-rail lux-tap" id="ds-copy-toggle" aria-expanded="false" aria-controls="ds-copy-panel" title="展开爆款文案">
+    <span class="ds-copy-rail-text">🔥<br>文案</span>
   </button>
 </div>
 </div>
@@ -1804,12 +1992,12 @@ var _caseApplyPreset=null;
 var _genParticleRaf=null;
 var CASE_TABS=[
   {id:'edu',icon:'📚',label:'教学图'},
-  {id:'ecom',icon:'🛍️',label:'电商'},
-  {id:'3d',icon:'🌟',label:'3D'},
-  {id:'card',icon:'🔥',label:'知识卡'}
+  {id:'ecom',icon:'🛍️',label:'电商海报'},
+  {id:'3d',icon:'🌟',label:'3D悬浮图'},
+  {id:'card',icon:'🔥',label:'知识卡片'}
 ];
 var CASE_LIBRARY=[
-  {id:'edu_01',category:'edu',title:'数学口诀图',img:'',defaultTheme:'一年级加减法口诀',style:'卡通彩色插画',size:'9:16竖版',tag:'教育类',count:2341},
+  {id:'edu_01',category:'edu',title:'数学口诀图',img:CASE_IMG.suzhou,defaultTheme:'一年级加减法口诀',style:'卡通彩色插画',size:'9:16竖版',tag:'教育类',count:2341},
   {id:'edu_02',category:'edu',title:'语文古诗图',img:CASE_IMG.osmanthus,defaultTheme:'静夜思全文解析',style:'国风水墨插画',size:'9:16竖版',tag:'教育类',count:1892},
   {id:'edu_03',category:'edu',title:'英语单词卡',img:'',defaultTheme:'常见动物英语单词',style:'萌系卡通',size:'1:1方图',tag:'教育类',count:1567},
   {id:'edu_04',category:'edu',title:'科学探索图',img:CASE_IMG.lotus,defaultTheme:'植物光合作用原理',style:'科普信息图',size:'9:16竖版',tag:'教育类',count:2103},
@@ -1819,7 +2007,7 @@ var CASE_LIBRARY=[
   {id:'ecom_02',category:'ecom',title:'产品主图',img:'',defaultTheme:'玻尿酸精华液产品图',style:'高端白底风',size:'1:1方图',tag:'电商类',count:2788},
   {id:'ecom_03',category:'ecom',title:'节日活动图',img:'',defaultTheme:'618大促活动海报',style:'节日喜庆风',size:'16:9横版',tag:'电商类',count:1956},
   {id:'ecom_04',category:'ecom',title:'种草笔记封面',img:'',defaultTheme:'平价好物推荐清单',style:'小红书清新风',size:'3:4竖版',tag:'电商类',count:2644},
-  {id:'ecom_05',category:'ecom',title:'带货短视频封面',img:'',defaultTheme:'今日必买好物分享',style:'直播带货风',size:'9:16竖版',tag:'电商类',count:1833},
+  {id:'ecom_05',category:'ecom',title:'带货视频封面',img:'',defaultTheme:'今日必买好物',style:'直播带货风',size:'9:16竖版',tag:'电商类',count:1833},
   {id:'ecom_06',category:'ecom',title:'品牌宣传图',img:'',defaultTheme:'国货护肤品牌故事',style:'国潮设计风',size:'16:9横版',tag:'电商类',count:1204},
   {id:'3d_01',category:'3d',title:'3D文字海报',img:'',defaultTheme:'灵创星球品牌3D字',style:'金属质感3D',size:'9:16竖版',tag:'3D类',count:1560},
   {id:'3d_02',category:'3d',title:'科技感场景',img:'',defaultTheme:'AI数字宇宙空间站',style:'赛博朋克',size:'16:9横版',tag:'3D类',count:1899},
@@ -1831,7 +2019,7 @@ var CASE_LIBRARY=[
   {id:'card_02',category:'card',title:'对比卡片',img:'',defaultTheme:'高效率vs低效率的区别',style:'撞色设计风',size:'1:1方图',tag:'知识类',count:1789},
   {id:'card_03',category:'card',title:'步骤流程图',img:'',defaultTheme:'5步学会时间管理',style:'信息图表风',size:'9:16竖版',tag:'知识类',count:2045},
   {id:'card_04',category:'card',title:'金句海报',img:'',defaultTheme:'每天进步1%的力量',style:'极简文字风',size:'3:4竖版',tag:'知识类',count:1433},
-  {id:'card_05',category:'card',title:'数据可视化',img:CASE_IMG.huangshan,defaultTheme:'中国新媒体用户画像',style:'科技数据风',size:'16:9横版',tag:'知识类',count:1677},
+  {id:'card_05',category:'card',title:'数据可视化',img:CASE_IMG.huangshan,defaultTheme:'新媒体用户画像',style:'科技数据风',size:'16:9横版',tag:'知识类',count:1677},
   {id:'card_06',category:'card',title:'避坑指南',img:'',defaultTheme:'新手做自媒体的5个坑',style:'警示红色风',size:'9:16竖版',tag:'知识类',count:1988}
 ];
 var VISUAL_STYLES=[
@@ -2041,6 +2229,25 @@ function switchCaseTab(tabId){
   tabs.forEach(function(t){t.classList.toggle('is-active',t.getAttribute('data-tab')===tabId);});
   renderCaseGrid(tabId);
 }
+function syncLcMobileBackdrop(){
+  var bd=document.getElementById('lc-drawer-backdrop');
+  if(!bd) return;
+  var mw=typeof window.matchMedia==='function'&&window.matchMedia('(max-width:768px)').matches;
+  var c=document.getElementById('case-sidebar-wrap');
+  var d=document.getElementById('ds-copy-wrap');
+  var open=(c&&c.classList.contains('is-open'))||(d&&d.classList.contains('is-open'));
+  if(mw&&open){
+    bd.classList.add('is-open');
+    document.body.style.overflow='hidden';
+  }else{
+    bd.classList.remove('is-open');
+    document.body.style.overflow='';
+  }
+  var fc=document.getElementById('lc-m-fab-case');
+  var fcp=document.getElementById('lc-m-fab-copy');
+  if(fc) fc.setAttribute('aria-expanded',c&&c.classList.contains('is-open')?'true':'false');
+  if(fcp) fcp.setAttribute('aria-expanded',d&&d.classList.contains('is-open')?'true':'false');
+}
 function setCaseSidebarOpen(open){
   var wrap=document.getElementById('case-sidebar-wrap');
   var btn=document.getElementById('case-sidebar-toggle');
@@ -2051,14 +2258,15 @@ function setCaseSidebarOpen(open){
     btn.setAttribute('aria-expanded','true');
     aside.setAttribute('aria-hidden','false');
     btn.classList.add('is-active');
-    btn.title='收起案例灵感库';
+    btn.title='收起案例库';
   }else{
     wrap.classList.remove('is-open');
     btn.setAttribute('aria-expanded','false');
     aside.setAttribute('aria-hidden','true');
     btn.classList.remove('is-active');
-    btn.title='展开案例灵感库';
+    btn.title='展开案例库';
   }
+  syncLcMobileBackdrop();
 }
 function parseDsCopyAnswer(raw){
   var text=String(raw||'');
@@ -2082,26 +2290,31 @@ function setDsCopyOpen(open){
     btn.setAttribute('aria-expanded','true');
     pan.setAttribute('aria-hidden','false');
     btn.classList.add('is-active');
-    btn.title='收起爆款文案区';
+    btn.title='收起文案';
   }else{
     wrap.classList.remove('is-open');
     btn.setAttribute('aria-expanded','false');
     pan.setAttribute('aria-hidden','true');
     btn.classList.remove('is-active');
-    btn.title='展开爆款文案区';
+    btn.title='展开文案';
   }
+  syncLcMobileBackdrop();
 }
 function setupDsCopyPanel(){
   var wrap=document.getElementById('ds-copy-wrap');
   var btn=document.getElementById('ds-copy-toggle');
   var close=document.getElementById('ds-copy-close');
   var genBtn=document.getElementById('ds-gen-btn');
+  var genWrap=document.getElementById('ds-copy-genwrap');
   if(!wrap||!btn||wrap.dataset.dsCopyBound==='1') return;
   wrap.dataset.dsCopyBound='1';
   btn.addEventListener('click',function(){setDsCopyOpen(!wrap.classList.contains('is-open'));});
   if(close) close.addEventListener('click',function(){setDsCopyOpen(false);});
   document.addEventListener('keydown',function(ev){
-    if(ev.key==='Escape'&&wrap.classList.contains('is-open')) setDsCopyOpen(false);
+    if(ev.key!=='Escape') return;
+    if(wrap.classList.contains('is-open')) setDsCopyOpen(false);
+    var cw=document.getElementById('case-sidebar-wrap');
+    if(cw&&cw.classList.contains('is-open')) setCaseSidebarOpen(false);
   });
   function clipText(s,useToast){
     if(!s||!String(s).trim()){alert('内容为空，请先生成！');return;}
@@ -2110,47 +2323,70 @@ function setupDsCopyPanel(){
     }).catch(function(){alert('复制失败，请手动选中文本复制');});
   }
   function packDsCopyText(){
-    var t=document.getElementById('ds-out-title');
-    var b=document.getElementById('ds-out-body');
-    var tg=document.getElementById('ds-out-tags');
+    var t=document.getElementById('ds-ta-title');
+    var b=document.getElementById('ds-ta-body');
+    var tg=document.getElementById('ds-ta-tags');
     var parts=[];
-    if(t&&t.textContent.trim()) parts.push('【标题】\n'+t.textContent.trim());
-    if(b&&b.textContent.trim()) parts.push('【正文】\n'+b.textContent.trim());
-    if(tg&&tg.textContent.trim()) parts.push('【话题标签】\n'+tg.textContent.trim());
+    if(t&&String(t.value||'').trim()) parts.push('【标题】\n'+String(t.value).trim());
+    if(b&&String(b.value||'').trim()) parts.push('【正文】\n'+String(b.value).trim());
+    if(tg&&String(tg.value||'').trim()) parts.push('【话题标签】\n'+String(tg.value).trim());
     return parts.join('\n\n');
   }
-  var fillMain=document.getElementById('ds-fill-main');
-  if(fillMain) fillMain.addEventListener('click',function(){
-    var s=packDsCopyText();
-    if(!s.trim()){alert('请先生成文案');return;}
+  function buildPicPromptFromDs(){
+    var pack=packDsCopyText();
+    var topic=(document.getElementById('ds-topic')||{}).value||'';
+    var cat=(document.getElementById('ds-category')||{}).value||'';
+    return (
+      '请根据以下爆款文案框架生成一张知识图文笔记配图（竖版优先），风格高级、信息层次清晰：\n\n'+
+      (pack.trim()||('主题：'+String(topic).trim()))+
+      '\n\n品类参考：'+String(cat).trim()
+    );
+  }
+  var picGo=document.getElementById('ds-pic-go');
+  if(picGo) picGo.addEventListener('click',function(){
+    var s=buildPicPromptFromDs();
+    if(!s.trim()){alert('请先生成或填写文案');return;}
     var ta=document.getElementById('main-textarea');
-    if(ta) ta.value=s.trim();
+    if(ta){
+      ta.value=s.trim();
+      ta.classList.add('ds-pic-flash');
+      setTimeout(function(){try{ta.classList.remove('ds-pic-flash');}catch(e){}},1000);
+    }
     setDsCopyOpen(false);
-    try{ta.focus();}catch(e){}
+    setCaseSidebarOpen(false);
+    try{if(typeof runEngine==='function') runEngine();}catch(e2){alert('已填入主题，请点击主区域「启动大脑」生成');}
   });
-  var cp=document.getElementById('ds-copy-pack');
-  if(cp) cp.addEventListener('click',function(){clipText(packDsCopyText());});
+  var cpAll=document.getElementById('ds-copy-all');
+  if(cpAll) cpAll.addEventListener('click',function(){
+    var pack=packDsCopyText();
+    var op=document.getElementById('out-prompt');
+    var extra=op&&op.textContent&&op.textContent.trim() ? '\n\n【配图提示词】\n'+op.textContent.trim() : '';
+    clipText((pack+extra).trim());
+  });
   var cpt=document.getElementById('ds-copy-title');
-  if(cpt) cpt.addEventListener('click',function(){var el=document.getElementById('ds-out-title');clipText(el&&el.textContent);});
+  if(cpt) cpt.addEventListener('click',function(){var el=document.getElementById('ds-ta-title');clipText(el&&el.value);});
   var cpb=document.getElementById('ds-copy-body');
-  if(cpb) cpb.addEventListener('click',function(){var el=document.getElementById('ds-out-body');clipText(el&&el.textContent);});
+  if(cpb) cpb.addEventListener('click',function(){var el=document.getElementById('ds-ta-body');clipText(el&&el.value);});
   var cptg=document.getElementById('ds-copy-tags');
-  if(cptg) cptg.addEventListener('click',function(){var el=document.getElementById('ds-out-tags');clipText(el&&el.textContent);});
+  if(cptg) cptg.addEventListener('click',function(){var el=document.getElementById('ds-ta-tags');clipText(el&&el.value);});
   if(genBtn) genBtn.addEventListener('click',function(){
     var topicEl=document.getElementById('ds-topic');
     var topic=topicEl?String(topicEl.value||'').trim():'';
     if(!topic){alert('请填写主题');return;}
     var body={
-      mode:'deepseek-copy',
+      mode:'deepseek',
+      prompt:topic,
       ds_topic:topic,
+      ds_seed:String(Date.now())+'_'+Math.random().toString(36).slice(2,9),
       ds_platform:(document.getElementById('ds-platform')||{}).value||'xiaohongshu',
       ds_category:(document.getElementById('ds-category')||{}).value||'知识科普',
-      ds_persona:(document.getElementById('ds-persona')||{}).value||'qinqie',
+      ds_persona:(document.getElementById('ds-persona')||{}).value||'jiemei',
       ds_copy_style:(document.getElementById('ds-copy-style')||{}).value||'ganhuo'
     };
     genBtn.disabled=true;
     var old=genBtn.textContent;
-    genBtn.textContent='生成中…';
+    genBtn.textContent='⏳ AI生成中，请稍候…';
+    if(genWrap) genWrap.classList.add('is-busy');
     fetch(API_BASE+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
       .then(parseApiResponse)
       .then(function(data){
@@ -2159,17 +2395,21 @@ function setupDsCopyPanel(){
         var ans=String(data.answer||'').trim();
         if(!ans) throw new Error('返回内容为空');
         var p=parseDsCopyAnswer(ans);
-        var ot=document.getElementById('ds-out-title');
-        var ob=document.getElementById('ds-out-body');
-        var og=document.getElementById('ds-out-tags');
+        var tt=document.getElementById('ds-ta-title');
+        var tb=document.getElementById('ds-ta-body');
+        var tg=document.getElementById('ds-ta-tags');
         var ou=document.getElementById('ds-copy-out');
-        if(ot) ot.textContent=p.title||'';
-        if(ob) ob.textContent=p.body||p.raw||'';
-        if(og) og.textContent=p.tags||'';
+        if(tt) tt.value=p.title||'';
+        if(tb) tb.value=p.body||p.raw||'';
+        if(tg) tg.value=p.tags||'';
         if(ou) ou.style.display='block';
       })
       .catch(function(err){alert(err.message||String(err));})
-      .finally(function(){genBtn.disabled=false;genBtn.textContent=old;});
+      .finally(function(){
+        genBtn.disabled=false;
+        genBtn.textContent=old;
+        if(genWrap) genWrap.classList.remove('is-busy');
+      });
   });
 }
 function setupCaseSidebarToggle(){
@@ -3579,6 +3819,7 @@ function bootApp(){
   try{initFreeTrialQuota(_systemConfigCache&&_systemConfigCache.business_funnel);}catch(e){}
   try{initCaseSidebar();setupCaseSidebarToggle();}catch(e){}
   try{setupDsCopyPanel();}catch(e){}
+  try{setupLcMobileChrome();}catch(e){}
   try{initGallery();}catch(e){}
   try{initKeywords();}catch(e){}
   try{initStylePicker();}catch(e){}
@@ -3590,7 +3831,75 @@ function bootApp(){
   try{updateFreeTrialHint();}catch(e){}
   try{initLegalNotices();}catch(e){}
 }
+var LC_LS_INTRO_DONE='lingchuang_intro_done';
+var _lcTermsWired=false;
+var _lcIntroTimer=null;
+function wireLcTermsOnce(){
+  if(_lcTermsWired) return;
+  _lcTermsWired=true;
+  var scrollEl=document.getElementById('lc-terms-scroll');
+  var chk=document.getElementById('lc-terms-check');
+  var btn=document.getElementById('lc-terms-btn');
+  if(!scrollEl||!chk||!btn) return;
+  function syncChk(){
+    var st=scrollEl.scrollTop+scrollEl.clientHeight>=scrollEl.scrollHeight-6;
+    chk.disabled=!st;
+    if(!st){btn.disabled=true;btn.classList.remove('is-ready');chk.checked=false;}
+  }
+  scrollEl.addEventListener('scroll',syncChk);
+  chk.addEventListener('change',function(){
+    btn.disabled=!chk.checked;
+    if(chk.checked) btn.classList.add('is-ready'); else btn.classList.remove('is-ready');
+  });
+  btn.addEventListener('click',function(){if(btn.disabled)return;try{localStorage.setItem(LC_LS_INTRO_DONE,'1');}catch(e){}
+    var to=document.getElementById('lc-terms-overlay');
+    if(to){to.classList.remove('is-visible');to.setAttribute('aria-hidden','true');}
+  });
+  syncChk();
+}
+function hideIntroShowTerms(){
+  if(_lcIntroTimer){clearTimeout(_lcIntroTimer);_lcIntroTimer=null;}
+  var io=document.getElementById('lc-intro-overlay');
+  if(io){io.classList.remove('is-visible');io.setAttribute('aria-hidden','true');}
+  var to=document.getElementById('lc-terms-overlay');
+  if(to){to.classList.add('is-visible');to.setAttribute('aria-hidden','false');}
+  wireLcTermsOnce();
+}
+function initLcV4Boot(){
+  try{
+    if(localStorage.getItem(LC_LS_INTRO_DONE)==='1') return;
+    var io=document.getElementById('lc-intro-overlay');
+    if(!io) return;
+    io.classList.add('is-visible');
+    io.setAttribute('aria-hidden','false');
+    var sub=document.getElementById('lc-intro-sub-txt');
+    var cur=document.getElementById('lc-intro-cursor');
+    var full='您身边的图片提示词专家';
+    if(sub) sub.textContent='';
+    if(cur) cur.style.display='inline-block';
+    var i=0;
+    function tickType(){
+      if(!sub) return;
+      if(i<=full.length){sub.textContent=full.slice(0,i);i++;setTimeout(tickType,i<3?70:48);}
+    }
+    setTimeout(tickType,520);
+    var sk=document.getElementById('lc-intro-skip');
+    if(sk) sk.onclick=function(){hideIntroShowTerms();};
+    _lcIntroTimer=setTimeout(hideIntroShowTerms,2500);
+  }catch(e){}
+}
+function setupLcMobileChrome(){
+  var bd=document.getElementById('lc-drawer-backdrop');
+  if(bd&&!bd.dataset.bound){bd.dataset.bound='1';bd.addEventListener('click',function(){setCaseSidebarOpen(false);setDsCopyOpen(false);});}
+  var fc=document.getElementById('lc-m-fab-case');
+  if(fc&&!fc.dataset.bound){fc.dataset.bound='1';fc.addEventListener('click',function(){var w=document.getElementById('case-sidebar-wrap');if(w) setCaseSidebarOpen(!w.classList.contains('is-open'));});}
+  var fcp=document.getElementById('lc-m-fab-copy');
+  if(fcp&&!fcp.dataset.bound){fcp.dataset.bound='1';fcp.addEventListener('click',function(){var w=document.getElementById('ds-copy-wrap');if(w) setDsCopyOpen(!w.classList.contains('is-open'));});}
+  if(!window._lcResizeBound){window._lcResizeBound=1;window.addEventListener('resize',function(){syncLcMobileBackdrop();});}
+  syncLcMobileBackdrop();
+}
 function boot(){
+  initLcV4Boot();
   bootHeadlessConfig();
   bootApp();
 }
