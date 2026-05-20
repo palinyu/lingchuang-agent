@@ -434,10 +434,22 @@ function buildStyleLibSystemBlock(opts) {
   const rootDir = o.rootDir || path.join(__dirname);
   const lib = ensureStyleLibFresh(rootDir);
   const intent = o.intent || 'analyze';
+  const hasFile = !!o.hasFile;
   const topic = o.topic || o.coreTopic || '';
   const style = o.style || '';
   const technique = o.technique || '';
   const extracted = lib.extracted || extractKnowledge('');
+
+  if (intent === 'analyze' && hasFile) {
+    return (
+      '【STEP1·看图分析·精简知识库注入】\n' +
+      '禁用「电商单图海报模式」第④步：禁止输出「已识别你的产品+三方案+询问平台」。\n' +
+      '必须：先看图+读文字定 1.品类判定，再在该品类下选 5.本次随机风格（全品类，非仅餐饮）。格式：✅内容识别 → 1.品类判定 → … → 6.推荐理由。\n' +
+      '匹配手法须写：' +
+      (String(technique || '').trim() || '手法二十二B方案（视觉优先菜谱卡）') +
+      '。'
+    );
+  }
 
   const techniqueHits = pickBestSnippet(extracted.techniques || [], [technique, topic, style], 3);
   const patch32 = extractTechniquePatch32(lib.raw || '');

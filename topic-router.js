@@ -3,6 +3,13 @@
  */
 
 const { ensureStyleLibFresh, pickBestSnippet } = require('./style-lib-loader.js');
+const {
+  classifyMdCategory,
+  getUserTypeForCategory,
+  pickMdStyle,
+  detectSeason,
+  getNetworkFallbackBlock,
+} = require('./system-logic-data.js');
 
 /** 路由表：关键词命中 → profile + 手法 + 品类模板锚点 */
 const ROUTE_RULES = [
@@ -285,6 +292,20 @@ function detectSpecialOverrides(blob, hasFileHint) {
       return r.profile === 'ecom_dual';
     });
   }
+  if (
+    hasFileHint &&
+    /海报|详情|诱人|食欲|餐饮|美食|火锅|牛蛙|美蛙|蛙|菜品|128|元\/份|元\/斤/.test(blob)
+  ) {
+    const recipe = ROUTE_RULES.find(function (r) {
+      return r.profile === 'recipe';
+    });
+    if (recipe) {
+      return Object.assign({}, recipe, {
+        technique: '手法二十二B方案（视觉优先菜谱卡）',
+        humanLabel: '餐饮海报·上传图识别（对齐扣子 STEP1）',
+      });
+    }
+  }
   if (hasFileHint && /海报|详情|主图|产品|推广|二维码|带货/.test(blob)) {
     return ROUTE_RULES.find(function (r) {
       return r.profile === 'ecom_image';
@@ -374,22 +395,35 @@ function routePlainLanguageTopic(topic, rawQuery, rootDir, options) {
   const blob = t + ' ' + q;
   const opts = options || {};
   const hasFileHint = !!opts.hasFile || /上传|附图|产品图|图a|图b/i.test(blob);
+  const imageCount = Math.max(0, parseInt(opts.imageCount, 10) || 0);
 
-  const override = detectSpecialOverrides(blob, hasFileHint);
+  const md = classifyMdCategory(blob, opts);
+
+  let override = detectSpecialOverrides(blob, hasFileHint);
+  if (imageCount >= 2) {
+    const dual = ROUTE_RULES.find(function (r) {
+      return r.profile === 'ecom_dual';
+    });
+    if (dual) override = dual;
+  }
   let best = override || null;
   let bestScore = override ? 99 : 0;
 
-  ROUTE_RULES.forEach(function (rule) {
-    const s = scoreRule(rule, blob);
-    if (s > bestScore) {
-      bestScore = s;
-      best = rule;
-    }
-  });
-
-  if (!best) {
-    best = ROUTE_RULES[ROUTE_RULES.length - 1];
-    bestScore = /知识|图|科普|学习|教育/.test(blob) ? 1 : 0;
+  if (!override) {
+    const profileTarget = md.profile === 'citywalk' ? 'city' : md.profile;
+    const found = ROUTE_RULES.find(function (r) {
+      return r.profile === profileTarget;
+    });
+    best = found
+      ? Object.assign({}, found, {
+          technique: md.technique,
+          humanLabel: md.categoryName,
+        })
+      : Object.assign({}, ROUTE_RULES[ROUTE_RULES.length - 1], {
+          technique: md.technique,
+          humanLabel: md.categoryName,
+        });
+    bestScore = md.isFallback ? 1 : 4;
   }
 
   const lib = ensureStyleLibFresh(rootDir || require('path').join(__dirname));
@@ -411,7 +445,16 @@ function routePlainLanguageTopic(topic, rawQuery, rootDir, options) {
 
   const extraSnippets = pickBestSnippet(lib.extracted?.categories || [], [t, q, best.technique], 1);
   const reshuffle = /换一套|换风格|重新随机|^2$|回复\s*2/.test(q);
-  const randomStyleName = pickRandomStyle(best.profile, t + '|' + q, reshuffle);
+  const season = detectSeason(blob);
+  const poolKey = override
+    ? best.profile
+    : md.templateKey || md.categoryId || best.profile;
+  const randomStyleName = pickMdStyle(
+    poolKey,
+    t + '|' + q,
+    opts.usedStyleNames || [],
+    !!(season || /3d|3D|浮雕/.test(blob))
+  );
 
   return {
     profile: best.profile,
@@ -425,6 +468,11 @@ function routePlainLanguageTopic(topic, rawQuery, rootDir, options) {
     styleLibLoaded: !!lib.ok,
     randomStyleName: randomStyleName,
     reshuffleStyle: reshuffle,
+    mdCategoryId: md.categoryId,
+    mdCategoryName: md.categoryName,
+    mdTemplateKey: override ? best.profile : md.templateKey,
+    userType: getUserTypeForCategory(md.categoryId),
+    networkFallbackBlock: getNetworkFallbackBlock(),
   };
 }
 
@@ -474,6 +522,11 @@ function usesFullCozePackage(profile) {
   );
 }
 
+function getStylePoolForProfile(profile) {
+  const pool = STYLE_POOLS[profile] || STYLE_POOLS.default;
+  return Array.isArray(pool) ? pool.slice() : [];
+}
+
 module.exports = {
   routePlainLanguageTopic,
   isKnowledgeProfile,
@@ -482,4 +535,5 @@ module.exports = {
   buildWebSearchFallbackBlock,
   KNOWLEDGE_PROFILES,
   pickRandomStyle,
+  getStylePoolForProfile,
 };

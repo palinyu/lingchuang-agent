@@ -1,7 +1,13 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/index.html" },
-    { "source": "/pet", "destination": "/lingchuang_agent_final.html" },
-    { "source": "/mofang", "destination": "/zhishi_mofang.html" }
+    { "source": "/", "destination": "/zhishi_mofang.html" }
+  ],
+  "headers": [
+    {
+      "source": "/zhishi_mofang.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    }
   ]
 }

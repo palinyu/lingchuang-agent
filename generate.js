@@ -13,14 +13,24 @@ const {
   routePlainLanguageTopic,
   validatePromptForTopic,
   buildPromptRetryBlockForTopic,
+  validateAnalyzeResponse,
+  buildAnalyzeRetryBlock,
 } = require(path.join(process.cwd(), 'prompt-engine.js'));
 
 const { fetchDeepseekCopywrite } = require(path.join(process.cwd(), 'deepseek-copy-util.js'));
 const { initStyleLib, getStyleLibStatus } = require(path.join(process.cwd(), 'style-lib-loader.js'));
+const { finalizeCozeResponse } = require(path.join(process.cwd(), 'coze-response-pipeline.js'));
 
 const ROOT = process.cwd();
 const PROMPT_QUALITY_INTENTS = ['prompt', 'custom'];
 const MAX_MASTERS_PROMPT_RETRIES = 2;
+const MAX_ANALYZE_RETRIES = 2;
+
+function maxCozeAttempts(intent) {
+  if (intent === 'analyze') return MAX_ANALYZE_RETRIES;
+  if (PROMPT_QUALITY_INTENTS.indexOf(intent) !== -1) return MAX_MASTERS_PROMPT_RETRIES;
+  return 0;
+}
 initStyleLib(ROOT);
 
 function buildUserMessagePayload(text, fileIds) {
@@ -44,7 +54,8 @@ function resolveDocumentContent(body) {
     (body && body.documentContent) || (body && body.file_content) || ''
   ).trim();
   if (!raw) return '';
-  if (/^\[(已上传|PDF文件)/.test(raw)) return '';
+  if (/^\[(已上传|PDF文件已上传|解析失败)/.test(raw)) return '';
+  if (raw.length < 12) return '';
   return raw.slice(0, 20000);
 }
 
@@ -69,7 +80,7 @@ function buildFileAttachmentNotice(body) {
   return (
     '【已挂载上传文件】共 ' +
     ids.length +
-    ' 个。请务必识别文件中的真实画面与文字，禁止忽略附件凭空编造。'
+    ' 个。请务必先观看图片再分析：写清食物/产品物种（牛蛙≠甲鱼≠鱼）、场景、色泽、卖点；禁止忽略附件凭空编造或套用「已识别你的产品+三方案」缩写。'
   );
 }
 
@@ -273,11 +284,15 @@ export default async function handler(req, res) {
       ? file_ids.map(String).filter(Boolean)
       : [];
     initStyleLib(ROOT);
+    const lcImageCount = Math.max(
+      0,
+      parseInt(body.lc_image_count, 10) || 0
+    );
     const route = routePlainLanguageTopic(
       coreTopic,
       rawQuery || user_notes || '',
       ROOT,
-      { hasFile: cozeFileIds.length > 0 }
+      { hasFile: cozeFileIds.length > 0, imageCount: lcImageCount }
     );
 
     let assembledMessage = buildCozeMessage({
@@ -290,17 +305,14 @@ export default async function handler(req, res) {
       rawQuery: rawQuery || coreTopic,
       userNotes: user_notes || '',
       route: route,
+      hasFile: cozeFileIds.length > 0,
+      fileIds: cozeFileIds,
+      imageCount: lcImageCount,
     });
 
-    if (intent === 'analyze') {
-      assembledMessage = assembledMessage
-        .replace(/\n\n【全息汇总深度要求[\s\S]*?禁止敷衍。\n\n/g, '\n\n')
-        .replace(
-          '6. 内容要点\n7. 联想记忆点\n8. 场景延伸\n9. 电商应用潜力\n10. 全息深度洞察\n\n',
-          '6. 内容要点\n7. 联想记忆点\n\n'
-        );
+    if (intent === 'analyze' && cozeFileIds.length === 0) {
       assembledMessage +=
-        '\n【篇幅铁律】分析精简干练，每条不超过25字；内容要点最多6条；必须保留「5. 本次随机风格」行。';
+        '\n【篇幅铁律】结构化分析须含品类/手法/尺寸/风格；禁止只输出菜单而无正文。';
     }
     if (PROMPT_QUALITY_INTENTS.indexOf(intent) !== -1) {
       assembledMessage +=
@@ -341,7 +353,8 @@ export default async function handler(req, res) {
     let rawEvents = [];
     let lastValidation = { valid: true, reason: '' };
 
-    for (let attempt = 0; attempt <= MAX_MASTERS_PROMPT_RETRIES; attempt++) {
+    const rawQueryForValidate = rawQuery || user_notes || coreTopic;
+    for (let attempt = 0; attempt <= maxCozeAttempts(intent); attempt++) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 120000);
       const outgoing = {
@@ -433,8 +446,33 @@ export default async function handler(req, res) {
         });
       }
 
-      const purified = purifyAssistantText(assistantText, intent, coreTopic, route);
-      assistantText = purified || assistantText;
+      let purified = purifyAssistantText(assistantText, intent, coreTopic, route);
+      assistantText = finalizeCozeResponse(purified || assistantText, intent);
+      purified = assistantText;
+
+      if (intent === 'analyze') {
+        lastValidation = validateAnalyzeResponse(
+          assistantText,
+          rawQueryForValidate,
+          route,
+          cozeFileIds.length > 0
+        );
+        if (lastValidation.valid) break;
+        if (attempt < MAX_ANALYZE_RETRIES) {
+          console.warn(
+            '[分析自我检测] 第 ' +
+              (attempt + 1) +
+              ' 次未达标，自动重试：' +
+              lastValidation.reason
+          );
+          queryForCoze =
+            assembledMessage +
+            buildAnalyzeRetryBlock(lastValidation, cozeFileIds.length > 0);
+          continue;
+        }
+        console.warn('[分析自我检测] 仍不达标，返回最后一次结果：' + lastValidation.reason);
+        break;
+      }
 
       if (PROMPT_QUALITY_INTENTS.indexOf(intent) === -1) break;
 
@@ -493,10 +531,16 @@ export default async function handler(req, res) {
         recommended_technique: route.technique || '',
         random_style_name: route.randomStyleName || '',
         need_web_search: !!route.needWebSearch,
+        analyze_quality_ok: intent === 'analyze' ? !!lastValidation.valid : undefined,
+        analyze_quality_reason:
+          intent === 'analyze' && !lastValidation.valid ? lastValidation.reason : '',
         masters_quality_passed:
           PROMPT_QUALITY_INTENTS.indexOf(intent) === -1 || lastValidation.valid,
         style_lib_loaded: styleLibStatus.loaded,
         style_lib_path: styleLibStatus.path || undefined,
+        md_category_id: route.mdCategoryId || '',
+        md_category_name: route.mdCategoryName || '',
+        user_type: route.userType || '',
       },
       messages: [
         {

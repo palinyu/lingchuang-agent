@@ -849,6 +849,12 @@ html.lc-await-intro #lc-mobile-legal-bar{visibility:hidden!important;pointer-eve
 /* fix2: 大预览区 */
 #img-preview-area{display:none;position:relative;width:100%;border-radius:10px;overflow:hidden;margin-bottom:14px;background:#080910;border:1px solid var(--bd-gold);}
 #preview-img{width:100%;max-height:260px;object-fit:contain;display:block;}
+#preview-images-row{display:none;gap:10px;padding:10px;flex-wrap:wrap;}
+#preview-images-row.is-dual{display:flex;}
+.preview-slot{flex:1;min-width:140px;position:relative;border-radius:8px;overflow:hidden;border:1px solid rgba(243,175,66,0.25);background:#0c0d14;}
+.preview-slot .slot-label{position:absolute;top:6px;left:6px;z-index:2;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,0.75);color:var(--gold);}
+.preview-slot img{width:100%;max-height:200px;object-fit:contain;display:block;}
+.preview-slot .btn-rm-slot{position:absolute;top:6px;right:6px;z-index:2;background:rgba(0,0,0,0.7);border:none;color:#fff;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:12px;line-height:22px;}
 #preview-doc{padding:20px;display:flex;align-items:center;gap:12px;}
 .doc-icon{font-size:32px;}
 .doc-meta .doc-name{font-size:13px;color:var(--tx);font-weight:600;}
@@ -1383,6 +1389,10 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
   <div class="input-stage" id="input-stage">
     <div id="img-preview-area">
       <button class="btn-rm-preview" onclick="removeFile()">✕</button>
+      <div id="preview-images-row">
+        <div class="preview-slot" id="preview-slot-0" style="display:none;"><span class="slot-label">图B 产品</span><button type="button" class="btn-rm-slot" onclick="removeImageSlot(0)">✕</button><img id="preview-img-0" src="" alt="图B"></div>
+        <div class="preview-slot" id="preview-slot-1" style="display:none;"><span class="slot-label">图A 风格</span><button type="button" class="btn-rm-slot" onclick="removeImageSlot(1)">✕</button><img id="preview-img-1" src="" alt="图A"></div>
+      </div>
       <img id="preview-img" src="" style="display:none;">
       <div id="preview-doc" style="display:none;" class="doc-preview">
         <div class="doc-icon">📄</div>
@@ -1392,10 +1402,10 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
         </div>
       </div>
     </div>
-    <textarea id="main-textarea" placeholder="直接说你想做什么图，用大白话就行…&#10;&#10;📝 例：红烧肉的做法 / 苏州旅游攻略 / 光合作用 / 天蝎座性格分析&#10;🌿 加季节词触发浮雕风：秋天的故宫 / 冬天的西湖&#10;📄 上传图片做电商海报，上传文档自动提取知识点"></textarea>
+    <textarea id="main-textarea" placeholder="直接说你想做什么图，用大白话就行…&#10;&#10;📝 例：红烧肉的做法 / 苏州旅游攻略 / 光合作用&#10;🖼️ 电商可一次选2张图：第1张=产品(图B)，第2张=风格参考(图A)，可说换背景/出海报&#10;📄 上传 txt/docx/pdf 会自动提取文字发给 AI"></textarea>
     <div class="input-toolbar">
       <input type="file" id="file-input" style="display:none;" accept="image/*,.pdf,.doc,.docx,.txt" multiple onchange="handleFile(this)">
-      <button class="btn-attach" onclick="document.getElementById('file-input').click()">📎 上传参考图 / 文档 / 手写稿</button>
+      <button class="btn-attach" onclick="document.getElementById('file-input').click()">📎 上传图(最多2张) / 文档 / 手写稿</button>
     </div>
   </div>
   <div class="gen-launch-wrap" id="gen-launch-wrap">
@@ -2214,7 +2224,8 @@ function bootHeadlessConfig(){
 }
 var sessionUserId=null;
 var sessionContext={coreTopic:'',style:'',technique:'',size:'',userNotes:'',fromDsNotes:false,promptProfile:'standard',routeHumanLabel:'',randomStyleName:''};
-var uploadedFileIds=[],isFileAttached=false,cachedPrompt='',cachedPromptShort='',selectedBubbles=[],currentConversationId=null,currentChatId=null;
+var uploadedFileIds=[],uploadedImageSlots=[null,null],uploadedImageFileIds=[null,null],docUploadFileId=null,uploadedImageCount=0,isFileAttached=false,cachedPrompt='',cachedPromptShort='',selectedBubbles=[],currentConversationId=null,currentChatId=null;
+var docParsePromise=Promise.resolve(),docParseResolve=null,pendingUploadPromises=[];
 var promptReadyTopic='',copywriteGenToken=0;
 var aiRecSize='',aiRecStyle='',userCustomSize='',userCustomStyle='';
 var docTextContent='',attachedFileName='';
@@ -3041,15 +3052,99 @@ var debounceTimer=null;
 function setupBubbles(){var ta=document.getElementById('main-textarea');if(ta)ta.addEventListener('input',function(){clearTimeout(debounceTimer);debounceTimer=setTimeout(function(){matchBubbles(ta.value);},400);});}
 function matchBubbles(text){if(!document.getElementById('bubble-label'))return;if(!text||text.trim().length===0){hideBubbles();return;}var lower=text.toLowerCase();var matched=null;var _blen=BUBBLE_MAP.length;for(var i=0;i!==_blen;i++){if(BUBBLE_MAP[i].keys.some(function(k){return lower.indexOf(k)>=0;})){matched=BUBBLE_MAP[i];break;}}if(!matched){hideBubbles();return;}document.getElementById('bubble-label').style.display='flex';document.getElementById('bubble-hint').style.display='block';var wrap=document.getElementById('bubbles-wrap');wrap.innerHTML='';matched.bubbles.forEach(function(b){var chip=document.createElement('div');chip.className='bubble-chip'+(selectedBubbles.indexOf(b.t)>=0?' selected':'');chip.innerHTML=b.e+' '+b.t;chip.onclick=function(){if(selectedBubbles.indexOf(b.t)>=0){selectedBubbles=selectedBubbles.filter(function(t){return t!==b.t;});chip.classList.remove('selected');}else{selectedBubbles.push(b.t);chip.classList.add('selected');}};wrap.appendChild(chip);});}
 function hideBubbles(){if(!document.getElementById('bubble-label'))return;document.getElementById('bubble-label').style.display='none';document.getElementById('bubble-hint').style.display='none';document.getElementById('bubbles-wrap').innerHTML='';}
-function handleFile(input){var files=input.files;if(!files||files.length===0)return;isFileAttached=true;var file=files[0];attachedFileName=file.name;var pa=document.getElementById('img-preview-area');var pi=document.getElementById('preview-img');var pd=document.getElementById('preview-doc');var pdn=document.getElementById('preview-doc-name');var pds=document.getElementById('preview-doc-size');pa.style.display='block';if(file.type.indexOf('image/')===0){var r=new FileReader();r.onload=function(e){pi.src=e.target.result;pi.style.display='block';pd.style.display='none';};r.readAsDataURL(file);uploadFile(file);var ta=document.getElementById('main-textarea');if(ta&&!ta.value)showEcomHint();}else{pi.style.display='none';pd.style.display='flex';pdn.textContent=file.name;pds.textContent=(file.size/1024).toFixed(1)+' KB · 读取中…';var ext=file.name.split('.').pop().toLowerCase();
-if(ext==='txt'){var r2=new FileReader();r2.onload=function(e){docTextContent=e.target.result.substring(0,20000);pds.textContent=(file.size/1024).toFixed(1)+' KB · ✅ 已读取 '+docTextContent.length+' 字';};r2.readAsText(file,'utf-8');}
-else if(ext==='docx'&&typeof mammoth!=='undefined'){var r3=new FileReader();r3.onload=function(e){var ab=e.target.result;mammoth.extractRawText({arrayBuffer:ab}).then(function(result){docTextContent=result.value.substring(0,20000);pds.textContent=(file.size/1024).toFixed(1)+' KB · ✅ 已解析 '+docTextContent.length+' 字';}).catch(function(){uploadFile(file);docTextContent='[已上传Word文档：'+file.name+'，请识别核心内容]';pds.textContent=(file.size/1024).toFixed(1)+' KB · 已上传（解析失败）';});};r3.readAsArrayBuffer(file);}
-else if(ext==='pdf'){// pdf.js 动态加载解析
-pds.textContent=(file.size/1024).toFixed(1)+' KB · PDF解析中…';
-var r4=new FileReader();r4.onload=function(e){var ab=e.target.result;
-if(typeof pdfjsLib!=='undefined'){parsePDF(ab,file,pds);}
-else{var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';s.onload=function(){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';parsePDF(ab,file,pds);};document.head.appendChild(s);}};r4.readAsArrayBuffer(file);}
-else{uploadFile(file);docTextContent='[已上传文件：'+file.name+'，请识别并提取核心内容]';pds.textContent=(file.size/1024).toFixed(1)+' KB · 已上传，AI将识别内容';}}}
+function beginDocParseWait(){docParsePromise=new Promise(function(r){docParseResolve=r;});}
+function finishDocParseWait(){if(docParseResolve){docParseResolve();docParseResolve=null;}}
+function rebuildUploadedFileIds(){
+  var ids=[];
+  for(var i=0;i<2;i++){if(uploadedImageFileIds[i])ids.push(uploadedImageFileIds[i]);}
+  if(docUploadFileId)ids.push(docUploadFileId);
+  uploadedFileIds=ids;
+}
+function refreshImagePreviewUI(){
+  var row=document.getElementById('preview-images-row');var pi=document.getElementById('preview-img');var n=0;
+  for(var i=0;i<2;i++){if(uploadedImageSlots[i])n++;}
+  uploadedImageCount=n;
+  rebuildUploadedFileIds();
+  if(n>=2){if(row){row.className='is-dual';row.style.display='flex';}if(pi)pi.style.display='none';}
+  else if(n===1){if(row){row.className='';row.style.display='flex';}if(pi)pi.style.display='none';}
+  else{if(row)row.style.display='none';if(pi){pi.style.display='none';pi.src='';}}
+}
+function addImageToSlot(file,slotIdx){
+  if(slotIdx<0||slotIdx>1)return;
+  var slot=document.getElementById('preview-slot-'+slotIdx);var img=document.getElementById('preview-img-'+slotIdx);
+  if(!slot||!img)return;
+  var r=new FileReader();
+  r.onload=function(e){img.src=e.target.result;slot.style.display='block';refreshImagePreviewUI();};
+  r.readAsDataURL(file);
+  uploadedImageSlots[slotIdx]={name:file.name,type:file.type};
+  uploadedImageFileIds[slotIdx]=null;
+  pendingUploadPromises.push(uploadFile(file,slotIdx));
+  isFileAttached=true;
+  var pa=document.getElementById('img-preview-area');if(pa)pa.style.display='block';
+  var pd=document.getElementById('preview-doc');if(pd)pd.style.display='none';
+}
+function processImageFiles(imageFiles){
+  var imgs=imageFiles.filter(function(f){return f.type.indexOf('image/')===0;}).slice(0,2);
+  if(!imgs.length)return;
+  if(imgs.length>=2){uploadedImageSlots=[null,null];uploadedImageFileIds=[null,null];pendingUploadPromises=[];}
+  docTextContent='';attachedFileName='';docUploadFileId=null;
+  var pd=document.getElementById('preview-doc');if(pd)pd.style.display='none';
+  var startSlot=uploadedImageSlots[0]?1:0;
+  for(var j=0;j<imgs.length;j++){
+    var slot=startSlot+j;if(slot>1)break;
+    addImageToSlot(imgs[j],slot);
+  }
+  var ta=document.getElementById('main-textarea');
+  if(ta&&!ta.value)showEcomHint(uploadedImageCount>=2);
+}
+function processDocumentFile(file){
+  isFileAttached=true;attachedFileName=file.name;
+  beginDocParseWait();
+  var pa=document.getElementById('img-preview-area');var pi=document.getElementById('preview-img');var row=document.getElementById('preview-images-row');
+  var pd=document.getElementById('preview-doc');var pdn=document.getElementById('preview-doc-name');var pds=document.getElementById('preview-doc-size');
+  if(pa)pa.style.display='block';if(pi)pi.style.display='none';if(row)row.style.display='none';
+  if(pd)pd.style.display='flex';if(pdn)pdn.textContent=file.name;if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 读取中…';
+  var ext=file.name.split('.').pop().toLowerCase();
+  var upBackup=function(){pendingUploadPromises.push(uploadFile(file,'doc'));};
+  if(ext==='txt'){
+    var r2=new FileReader();
+    r2.onload=function(e){docTextContent=String(e.target.result||'').substring(0,20000);if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · ✅ 已读取 '+docTextContent.length+' 字';upBackup();finishDocParseWait();};
+    r2.onerror=function(){docTextContent='[解析失败：'+file.name+']';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 解析失败，已转交AI识别';upBackup();finishDocParseWait();};
+    r2.readAsText(file,'utf-8');
+  }else if(ext==='docx'&&typeof mammoth==='undefined'){
+    upBackup();docTextContent='[解析失败：'+file.name+']';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 已上传，AI将识别内容';finishDocParseWait();
+  }else if(ext==='docx'){
+    var r3=new FileReader();
+    r3.onload=function(e){var ab=e.target.result;mammoth.extractRawText({arrayBuffer:ab}).then(function(result){docTextContent=String(result.value||'').substring(0,20000);if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · ✅ 已解析 '+docTextContent.length+' 字';upBackup();finishDocParseWait();}).catch(function(){docTextContent='[解析失败：'+file.name+']';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 解析失败，已转交AI识别';upBackup();finishDocParseWait();});};
+    r3.onerror=function(){docTextContent='[解析失败：'+file.name+']';upBackup();finishDocParseWait();};
+    r3.readAsArrayBuffer(file);
+  }else if(ext==='pdf'){
+    if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · PDF解析中…';
+    upBackup();
+    var r4=new FileReader();
+    r4.onload=function(e){var ab=e.target.result;
+      if(typeof pdfjsLib!=='undefined'){parsePDF(ab,file,pds);}
+      else{var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';s.onload=function(){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';parsePDF(ab,file,pds);};document.head.appendChild(s);}};
+    r4.onerror=function(){docTextContent='[解析失败：'+file.name+']';finishDocParseWait();};
+    r4.readAsArrayBuffer(file);
+  }else{upBackup();docTextContent='[解析失败：'+file.name+']';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 已上传，AI将识别内容';finishDocParseWait();}
+}
+function handleFile(input){
+  var files=input.files;if(!files||!files.length)return;
+  var list=[];for(var i=0;i<files.length;i++)list.push(files[i]);
+  var images=list.filter(function(f){return f.type.indexOf('image/')===0;});
+  var docs=list.filter(function(f){return f.type.indexOf('image/')!==0;});
+  if(docs.length>0){processDocumentFile(docs[0]);if(images.length)processImageFiles(images);}
+  else if(images.length){processImageFiles(images);}
+  input.value='';
+}
+function removeImageSlot(idx){
+  uploadedImageSlots[idx]=null;uploadedImageFileIds[idx]=null;
+  var slot=document.getElementById('preview-slot-'+idx);var img=document.getElementById('preview-img-'+idx);
+  if(slot)slot.style.display='none';if(img)img.src='';
+  refreshImagePreviewUI();
+  if(uploadedImageCount===0&&!docTextContent&&!getDocumentContent())removeFile();
+}
 function parsePDF(ab,file,pds){
   pdfjsLib.getDocument({data:ab}).promise.then(function(pdf){
     var pages=[];var total=Math.min(pdf.numPages,8);
@@ -3064,12 +3159,20 @@ function parsePDF(ab,file,pds){
     docTextContent=text.substring(0,20000);
     var pdsEl=pds||document.getElementById('preview-doc-size');
     if(pdsEl) pdsEl.textContent=(docTextContent.length/1000).toFixed(1)+'K字 · ✅ PDF已解析 '+docTextContent.length+' 字';
+    finishDocParseWait();
   }).catch(function(){
-    docTextContent='[PDF文件已上传，请识别核心内容]';
+    docTextContent='[解析失败：'+(file&&file.name?file.name:'PDF')+']';
+    var pdsEl=pds||document.getElementById('preview-doc-size');
+    if(pdsEl) pdsEl.textContent='PDF解析失败 · 已转交AI识别附件';
+    finishDocParseWait();
   });
 }
 
-function showEcomHint(){var hint=document.getElementById('ecom-hint');if(hint){hint.style.display='flex';return;}hint=document.createElement('div');hint.id='ecom-hint';hint.style.cssText='margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;';var items=[['帮我做这个产品的海报','📢 做海报'],['帮我做这个产品的详情页','🛍️ 做详情页'],['参考这张图风格帮我做知识图文','🔄 复刻风格'],['识别这张图的内容帮我做知识图文提示词','📝 识别内容']];var html='<span style="font-size:11px;color:var(--tx3);">检测到图片：</span>';items.forEach(function(it){html+='<span onclick="fillEcom(\''+it[0]+'\')" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">'+it[1]+'</span>';});hint.innerHTML=html;document.getElementById('input-stage').appendChild(hint);}
+function showEcomHint(isDual){var hint=document.getElementById('ecom-hint');if(!hint){hint=document.createElement('div');hint.id='ecom-hint';hint.style.cssText='margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;';document.getElementById('input-stage').appendChild(hint);}
+var items=isDual?[['图B产品换到图A版式，背景改成浅米色，出一张电商海报','🖼️ 双图融合海报'],['把图B产品放到图A的构图里，换纯色背景','🎨 换背景+融合'],['参考图A风格给图B产品做详情页主图','🛍️ 详情主图']]:[['帮我做这个产品的海报','📢 做海报'],['帮我做这个产品的详情页','🛍️ 做详情页'],['参考这张图风格帮我做知识图文','🔄 复刻风格'],['识别这张图的内容帮我做知识图文提示词','📝 识别内容']];
+var html='<span style="font-size:11px;color:var(--tx3);">'+(isDual?'已上传2张：图B产品+图A风格，可点快捷话术：':'检测到图片：')+'</span>';
+items.forEach(function(it){html+='<span onclick="fillEcom(\''+it[0].replace(/'/g,"\\'")+'\')" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">'+it[1]+'</span>';});
+hint.innerHTML=html;hint.style.display='flex';}
 function fillEcom(text){var ta=document.getElementById('main-textarea');if(ta)ta.value=text;var hint=document.getElementById('ecom-hint');if(hint)hint.style.display='none';}
 function setApiLoading(on,statusText){
   if(on){_apiLoadingCount++;}else{_apiLoadingCount=Math.max(0,_apiLoadingCount-1);}
@@ -3088,7 +3191,7 @@ function getDocumentContent(){
   if(!docTextContent) return '';
   var t=String(docTextContent).trim();
   if(!t) return '';
-  if(t.indexOf('[已上传')===0||t.indexOf('[PDF文件')===0) return '';
+  if(/^\[(已上传|PDF文件|解析失败)/.test(t)) return '';
   return t;
 }
 function buildUserQuery(topic){
@@ -3334,26 +3437,54 @@ function fetchDeepseekCopywriteApi(){
   };
   return fetch(url,opts).then(parseApiResponse);
 }
-function uploadFile(file){
-  if(!file)return;
-  fileToBase64(file).then(function(b64){
+function uploadFile(file,slotKey){
+  if(!file)return Promise.resolve();
+  return fileToBase64(file).then(function(b64){
     return fetch(API_BASE+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze-upload',file_base64:b64,file_name:file.name,file_type:file.type||'application/octet-stream'})});
   }).then(parseApiResponse).then(function(data){
-    if(data&&data.code===0&&data.data&&data.data.id){uploadedFileIds.push(data.data.id);}
-    else{console.warn('文件上传未返回有效文件ID',data);}
+    if(data&&data.code===0&&data.data&&data.data.id){
+      var fid=String(data.data.id);
+      if(slotKey==='doc'){docUploadFileId=fid;}
+      else if(typeof slotKey==='number'){uploadedImageFileIds[slotKey]=fid;}
+      else{uploadedFileIds.push(fid);}
+      rebuildUploadedFileIds();
+      return fid;
+    }
+    console.warn('文件上传未返回有效文件ID',data);
   }).catch(function(e){console.log('上传跳过（文档文本将随 query 发送）',e.message||e);});
 }
-function removeFile(){document.getElementById('file-input').value='';document.getElementById('img-preview-area').style.display='none';document.getElementById('preview-img').src='';isFileAttached=false;uploadedFileIds=[];docTextContent='';attachedFileName='';var hint=document.getElementById('ecom-hint');if(hint)hint.style.display='none';}
+function removeFile(){
+  document.getElementById('file-input').value='';
+  document.getElementById('img-preview-area').style.display='none';
+  document.getElementById('preview-img').src='';
+  uploadedImageSlots=[null,null];uploadedImageFileIds=[null,null];docUploadFileId=null;uploadedImageCount=0;
+  for(var si=0;si<2;si++){var sl=document.getElementById('preview-slot-'+si);var im=document.getElementById('preview-img-'+si);if(sl)sl.style.display='none';if(im)im.src='';}
+  var row=document.getElementById('preview-images-row');if(row){row.style.display='none';row.className='';}
+  isFileAttached=false;uploadedFileIds=[];docTextContent='';attachedFileName='';
+  pendingUploadPromises=[];docParsePromise=Promise.resolve();docParseResolve=null;
+  var hint=document.getElementById('ecom-hint');if(hint)hint.style.display='none';
+}
 function waitForFileReady(maxMs){
-  return new Promise(function(resolve){
-    var start=Date.now();
-    (function tick(){
-      if(!isFileAttached){resolve();return;}
-      if(getDocumentContent()||uploadedFileIds.length>0){resolve();return;}
-      if(Date.now()-start>=maxMs){resolve();return;}
-      setTimeout(tick,250);
-    })();
-  });
+  maxMs=maxMs||12000;
+  var uploadsDone=function(){
+    if(!pendingUploadPromises.length)return Promise.resolve();
+    return Promise.all(pendingUploadPromises.map(function(p){return p.catch(function(){});}));
+  };
+  return Promise.race([
+    Promise.all([docParsePromise,uploadsDone()]).then(function(){
+      if(!isFileAttached)return;
+      if(getDocumentContent()||uploadedFileIds.length>0)return;
+      return new Promise(function(resolve){
+        var start=Date.now();
+        (function tick(){
+          if(getDocumentContent()||uploadedFileIds.length>0){resolve();return;}
+          if(Date.now()-start>=maxMs){resolve();return;}
+          setTimeout(tick,200);
+        })();
+      });
+    }),
+    new Promise(function(r){setTimeout(r,maxMs+500);})
+  ]);
 }
 function fileToBase64(file){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(e){res(e.target.result.split(',')[1]);};r.onerror=rej;r.readAsDataURL(file);});}
 function qLog(text,cls,delay){setTimeout(function(){var log=document.getElementById('quantum-log');if(!log)return;var line=document.createElement('div');line.className='q-line'+(cls?' '+cls:'');line.innerHTML=text;log.appendChild(line);log.scrollTop=log.scrollHeight;},delay);}
@@ -3853,6 +3984,7 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
     }
   }
   if(withFiles&&uploadedFileIds.length>0) body.file_ids=uploadedFileIds;
+  if(uploadedImageCount>0) body.lc_image_count=uploadedImageCount;
   setApiLoading(true,loadingLabel||'⚡ AI大脑运算中…');
   deductFreeTrialOnFetch();
   try{
@@ -3952,7 +4084,7 @@ function runEngine(){
   sessionUserId='lc_'+Date.now()+'_'+Math.random().toString(36).slice(2,9);
   updateStyleDisplays();
   runQuantumScan(topic||'上传文件');
-  waitForFileReady(10000).then(function(){
+  waitForFileReady(12000).then(function(){
   lockSessionFromInput(topic);
   var query=buildUserQuery(topic);
   qLog('📡 <span class="q-gold">CALLING</span> · 呼叫AI大脑…',null,0);
@@ -3984,6 +4116,15 @@ function runEngine(){
       unlockGenBtn();
       updateFreeTrialHint();
     });
+}
+function parseVisionRecognition(raw){
+  var text=String(raw||'');
+  var m=text.match(/✅\s*内容识别[：:\s]*\n([\s\S]*?)(?=\n\s*1[\.、\s]*品类|\n\s*品类判定|$)/i);
+  if(m&&m[1]){
+    var line=m[1].trim().split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean)[0];
+    if(line&&line.length>2) return line;
+  }
+  return parseFieldFromRaw(text,['内容识别','✅ 内容识别']);
 }
 function parseFieldFromRaw(raw, keys){
   var lines = raw.split('\n');
@@ -4069,18 +4210,15 @@ function showAnalysisCard(raw){
   if(!grid) return;
   grid.innerHTML='';
 
-  var visionRec=parseFieldFromRaw(raw,['内容识别','✅ 内容识别']);
+  var visionRec=parseVisionRecognition(raw);
   if(visionRec&&visionRec.length>2){
     var vBlock=document.createElement('div');
     vBlock.style.cssText='margin-bottom:12px;padding:12px 14px;border-radius:10px;background:rgba(34,197,94,0.08);border:1px solid rgba(74,222,128,0.35);';
-    vBlock.innerHTML='<div style="font-size:10px;color:rgba(134,239,172,0.9);margin-bottom:6px;">✅ 内容识别（基于上传图）</div><div style="font-size:14px;font-weight:700;color:#ecfdf5;line-height:1.55;">'+visionRec.substring(0,220)+'</div>';
+    vBlock.innerHTML='<div style="font-size:10px;color:rgba(134,239,172,0.9);margin-bottom:6px;">✅ 内容识别</div><div style="font-size:14px;font-weight:700;color:#ecfdf5;line-height:1.55;">'+visionRec.substring(0,280)+'</div>';
     grid.appendChild(vBlock);
-  }
-  if(/已识别你的产品/.test(raw)&&(!visionRec||visionRec.length<4)&&!/牛蛙|美蛙|蛙|火锅/.test(raw)){
-    var warn=document.createElement('div');
-    warn.style.cssText='margin-bottom:10px;padding:10px 12px;border-radius:8px;background:rgba(239,68,68,0.1);border:1px solid rgba(248,113,113,0.4);font-size:12px;line-height:1.5;color:#fecaca;';
-    warn.textContent='⚠️ 当前回复疑似未充分看图（仅为「已识别产品+三方案」模板）。请重新「启动大脑」；若主体是牛蛙/美蛙，请在输入框写明以免与甲鱼混淆。';
-    grid.insertBefore(warn,grid.firstChild);
+    if(isFileAttached&&uploadedFileIds.length>0){
+      sessionContext.coreTopic=visionRec.substring(0,96);
+    }
   }
 
   // 字段卡片区（横向排列）
@@ -4088,7 +4226,8 @@ function showAnalysisCard(raw){
     {keys:['品类判定'],icon:'📂',label:'目标品类'},
     {keys:['用户类型'],icon:'👤',label:'受众类型'},
     {keys:['匹配手法'],icon:'🎯',label:'出图手法'},
-    {keys:['推荐尺寸'],icon:'📐',label:'推荐尺寸'}
+    {keys:['推荐尺寸'],icon:'📐',label:'推荐尺寸'},
+    {keys:['本次随机风格','本次指定风格'],icon:'🎨',label:'推荐风格'}
   ];
   var cardRow=document.createElement('div');
   cardRow.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;';
@@ -4117,6 +4256,13 @@ function showAnalysisCard(raw){
     routeTip.style.cssText='margin-bottom:10px;padding:10px 12px;border-radius:10px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.25);font-size:12px;line-height:1.5;color:#bae6fd;';
     routeTip.innerHTML='💡 已听懂您的大白话，推荐画法：<strong style="color:#f3af42;">'+sessionContext.routeHumanLabel+'</strong>（无需您懂专业术语）';
     grid.appendChild(routeTip);
+  }
+  var reasonVal=parseFieldFromRaw(raw,['推荐理由']);
+  if(reasonVal&&reasonVal.length>2){
+    var reasonTip=document.createElement('div');
+    reasonTip.style.cssText='margin-bottom:10px;padding:10px 12px;border-radius:10px;background:rgba(243,175,66,0.06);border:1px solid rgba(243,175,66,0.22);font-size:12px;line-height:1.55;color:#e2e8f0;';
+    reasonTip.innerHTML='<span style="color:rgba(243,175,66,0.9);font-weight:700;">推荐理由 · </span>'+reasonVal.substring(0,160);
+    grid.appendChild(reasonTip);
   }
 
   var contentItems=parseContentList(raw);

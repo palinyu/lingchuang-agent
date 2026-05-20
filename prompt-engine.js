@@ -13,11 +13,21 @@ const {
   usesFullCozePackage,
   buildHumanFirstBlock,
   buildWebSearchFallbackBlock,
+  getStylePoolForProfile,
 } = require('./topic-router.js');
 const {
   parseCozeOutputPackage,
   validateCozePackage,
 } = require('./coze-output-parser.js');
+const {
+  getStructureTemplate,
+  DENSITY_RULES_CH5,
+  getNetworkFallbackBlock,
+} = require('./system-logic-data.js');
+const { JIMENG_CHAR_LIMIT, JIMENG_TAIL_LITE } = require('./prompt-compress.js');
+
+/** 《系统逻辑完整版》严格模式：默认开启，仅后端 Prompt 组装 */
+const STRICT_MD_MODE = process.env.STRICT_MD_MODE !== '0';
 
 const FLUFF_LINE_RE =
   /^(好的|好的！|确认|确认后|确认后直接出图|我要换|换一套|用这套|建议回复|【建议|⭕|💡|👆|长按|复制\s*→|打开即梦|发送任意|支持四种|我是灵创|欢迎使用|灵创星球·|✅)/;
@@ -84,6 +94,218 @@ function buildNoFluffBlock(topic) {
     topic +
     '】无关的节日/营销模板（如母亲节、春节、双十一），除非用户主题本身包含该节日。只输出用户需要的最终内容。'
   );
+}
+
+/** 有上传图时：先看图再写，用户文字只做补充 */
+function buildVisionFirstAnalyzeBlock() {
+  return (
+    '【看图优先·铁律】附件图片是唯一事实来源。你必须先完整观看图片，再输出文字。\n' +
+    '识别顺序：① 画面主体（何物/何菜/何产品）② 场景（容器/色泽/摆盘/氛围）③ 用户文案里的价格、用途、平台诉求。\n' +
+    '禁止：未看图就套「已识别你的产品+三方案」；禁止用用户一句话瞎猜与画面不符的主体。'
+  );
+}
+
+/** 扣子直聊同级范例：多品类示范「先认品类、再配风格」，非只认牛蛙 */
+function buildCozeAnalyzeFewShot() {
+  return (
+    '【扣子智能体·全品类识别范例·学流程不抄答案】\n' +
+    '范例A·餐饮图+「做海报128元/份」→ 内容识别写清【画面里是什么菜】；品类判定：餐饮海报；风格从餐饮池选（如国潮美食风）。\n' +
+    '范例B·护肤品图+「做小红书种草」→ 内容识别写【瓶身/质地/场景】；品类判定：护肤美妆种草图；风格从美妆池选（如清新棚拍/成分图解）。\n' +
+    '范例C·城市风光图+「旅游攻略」→ 内容识别写【地标/季节/氛围】；品类判定：旅行攻略图；风格从城市池选（如手绘地图/浮雕城市）。\n' +
+    '范例A 完整骨架（餐饮，仅示意格式）：\n' +
+    '✅ 内容识别：\n（画面主体+场景+用户诉求，须与图一致）\n' +
+    '1. 品类判定：餐饮海报\n' +
+    '2. 用户类型：…\n3. 匹配手法：…\n4. 推荐尺寸：…\n5. 本次随机风格：（必须从下方「该品类风格池」中选或同义扩写）\n6. 推荐理由：…\n' +
+    '用户不必在输入框写「牛蛙」；任何图都要先根据画面认主体，再结合文字里的价格/用途/平台。'
+  );
+}
+
+/** 先定品类（图+文），再在该品类风格池内选风格 */
+function buildCategoryFirstWorkflowBlock(route) {
+  const prof = (route && route.profile) || 'default';
+  const pool = getStylePoolForProfile(prof);
+  const poolText = pool.length ? pool.join('、') : '爆款知识图解、小红书竖版信息图';
+  return (
+    '【流水线·先品类后风格·全品类】\n' +
+    '第一步（闸门）：综合上传图 + 用户大白话 → 写 ✅内容识别 与 1.品类判定。不限定牛蛙，画面是护肤/旅游/数码/古诗/健身等均可。\n' +
+    '第二步：品类确定后，再从该品类风格池挑选 5.本次随机风格，并匹配对应手法与尺寸；禁止未定了品类就乱套无关风格。\n' +
+    '系统根据文字预猜品类（仅供参考）：' +
+    safeStr(route && route.humanLabel, '待看图判定') +
+    '。若与画面不符，以你写的「1.品类判定」为准。\n' +
+    '该品类风格池（第5条须从中选一或同义细化）：' +
+    poolText
+  );
+}
+
+/** 电商双图：图A 风格/背景 + 图B 产品主体 → 融合海报 */
+function buildEcomDualAnalyzeMessage(p, route, techniqueEffective, style) {
+  const rawQuery = safeStr(p.rawQuery, '');
+  const userNotes = safeStr(p.userNotes, '');
+  const r = route || {};
+  return [
+    '【STEP1·电商双图融合·对齐扣子 SOP】',
+    '用户已上传 2 张图片（附件顺序：第1张=图B产品主体，第2张=图A风格/版式参考，若与用户说明相反则以用户文字为准）。\n',
+    '① 先看图A（风格参考）：版式、配色、排版、氛围、背景色调。\n',
+    '② 再看图B（产品主体）：产品形态、材质、主色、卖点。\n',
+    '③ 结合用户大白话（如换背景色、出海报、详情页）写融合方案。\n',
+    buildCozeAnalyzeFewShot(),
+    '\n【输出格式】\n' +
+      '✅ 内容识别：（图A风格要点 + 图B产品要点 + 用户诉求如换背景/海报）\n' +
+      '1. 品类判定：电商海报/详情主图\n' +
+      '2. 用户类型：\n' +
+      '3. 匹配手法：手法四十四或双图融合方案（写明图A图B分工）\n' +
+      '4. 推荐尺寸：\n' +
+      '5. 本次随机风格：\n' +
+      '6. 推荐理由：\n' +
+      '禁止只输出「已识别你的产品+三方案」。',
+    '\n【系统预匹配】',
+    '预猜画法：' + safeStr(r.humanLabel, '电商·双图融合'),
+    '预选手法：' + safeStr(techniqueEffective, r.technique || ''),
+    userNotes ? '【用户补充】\n' + userNotes : '',
+    '【用户原话】\n' + rawQuery,
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+}
+
+function buildEcomDualPromptBlock(topic, style, size, route) {
+  const r = route || {};
+  return (
+    '\n\n【电商双图融合·STEP2·已确认】\n' +
+    '必须以「图A」的版式/配色/氛围为底，将「图B」产品主体自然融入；用户关于背景色、海报尺寸、平台的文字必须落实。\n' +
+    '主题【' +
+    topic +
+    '】；风格【' +
+    (r.randomStyleName || style) +
+    '】；尺寸【' +
+    (size || 'AI推荐尺寸') +
+    '】。\n' +
+    '英文 Prompt 须描述：layout from style reference image A, product hero from image B, background color as user requested, reserved clean zone for QR code if poster.\n' +
+    '末尾中文提示：请在即梦图生图模式上传图B产品图作参考图，强度建议 50–60；若需还原图A版式可同时上传图A作风格参考。\n' +
+    buildStep2OutputBlock(topic, style, size, route)
+  );
+}
+
+function buildCozeMirrorAnalyzeMessage(p, route, techniqueEffective, style) {
+  const imageCount =
+    (p && p.imageCount) || (p && p.fileIds && p.fileIds.length) || 0;
+  if (imageCount >= 2) {
+    return buildEcomDualAnalyzeMessage(p, route, techniqueEffective, style);
+  }
+  const rawQuery = safeStr(p.rawQuery, '');
+  const userNotes = safeStr(p.userNotes, '');
+  const r = route || {};
+  return [
+    '【STEP1·上传图分析·对齐扣子智能体直聊】',
+    buildVisionFirstAnalyzeBlock(),
+    buildCategoryFirstWorkflowBlock(r),
+    buildCozeAnalyzeFewShot(),
+    '\n【系统预匹配·写入时须服从你判定的品类】',
+    '预猜画法：' + safeStr(r.humanLabel, ''),
+    '预选手法：' + safeStr(techniqueEffective, r.technique || ''),
+    '预选风格（若品类一致可参考）：' + safeStr(r.randomStyleName || style, 'AI智能推荐风格'),
+    buildAnalyzeOutputFormatBlock(true, r),
+    userNotes ? '【用户补充】\n' + userNotes : '',
+    '【用户原话】\n' + rawQuery,
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+}
+
+function buildAnalyzeOutputFormatBlock(hasFile, route) {
+  if (hasFile) {
+    return (
+      '\n\n【输出格式·与扣子一致·禁止菜单按钮】\n' +
+      '✅ 内容识别：\n' +
+      '（先写画面主体是什么，再写用户文案里的用途/价格/平台）\n' +
+      '1. 品类判定：（先定类，再定风格）\n' +
+      '2. 用户类型：\n' +
+      '3. 匹配手法：\n' +
+      '4. 推荐尺寸：\n' +
+      '5. 本次随机风格：（须属于上文品类对应风格池）\n' +
+      '6. 推荐理由：'
+    );
+  }
+  return (
+    '\n\n请输出结构化分析（禁止菜单选项）：\n' +
+    '1. 品类判定\n2. 用户类型\n3. 匹配手法\n4. 推荐尺寸\n5. 本次随机风格\n' +
+    '6. 内容要点\n7. 联想记忆点\n8. 场景延伸\n9. 电商应用潜力\n10. 全息深度洞察'
+  );
+}
+
+const ANALYZE_STRUCTURE_MARKERS = [
+  '内容识别',
+  '品类判定',
+  '匹配手法',
+  '推荐尺寸',
+  '本次随机风格',
+  '推荐理由',
+  '内容要点',
+];
+
+function countAnalyzeMarkers(text) {
+  const c = String(text || '');
+  let n = 0;
+  let i = 0;
+  while (i !== ANALYZE_STRUCTURE_MARKERS.length) {
+    if (c.indexOf(ANALYZE_STRUCTURE_MARKERS[i]) >= 0) n++;
+    i++;
+  }
+  return n;
+}
+
+function isEcomShortcutAnalyze(text) {
+  const c = String(text || '');
+  if (!/已识别你的产品|已识别你的产品为/.test(c)) return false;
+  if (/内容识别|✅\s*内容识别/.test(c) && countAnalyzeMarkers(c) >= 3) return false;
+  return /方案\s*[123一二三]|目标平台|淘宝\/小红书/.test(c) || countAnalyzeMarkers(c) < 2;
+}
+
+/**
+ * STEP1 分析自我检测（有图时强制扣子式结构化）
+ */
+function validateAnalyzeResponse(text, rawQuery, route, hasFile) {
+  const c = String(text || '').trim();
+  if (!c || c.length < 80) {
+    return { valid: false, reason: '分析过短或为空' };
+  }
+  if (isSopTemplateSkeleton(c)) {
+    return { valid: false, reason: '输出为模板占位而非真实分析' };
+  }
+  const markers = countAnalyzeMarkers(c);
+  if (hasFile) {
+    if (markers < 3) {
+      return { valid: false, reason: '有上传图但缺少结构化分析字段（需内容识别/品类/手法等）' };
+    }
+    if (!/内容识别|✅/.test(c)) {
+      return { valid: false, reason: '有上传图但未输出「内容识别」' };
+    }
+    if (isEcomShortcutAnalyze(c)) {
+      return {
+        valid: false,
+        reason: '走了电商缩写流程（已识别你的产品+方案），未按扣子 STEP1 看图分析',
+      };
+    }
+  } else if (markers < 2) {
+    return { valid: false, reason: '缺少基本结构化分析字段' };
+  }
+  return { valid: true, reason: '' };
+}
+
+function buildAnalyzeRetryBlock(validation, hasFile) {
+  const reason = (validation && validation.reason) || '分析未达标准';
+  let block =
+    '\n\n【STEP1 自我检测未通过 · 必须重写】\n' +
+    '原因：' +
+    reason +
+    '\n' +
+    '请重新完整输出 STEP1 分析，禁止解释失败原因，禁止菜单。';
+  if (hasFile) {
+    block +=
+      '\n请重新观看上传图，按范例写「✅ 内容识别」+ 1~6 字段（含推荐理由）。' +
+      '\n禁止「已识别你的产品+三方案」缩写。内容识别必须与画面一致。';
+  }
+  return block;
 }
 
 /**
@@ -585,7 +807,135 @@ function buildDeepAnalysisBlock(topic) {
  * @param {string} p.rawQuery
  * @param {string} p.userNotes
  */
+/**
+ * 《系统逻辑完整版》聚焦 Prompt — 每次仅注入当前品类模板 + SOP 切片
+ */
+function buildStrictMdCozeMessage(p) {
+  const topic = safeStr(p.coreTopic, safeStr(p.rawQuery, '用户主题'));
+  const style = safeStr(p.style, 'AI智能推荐风格');
+  const size = safeStr(p.size, 'AI推荐尺寸');
+  const intent = safeStr(p.intent, 'analyze');
+  const userNotes = safeStr(p.userNotes, '');
+  const rawQuery = safeStr(p.rawQuery, topic);
+  const hasFile = !!(p.hasFile || (p.fileIds && p.fileIds.length));
+  const route =
+    p.route ||
+    routePlainLanguageTopic(topic, rawQuery || userNotes, p.rootDir, {
+      hasFile: hasFile,
+      imageCount: (p && p.imageCount) || 0,
+    });
+  const techniqueEffective = safeStr(
+    p.technique,
+    route.technique || '手法三·结构化知识模块法'
+  );
+  const templateKey = route.mdTemplateKey || route.profile || 'default';
+  const structureBlock = getStructureTemplate(templateKey);
+  const styleName = route.randomStyleName || style;
+
+  const styleLibBlock = buildStyleLibSystemBlock({
+    rootDir: p.rootDir,
+    intent: intent,
+    topic: topic,
+    coreTopic: topic,
+    style: styleName,
+    technique: techniqueEffective,
+    size: size,
+    hasFile: hasFile,
+  });
+
+  const head =
+    '【知识图文魔方·系统逻辑完整版·后端执行】\n' +
+    '【第一章·输出顺序铁律】知识点结构化 → 完整版提示词 → 精简版 → 即梦设置 → 话题标签\n' +
+    '【第二章·四层判定结果】\n' +
+    '第二层品类：' +
+    safeStr(route.mdCategoryName, '') +
+    '\n第三层用户类型：' +
+    safeStr(route.userType, '') +
+    '\n第四层手法：' +
+    techniqueEffective +
+    '\n第五层本次风格（第十四章风格池）：' +
+    styleName +
+    '\n\n' +
+    structureBlock +
+    '\n\n' +
+    DENSITY_RULES_CH5 +
+    '\n\n' +
+    (route.needWebSearch
+      ? buildWebSearchFallbackBlock(route)
+      : route.networkFallbackBlock || getNetworkFallbackBlock()) +
+    '\n\n' +
+    styleLibBlock;
+
+  if (intent === 'analyze' && hasFile) {
+    return (
+      head +
+      '\n\n' +
+      buildVisionFirstAnalyzeBlock() +
+      '\n' +
+      buildCozeAnalyzeFewShot() +
+      '\n' +
+      buildAnalyzeOutputFormatBlock(hasFile, route) +
+      '\n\n【用户原话】\n' +
+      rawQuery
+    );
+  }
+
+  if (intent === 'analyze') {
+    return (
+      head +
+      '\n\n' +
+      buildAnalyzeOutputFormatBlock(hasFile, route) +
+      '\n\n【STEP1·主题分析】核心主题【' +
+      topic +
+      '】\n【用户原话】\n' +
+      rawQuery
+    );
+  }
+
+  if (intent === 'prompt') {
+    const imageCount = (p && p.imageCount) || 0;
+    if (imageCount >= 2 || route.profile === 'ecom_dual') {
+      return (
+        head +
+        '\n\n' +
+        buildEcomDualPromptBlock(topic, styleName, size, route) +
+        '\n【用户原话·必须贯彻】\n' +
+        rawQuery
+      );
+    }
+    return (
+      head +
+      '\n\n' +
+      buildStep2OutputBlock(topic, styleName, size, route) +
+      '\n\n【第十三章·即梦字符】精简版英文不得超过 ' +
+      JIMENG_CHAR_LIMIT +
+      ' 字符；必须保留收尾语：' +
+      JIMENG_TAIL_LITE +
+      '\n【用户确认·已批准方案】\n【用户原话】\n' +
+      rawQuery
+    );
+  }
+
+  if (intent === 'copywrite') {
+    return (
+      head +
+      '\n\n【第十一章·增收文案·X触发】\n' +
+      '角色：第一人称受益者；禁止广告腔。\n' +
+      '输出：小红书笔记 + 公众号文章 + 首评钩子。\n' +
+      '核心主题【' +
+      topic +
+      '】\n【用户原话】\n' +
+      rawQuery
+    );
+  }
+
+  return head + '\n\n【用户原话】\n' + rawQuery;
+}
+
 function buildCozeMessage(p) {
+  if (STRICT_MD_MODE) {
+    return buildStrictMdCozeMessage(p);
+  }
   const topic = safeStr(p.coreTopic, safeStr(p.rawQuery, '用户主题'));
   const style = safeStr(p.style, 'AI智能推荐风格');
   const size = safeStr(p.size, 'AI推荐尺寸');
@@ -593,9 +943,13 @@ function buildCozeMessage(p) {
   const userNotes = safeStr(p.userNotes, '');
   const rawQuery = safeStr(p.rawQuery, topic);
 
+  const hasFile = !!(p.hasFile || (p.fileIds && p.fileIds.length));
   const route =
     p.route ||
-    routePlainLanguageTopic(topic, rawQuery || userNotes, p.rootDir);
+    routePlainLanguageTopic(topic, rawQuery || userNotes, p.rootDir, {
+      hasFile: hasFile,
+      imageCount: (p && p.imageCount) || 0,
+    });
   const technique = safeStr(
     p.technique,
     route.technique || '爆款知识图解手法'
@@ -613,7 +967,24 @@ function buildCozeMessage(p) {
     style: style,
     technique: techniqueEffective,
     size: size,
+    hasFile: hasFile,
   });
+
+  if (intent === 'analyze' && hasFile) {
+    return buildCozeMirrorAnalyzeMessage(
+      {
+        rawQuery: rawQuery,
+        userNotes: userNotes,
+        style: style,
+        coreTopic: topic,
+        fileIds: p.fileIds || [],
+        imageCount: p.imageCount || 0,
+      },
+      route,
+      techniqueEffective,
+      style
+    );
+  }
 
   const routeBrief =
     '\n\n【系统已为该大白话自动匹配·无需用户懂术语】\n' +
@@ -627,32 +998,52 @@ function buildCozeMessage(p) {
     (route.needWebSearch ? '（将联网检索当下爆款版式补充）' : '（风格库已命中）') +
     '\n';
 
-  let head = [
+  const headParts = [
     buildHumanFirstBlock(topic, userNotes || rawQuery),
     buildIntentEnhancementSOP(topic, rawQuery),
     routeBrief,
     styleLibBlock,
     buildWebSearchFallbackBlock(route),
-    buildSearchBlock(topic),
-    buildSubjectLock(topic, style, techniqueEffective),
-    buildNoFluffBlock(topic),
-  ].join('\n\n');
-
-  if (route.categorySnippet) {
+  ];
+  if (!(hasFile && intent === 'analyze')) {
+    headParts.push(buildSearchBlock(topic));
+  } else {
+    headParts.push(
+      '【联网搜索已禁用】用户已上传参考图，STEP1 必须以看图识别为主，禁止脱离画面联网瞎编物种或菜名。'
+    );
+  }
+  if (hasFile && intent === 'analyze') {
+    headParts.push(
+      '【主题锁·看图后生效】核心主题须由「上传图识别结果 + 用户原话」共同决定，不得仅用泛化短语替代画面主体。'
+    );
+  } else {
+    headParts.push(buildSubjectLock(topic, style, techniqueEffective));
+  }
+  headParts.push(buildNoFluffBlock(topic));
+  let head = headParts.join('\n\n');
+  if (route.categorySnippet && !(hasFile && intent === 'analyze')) {
     head += '\n\n【路由注入·品类模板】\n' + route.categorySnippet.slice(0, 1500);
   }
 
   const lifecycle = route.profile === 'lifecycle' || detectLifecycleTopic(topic, rawQuery);
+  const isFoodPosterRoute =
+    route.profile === 'recipe' ||
+    route.profile === 'ecom_image' ||
+    route.profile === 'ecom';
   const analyzeHint =
     '\n\n【分析必遵·人话输出·STEP1】匹配手法必须写「' +
     route.technique +
-    '」；推荐尺寸优先 9:16 竖版知识图解（英语场景课可用 16:9）。' +
+    '」；推荐尺寸优先 9:16 竖版（餐饮海报/详情可用 9:16 或 3:4）。' +
     '「5. 本次随机风格」必须写：' +
     (route.randomStyleName || style) +
     '（人话，禁止只写编号）。' +
     '「3. 匹配手法」行必须包含：' +
     route.technique +
-    '。\n';
+    '。' +
+    (hasFile && isFoodPosterRoute
+      ? '\n餐饮/美食上传图：内容识别必须写明食物物种与食欲卖点，手法优先视觉优先菜谱卡（二十二B）或餐饮海报，对齐扣子智能体。'
+      : '') +
+    '\n';
 
   if (intent === 'analyze') {
     return (
@@ -669,9 +1060,8 @@ function buildCozeMessage(p) {
       techniqueEffective +
       '】\n\n' +
       buildDeepAnalysisBlock(topic) +
-      '\n\n请输出结构化分析（禁止菜单选项）：\n' +
-      '1. 品类判定\n2. 用户类型\n3. 匹配手法\n4. 推荐尺寸\n5. 本次随机风格\n' +
-      '6. 内容要点\n7. 联想记忆点\n8. 场景延伸\n9. 电商应用潜力\n10. 全息深度洞察\n\n' +
+      buildAnalyzeOutputFormatBlock(hasFile, route) +
+      '\n\n' +
       (userNotes ? '【用户补充材料】\n' + userNotes + '\n\n' : '') +
       '【用户原始输入】\n' +
       rawQuery
@@ -679,7 +1069,16 @@ function buildCozeMessage(p) {
   }
 
   if (intent === 'prompt') {
-    const lifecycleConfirm = lifecycle
+    const imageCount = (p && p.imageCount) || 0;
+    if (imageCount >= 2 || route.profile === 'ecom_dual') {
+      return (
+        head +
+        buildEcomDualPromptBlock(topic, style, size, route) +
+        '\n【用户原话·必须贯彻】\n' +
+        rawQuery
+      );
+    }
+    let lifecycleConfirm = lifecycle
       ? '【用户确认·生命周期图解】已批准方案。请按扣子智能体内「' +
         topic +
         '」直聊同级质量输出，严格套用知识库「手法三十二」五阶段结构（参考荔枝/榴莲/石榴一生剖面或人生五阶段时间轴）。\n' +
@@ -687,6 +1086,12 @@ function buildCozeMessage(p) {
         rawQuery +
         '\n'
       : '【用户确认·已批准方案】\n【用户原话·必须贯彻】\n' + rawQuery + '\n';
+    if (userNotes && /文案要点摘录|笔记配图|【正文】|知识图文笔记/.test(userNotes)) {
+      lifecycleConfirm +=
+        '\n【笔记配图联动·最高优先】用户已写好笔记框架，完整版英文必须结合下列文案设计画面（主体/场景/卖点/版式模块），≥380字符，禁止只输出 no text 类合规堆砌。\n' +
+        userNotes +
+        '\n';
+    }
     const useStep2 =
       usesFullCozePackage(route.profile) ||
       isKnowledgeProfile(route.profile) ||
@@ -1130,6 +1535,8 @@ module.exports = {
   sanitizeLifecyclePrompt,
   stripKnownBrandNames,
   copywriteTopicMismatch,
+  validateAnalyzeResponse,
+  buildAnalyzeRetryBlock,
   MIN_MASTERS_PROMPT_CHARS,
   MASTERS_MANDATORY_TAIL,
 };
