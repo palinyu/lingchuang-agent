@@ -60,7 +60,7 @@ function resolveDocumentContent(body) {
   if (!raw) return '';
   if (/^\[(已上传|PDF文件已上传|解析失败)/.test(raw)) return '';
   if (raw.length < 12) return '';
-  return raw.slice(0, 20000);
+  return raw.slice(0, 32000);
 }
 
 function buildDocumentContentBlock(body) {
@@ -80,7 +80,12 @@ function buildDocumentContentBlock(body) {
 function buildFileAttachmentNotice(body) {
   const ids = body && body.file_ids;
   if (!Array.isArray(ids) || ids.length === 0) return '';
-  if (resolveDocumentContent(body)) return '';
+  if (resolveDocumentContent(body)) {
+    return (
+      '【文档附件已同步】已提供 <document_content> 全文摘录，同时挂载原始文件 ID。' +
+      '分析须以文档前部核心为准，内容要点编号 1~6 不得只写「联想记忆点」及之后章节。'
+    );
+  }
   return (
     '【已挂载上传文件】共 ' +
     ids.length +
@@ -97,7 +102,11 @@ function injectDocumentIntoPrompt(assembledMessage, body, intent) {
   let msg = docBlock + '\n\n' + assembledMessage;
   if (intent === 'analyze') {
     msg +=
-      '\n\n【分析任务补充】内容要点必须直接来自 <document_content>，模块化列出。';
+      '\n\n【文档分析铁律·STEP1】\n' +
+      '1. <document_content> 是唯一事实来源，禁止脱离文档编造。\n' +
+      '2. 「6. 内容要点」或「✅ 内容识别」必须提炼文档【前部核心】至少 6 条（编号 1~6），不得只写第 7 条「联想记忆点」及之后章节。\n' +
+      '3. 若文档为脚本/笔记/课件，须覆盖开篇主题、结构、案例与结论，不得遗漏前半部分。\n' +
+      '4. 品类/手法/尺寸/风格可结合文档推断，但内容要点必须带文档原意关键词。';
   }
   return msg;
 }
