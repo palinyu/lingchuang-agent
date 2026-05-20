@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- 静态页与 API 不同域时：添加 meta 或 window.LC_API_BASE 指向后端根路径（无尾斜杠），例 <meta name="lc-api-base" content="https://api.xxx.com"> -->
 <title>灵创星球 · 图片提示词大师</title>
 <style>
 :root{
@@ -238,7 +239,7 @@ body{
 .gallery-header{border-left:3px solid var(--gold);padding-left:12px;margin-bottom:16px;}
 .gallery-title{font-size:14px;font-weight:800;color:#fff;}
 .gallery-sub{font-size:11px;color:var(--tx3);margin-top:4px;}
-.gallery-track{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;cursor:grab;padding:4px 28px 12px 4px;box-sizing:border-box;}
+.gallery-track{display:flex;gap:14px;justify-content:center;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;cursor:grab;padding:6px 16px 14px;box-sizing:border-box;}
 .gallery-track::-webkit-scrollbar{display:none;}
 .g-card{flex-shrink:0;width:138px;background:#171922;border-radius:10px;padding:6px;border:1px solid rgba(255,255,255,0.02);}
 .g-img{
@@ -290,7 +291,7 @@ body{
   writing-mode:vertical-rl;text-orientation:mixed;text-align:center;line-height:1.4;
   transition:background .2s,color .2s,box-shadow .2s;
 }
-.app-layout{max-width:1400px;margin:0 auto;padding:0 18px 80px;position:relative;z-index:2;min-width:0;width:100%;box-sizing:border-box;}
+.app-layout{max-width:none;margin:0 auto;padding:0 14px 80px;position:relative;z-index:2;min-width:0;width:100%;box-sizing:border-box;}
 .case-sidebar-rail:hover{background:rgba(243,175,66,0.1);color:#fff;box-shadow:4px 0 28px rgba(243,175,66,0.12);}
 .case-sidebar-rail-text{pointer-events:none;}
 .case-sidebar-rail.is-active{background:rgba(243,175,66,0.14);color:#fff;}
@@ -365,14 +366,32 @@ body{
 .case-apply-close:hover{color:#fff;border-color:rgba(243,175,66,0.35);}
 .case-apply-title{font-size:16px;font-weight:900;color:#fff;margin:0 40px 8px 0;line-height:1.35;}
 .case-apply-sub{font-size:12px;color:var(--tx3);margin-bottom:12px;}
-.case-apply-ref-label{font-size:10px;font-weight:800;color:rgba(243,175,66,0.85);letter-spacing:0.06em;margin-bottom:6px;}
+.case-apply-ref-label{font-size:11px;font-weight:800;color:rgba(243,175,66,0.9);letter-spacing:0.06em;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.case-apply-ref-hint{font-size:10px;font-weight:600;color:rgba(148,163,184,0.95);}
 .case-apply-ref-strip{
-  display:flex;gap:10px;overflow-x:auto;padding:8px;border-radius:12px;background:rgba(0,0,0,0.35);
-  border:1px solid rgba(255,255,255,0.06);margin-bottom:14px;min-height:72px;align-items:center;
+  display:flex;flex-direction:column;gap:0;width:100%;
+  padding:10px;border-radius:14px;background:rgba(0,0,0,0.45);
+  border:1px solid rgba(243,175,66,0.18);margin-bottom:14px;
+  min-height:240px;max-height:none;
+  align-items:stretch;justify-content:center;box-sizing:border-box;
 }
 .case-apply-ref-strip:empty{display:none;}
-.case-apply-ref-item{flex:0 0 auto;width:120px;height:72px;border-radius:10px;overflow:hidden;border:1px solid rgba(243,175,66,0.2);}
-.case-apply-ref-item img{width:100%;height:100%;object-fit:cover;display:block;}
+.case-apply-ref-item{
+  position:relative;width:100%;flex:1 1 auto;min-height:220px;height:min(48vh,400px);
+  border-radius:12px;overflow:hidden;border:1px solid rgba(243,175,66,0.28);
+  background:radial-gradient(ellipse 80% 70% at 50% 40%,rgba(30,28,20,0.9),rgba(6,7,10,0.98));
+  cursor:zoom-in;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.04);
+  display:flex;align-items:center;justify-content:center;
+}
+.case-apply-ref-item::after{
+  content:'🔍 点击放大';position:absolute;right:8px;bottom:8px;padding:4px 8px;border-radius:8px;
+  font-size:10px;font-weight:800;color:#0c0a06;background:rgba(243,175,66,0.92);
+  pointer-events:none;opacity:0.92;
+}
+.case-apply-ref-item img{
+  width:100%;height:100%;max-width:100%;max-height:100%;
+  object-fit:contain;object-position:center;display:block;
+}
 .case-apply-fixed{margin-bottom:12px;padding:10px 12px;border-radius:10px;background:rgba(0,0,0,0.38);border:1px solid rgba(243,175,66,0.12);}
 .case-apply-fixed-h{font-size:10px;font-weight:800;color:var(--tx3);margin-bottom:8px;letter-spacing:0.04em;}
 .case-apply-label{display:block;font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:8px;}
@@ -399,7 +418,7 @@ body{
   100%{box-shadow:0 0 0 18px rgba(243,175,66,0);}
 }
 @media(min-width:769px){
-  .app-layout{display:flex;align-items:flex-start;gap:18px;padding:8px 22px 80px;}
+  .app-layout{display:flex;align-items:flex-start;gap:16px;padding:8px max(12px,min(3vw,28px)) 80px;width:100%;max-width:none;}
   /* v4 左栏 280px 默认展开：收起时仅保留左侧竖条 */
   .case-sidebar-wrap{
     display:flex;flex-direction:row;flex-shrink:0;align-items:stretch;position:sticky;top:12px;
@@ -530,19 +549,17 @@ body{
   margin-top:26px;font-size:clamp(20px,4.8vw,30px);font-weight:800;letter-spacing:3px;color:#f3af42;
   display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:2px 6px;position:relative;z-index:1;
 }
-.lc-intro-slogan-a,.lc-intro-slogan-b,.lc-intro-slogan-c{display:inline-block;}
+.lc-intro-slogan-a,.lc-intro-slogan-b{display:inline-block;}
 .lc-intro-slogan-a{
   opacity:0;transform:translate3d(-48px,18px,0) scale(.9) rotateX(55deg);filter:blur(5px);
   animation:lc-slog-a-in .95s cubic-bezier(.22,1,.36,1) 2.35s forwards;
 }
-.lc-intro-slogan-c{opacity:0;animation:lc-slog-c-in .4s ease-out 2.28s forwards;}
-.lc-intro-slogan-b{
+  margin-left:8px;
   opacity:0;transform:translate3d(52px,-16px,0) scale(.88) rotateX(-48deg);filter:blur(6px);
   animation:lc-slog-b-in 1s cubic-bezier(.22,1,.36,1) 2.48s forwards;
 }
 @keyframes lc-slog-a-in{to{opacity:1;transform:none;filter:blur(0);}}
 @keyframes lc-slog-b-in{to{opacity:1;transform:none;filter:blur(0);}}
-@keyframes lc-slog-c-in{to{opacity:1;}}
 .lc-intro-skip{
   position:absolute;right:16px;bottom:16px;padding:6px 10px;border:none;background:transparent;
   color:rgba(255,255,255,0.45);font-size:12px;cursor:pointer;font-family:inherit;z-index:3;
@@ -614,6 +631,7 @@ body{
   background-size:40px 100%;animation:title-gold-sweep 4s linear infinite;
   mix-blend-mode:overlay;
 }
+.hero h1 .title-sweep + .title-sweep{margin-left:6px;}
 .hero h1 span.title-sweep-light{
   position:relative;display:inline-block;margin-right:2px;
   color:#fff !important;background:none !important;
@@ -1100,7 +1118,7 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
       <div class="lc-intro-tag">✦ 全平台适用</div>
     </div>
     <div class="lc-intro-slogan" id="lc-intro-slogan">
-      <span class="lc-intro-slogan-a">心有所想</span><span class="lc-intro-slogan-c">，</span><span class="lc-intro-slogan-b">一键出图</span>
+      <span class="lc-intro-slogan-a">心有所想</span><span class="lc-intro-slogan-b">一键出图</span>
     </div>
   </div>
   <button type="button" class="lc-intro-skip lux-tap" id="lc-intro-skip">跳过 →</button>
@@ -1120,7 +1138,7 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
 </div>
 <div id="lc-drawer-backdrop" aria-hidden="true"></div>
 <button type="button" class="lc-mobile-fab lc-mobile-fab-case lux-tap" id="lc-m-fab-case" aria-controls="case-sidebar-wrap" aria-expanded="false">📂<br>案例库</button>
-<button type="button" class="lc-mobile-fab lc-mobile-fab-copy lux-tap" id="lc-m-fab-copy" aria-controls="ds-copy-wrap" aria-expanded="false">🔥<br>文案</button>
+<button type="button" class="lc-mobile-fab lc-mobile-fab-copy lux-tap" id="lc-m-fab-copy" aria-controls="ds-copy-wrap" aria-expanded="false">🚀<br>笔记</button>
 <div id="lux-bg-layer" aria-hidden="true">
   <span class="lux-meteor m1"></span>
   <span class="lux-meteor m2"></span>
@@ -1185,7 +1203,7 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
 <div class="shell">
   <div class="hero">
     <div class="brand-badge">🌐 灵创星球 · 图片提示词大师</div>
-    <h1><span class="title-sweep title-sweep-light">心有所想</span>，<span class="title-sweep">一键出图</span></h1>
+    <h1><span class="title-sweep title-sweep-light">心有所想</span><span class="title-sweep">一键出图</span></h1>
     <p class="hero-sub">大白话描述你的想法 ➔ AI联网分析 ➔ 完整提示词直接生图</p>
     <p class="hero-tool-hint">AI辅助创作工具 · 非广告代写服务</p>
     <p class="hero-feat">全品类覆盖<span>•</span>联网搜爆款<span>•</span>傻瓜式操作</p>
@@ -1541,7 +1559,7 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
     <div class="ds-copy-inner">
       <div class="ds-copy-head-row">
         <h2 class="ds-copy-head">🔥 爆款文案</h2>
-        <button type="button" class="ds-copy-close lux-tap" id="ds-copy-close" aria-label="收起文案区">×</button>
+        <button type="button" class="ds-copy-close lux-tap" id="ds-copy-close" aria-label="收起笔记框架区">×</button>
       </div>
       <p class="ds-copy-subhint">AI辅助创作工具 · 非广告代写服务</p>
       <div class="ds-copy-field">
@@ -1629,7 +1647,7 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
       <div class="ds-copy-genwrap" id="ds-copy-genwrap">
         <div class="ds-copy-scanline" aria-hidden="true"></div>
         <div class="ds-copy-actions" style="margin-top:0;">
-          <button type="button" class="ds-gen-primary btn-ds-redgold lux-tap" id="ds-gen-btn">🚀 一键生成爆款文案</button>
+          <button type="button" class="ds-gen-primary btn-ds-redgold lux-tap" id="ds-gen-btn">🚀 生成爆款笔记框架</button>
         </div>
       </div>
       <div class="ds-copy-out" id="ds-copy-out" style="display:none;">
@@ -1659,8 +1677,8 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
       <p class="ds-copy-disclaimer" id="ds-copy-disclaimer">文案由 DeepSeek 生成；与主生图扣子链路独立。生成内容仅供创作参考。</p>
     </div>
   </aside>
-  <button type="button" class="ds-copy-rail lux-tap" id="ds-copy-toggle" aria-expanded="false" aria-controls="ds-copy-panel" title="展开爆款文案">
-    <span class="ds-copy-rail-text">🔥<br>文案</span>
+  <button type="button" class="ds-copy-rail lux-tap" id="ds-copy-toggle" aria-expanded="false" aria-controls="ds-copy-panel" title="展开笔记框架生成">
+    <span class="ds-copy-rail-text">🚀<br>笔记</span>
   </button>
 </div>
 </div>
@@ -1670,7 +1688,7 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
     <button type="button" class="case-apply-close lux-tap" onclick="closeApplySheet()" aria-label="关闭">×</button>
     <h3 class="case-apply-title" id="apply-case-title">套用案例风格</h3>
     <p class="case-apply-sub">说一下主题，其他不用动：</p>
-    <div class="case-apply-ref-label">参考图</div>
+    <div class="case-apply-ref-label"><span>参考图</span><span class="case-apply-ref-hint">大图预览 · 点击可全屏</span></div>
     <div class="case-apply-ref-strip" id="case-apply-ref-strip"></div>
     <div class="case-apply-fixed">
       <div class="case-apply-fixed-h">固定参数（风格 / 尺寸）</div>
@@ -1728,6 +1746,14 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
 <script>
 var API_BASE=(function(){
   try{
+    if(typeof window.LC_API_BASE==='string'&&window.LC_API_BASE.trim()){
+      return String(window.LC_API_BASE).trim().replace(/\/$/,'');
+    }
+    var meta=document.querySelector('meta[name="lc-api-base"]');
+    if(meta){
+      var c=(meta.getAttribute('content')||'').trim();
+      if(c) return c.replace(/\/$/,'');
+    }
     var h=location.hostname||'';
     if(h==='localhost'||h==='127.0.0.1') return 'http://localhost:3000';
     return '';
@@ -2395,13 +2421,13 @@ function setDsCopyOpen(open){
     btn.setAttribute('aria-expanded','true');
     pan.setAttribute('aria-hidden','false');
     btn.classList.add('is-active');
-    btn.title='收起文案';
+    btn.title='收起笔记框架';
   }else{
     wrap.classList.remove('is-open');
     btn.setAttribute('aria-expanded','false');
     pan.setAttribute('aria-hidden','true');
     btn.classList.remove('is-active');
-    btn.title='展开文案';
+    btn.title='展开笔记框架';
   }
   syncLcMobileBackdrop();
 }
@@ -2547,11 +2573,7 @@ function initCaseSidebar(){
     tabsEl.appendChild(btn);
   });
   renderCaseGrid(CASE_ACTIVE_TAB);
-  try{
-    if(typeof window.matchMedia==='function'&&window.matchMedia('(min-width:769px)').matches){
-      setCaseSidebarOpen(true);
-    }
-  }catch(e){}
+  try{setCaseSidebarOpen(true);}catch(e){}
 }
 function openApplySheet(item){
   _pendingCaseItem=item;
@@ -2572,11 +2594,22 @@ function openApplySheet(item){
     if(item.img){
       var wrap=document.createElement('div');
       wrap.className='case-apply-ref-item';
+      wrap.title='点击查看大图';
       var im=document.createElement('img');
       im.src=item.img;
       im.alt=item.title||'参考';
       im.loading='eager';
+      im.draggable=false;
       wrap.appendChild(im);
+      wrap.addEventListener('click',function(ev){
+        ev.stopPropagation();
+        try{
+          var zoom=document.getElementById('img-zoom');
+          var zsrc=document.getElementById('img-zoom-src');
+          if(zsrc) zsrc.src=item.img;
+          if(zoom) zoom.style.display='flex';
+        }catch(e2){}
+      });
       strip.appendChild(wrap);
     }else{
       strip.style.display='none';
@@ -2866,16 +2899,24 @@ function parseApiResponse(r){
     return data;
   });
 }
-/** 主路径走 /api/generate（与页面同域部署）；失败时再尝试 /api/deepseek-copy */
+/** 仅请求 /api/generate；附带 query/core_topic 兼容旧网关；勿再请求不存在的 /api/deepseek-copy 以免控制台 404 */
 function fetchDeepseekCopywriteApi(body){
+  var t=String((body&&body.ds_topic)||(body&&body.prompt)||'').trim();
+  var payload=Object.assign({},body||{});
+  if(t){
+    payload.query=t;
+    payload.core_topic=t;
+  }
+  payload.mode=payload.mode||'deepseek';
   var base=(typeof API_BASE==='string'&&API_BASE)?String(API_BASE).replace(/\/$/,''):'';
-  var gen=(base?base:'')+'/api/generate';
-  var ds=(base?base:'')+'/api/deepseek-copy';
-  if(!base){ gen='/api/generate'; ds='/api/deepseek-copy'; }
-  var opts={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)};
-  return fetch(gen,opts).then(parseApiResponse).catch(function(){
-    return fetch(ds,opts).then(parseApiResponse);
-  });
+  var url=(base?base:'')+'/api/generate';
+  if(!base) url='/api/generate';
+  var opts={
+    method:'POST',
+    headers:{'Content-Type':'application/json;charset=UTF-8'},
+    body:JSON.stringify(payload)
+  };
+  return fetch(url,opts).then(parseApiResponse);
 }
 function uploadFile(file){
   if(!file)return;
