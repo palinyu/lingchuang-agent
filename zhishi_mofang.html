@@ -2542,8 +2542,8 @@ function setupDsCopyPanel(){
       .then(function(data){
         if(!data) throw new Error('无响应');
         if(typeof data.code!=='undefined'&&data.code!==0) throw new Error(data.msg||data.error||'生成失败');
-        var ans=String(data.answer||'').trim();
-        if(!ans) throw new Error('返回内容为空');
+        var ans=normalizeDsApiAnswer(data);
+        if(!ans) throw new Error('返回内容为空：请确认线上已部署含 lc_ds_chat 分支的 /api/generate，且 DEEPSEEK_API_KEY 有效');
         var p=parseDsCopyAnswer(ans);
         var tt=document.getElementById('ds-ta-title');
         var tb=document.getElementById('ds-ta-body');
@@ -2930,6 +2930,34 @@ function parseApiResponse(r){
     }
     return data;
   });
+}
+/** 兼容网关改写后的 JSON：answer 可能在 data / messages 等字段 */
+function normalizeDsApiAnswer(data){
+  if(!data||typeof data!=='object') return '';
+  var keys=['answer','result','text','content','output'];
+  var i=0;
+  for(;i<keys.length;i++){
+    var v=data[keys[i]];
+    if(v!=null&&String(v).trim()) return String(v).trim();
+  }
+  if(data.data&&typeof data.data==='object'){
+    var j=0;
+    for(;j<keys.length;j++){
+      var v2=data.data[keys[j]];
+      if(v2!=null&&String(v2).trim()) return String(v2).trim();
+    }
+  }
+  if(Array.isArray(data.messages)){
+    var k=data.messages.length;
+    while(k--){
+      var m=data.messages[k];
+      if(m&&m.role==='assistant'){
+        var c=m.content!=null?m.content:m.text;
+        if(c!=null&&String(c).trim()) return String(c).trim();
+      }
+    }
+  }
+  return '';
 }
 /** 笔记框架：请求体含 OpenAI 形状 messages + lc_ds_chat，网关原样转发时 DeepSeek 不再报 missing field messages */
 function dsSelectOptionShortLabel(el){
