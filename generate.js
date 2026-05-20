@@ -21,6 +21,10 @@ const PROMPT_QUALITY_INTENTS = ['prompt', 'custom'];
 const MAX_MASTERS_PROMPT_RETRIES = 2;
 const MAX_ANALYZE_RETRIES = 2;
 const COZE_FETCH_TIMEOUT_MS = parseInt(process.env.COZE_FETCH_TIMEOUT_MS, 10) || 280000;
+/** Vercel 请求体约 4.5MB；图片解码后 ≤2MB，文档 ≤4MB */
+const MAX_UPLOAD_IMAGE_BYTES = 2 * 1024 * 1024;
+const MAX_UPLOAD_DOC_BYTES = 4 * 1024 * 1024;
+const MAX_UPLOAD_B64_LEN = Math.floor(3.2 * 1024 * 1024);
 
 function maxCozeAttempts(intent, fileCount) {
   if (intent === 'analyze') {
@@ -263,10 +267,27 @@ module.exports = async function handler(req, res) {
       if (!b64) {
         return res.status(400).json({ code: -1, msg: '缺少 file_base64' });
       }
-      if (b64.length > 3.2 * 1024 * 1024) {
+      if (b64.length > MAX_UPLOAD_B64_LEN) {
         return res.status(413).json({
           code: -1,
-          msg: '上传文件过大（超过平台 4MB 限制），请压缩图片至 2MB 以内，或仅上传文档文字',
+          msg: '上传体积过大，请压缩：单张图片＜2MB，文档＜4MB',
+        });
+      }
+      let fileBuffer;
+      try {
+        fileBuffer = Buffer.from(b64, 'base64');
+      } catch (e) {
+        return res.status(400).json({ code: -1, msg: 'file_base64 格式无效' });
+      }
+      const mimeType = String(body.file_type || 'application/octet-stream');
+      const isImageUpload = mimeType.indexOf('image/') === 0;
+      const maxBytes = isImageUpload ? MAX_UPLOAD_IMAGE_BYTES : MAX_UPLOAD_DOC_BYTES;
+      if (fileBuffer.length > maxBytes) {
+        return res.status(413).json({
+          code: -1,
+          msg: isImageUpload
+            ? '图片超过 2MB 上限，请压缩后重新上传'
+            : '文档超过 4MB 上限，请删减页数或换更小文件',
         });
       }
       const fileId = await uploadCozeFile(
