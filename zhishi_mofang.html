@@ -1009,9 +1009,29 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
 .ith-step.ith-drop-flash{animation:ith-drop-step .42s cubic-bezier(.22,1,.36,1) both;}
 .ith-log.ith-log-drop{animation:ith-drop-in .38s cubic-bezier(.22,1,.36,1) both;}
 .gen-wait-hint{display:none;font-size:11px;color:rgba(226,192,125,0.72);text-align:center;line-height:1.5;margin:0 0 6px;letter-spacing:0.2px;}
-@media(max-width:720px){
-  body.api-lux-loading .input-stage-body{grid-template-columns:1fr;}
+@media(max-width:768px){
+  body.api-lux-loading .input-stage-body{grid-template-columns:1fr!important;}
+  body.api-lux-loading .input-stage-main,
+  body.api-lux-loading .input-thinking-panel{width:100%;min-width:0;}
   .input-thinking-panel{min-height:72px;}
+  #preview-images-row.is-dual{flex-direction:column;align-items:stretch;}
+  .preview-slot{min-width:0!important;width:100%;flex:1 1 auto;}
+  #output-section{position:relative;z-index:60;width:100%;min-width:0;}
+  #output-section .prompt-block{overflow:visible;margin-bottom:14px;}
+  #output-section .block-head{flex-wrap:wrap;gap:8px;}
+  #output-section .block-head-left{flex:1 1 auto;min-width:0;}
+  #output-section .block-title{color:#f1f5f9!important;font-size:14px;}
+  #output-section .block-sub{color:#94a3b8!important;font-size:11px;}
+  #output-section .block-body{
+    min-height:80px;max-height:min(55vh,520px);
+    font-size:14px;line-height:1.75;color:#e2e8f0!important;
+    -webkit-overflow-scrolling:touch;overflow-y:auto;
+  }
+  #output-section .block-body.prompt-style{
+    font-size:13px;color:#e8d5a3!important;background:#0a0a0e!important;
+  }
+  #thinking-stage{min-height:0;padding:12px 0 20px;margin-bottom:16px;}
+  .thinking-wrap{width:100%;max-width:min(100vw - 32px,340px);height:auto;min-height:320px;}
 }
 /* fix9: 量子扫描 左日志+右可视化 */
 #quantum-stage{display:none;margin-bottom:16px;}
@@ -5351,27 +5371,42 @@ function cleanChineseShortText(raw){
   }
   return out.join('\n').trim();
 }
+function fillPromptBox(el,text,done){
+  if(!el){if(done)done();return;}
+  var full=String(text||'');
+  var instant=lcIsMobileDrawer()||window.matchMedia('(max-width:768px)').matches;
+  el.classList.remove('is-typing');
+  if(instant||full.length<24){
+    el.textContent=full;
+    if(done)done();
+    return;
+  }
+  typewriterPrompt(el,full,done);
+}
 function renderPromptOutputBoxes(englishText,chineseText,done){
   var fullEl=document.getElementById('out-prompt-full');
   var shortEl=document.getElementById('out-prompt-short');
   var shortBlock=document.getElementById('main-prompt-short-block');
+  var fullBlock=document.getElementById('main-prompt-full-block');
   var knowledgeTopic=isKnowledgeTopic()||!!sessionContext.fromDsNotes;
-  var full=cleanEnglishPromptText(englishText||'');
-  full=knowledgeTopic?sanitizeLifecyclePrompt(full):sanitizeKnowledgeJimengPrompt(full);
-  if(isPromptBoilerplateOnly(full)) full='';
+  var fullRaw=cleanEnglishPromptText(englishText||'');
+  var full=knowledgeTopic?sanitizeLifecyclePrompt(fullRaw):sanitizeKnowledgeJimengPrompt(fullRaw);
+  if(!full&&fullRaw) full=fullRaw;
   var short=cleanChineseShortText(chineseText||'');
+  if(!short&&chineseText&&String(chineseText).trim().length>8) short=String(chineseText).trim();
   cachedPrompt=full;
   cachedPromptShort=short;
+  if(fullBlock) fullBlock.style.display='block';
   if(shortBlock){
-    shortBlock.style.display=short&&short.length>8?'block':'none';
+    shortBlock.style.display=(short&&short.length>8)?'block':'none';
   }
   var pending=0;
   function tick(){pending--;if(pending<=0&&done) done();}
   pending=1;
-  typewriterPrompt(fullEl,full,function(){tick();});
+  fillPromptBox(fullEl,full,function(){tick();});
   if(short&&short.length>8&&shortEl){
     pending++;
-    typewriterPrompt(shortEl,short,function(){tick();});
+    fillPromptBox(shortEl,short,function(){tick();});
   }else if(shortEl){shortEl.textContent='';}
 }
 function copyPromptBox(which){
@@ -5526,8 +5561,13 @@ function showResult(raw,retryCount,fromConfirm){
     document.getElementById('copywrite-ask').style.display='block';
     renderPromptOutputBoxes(fullForBox,shortForBox,function(){
       triggerPromptGoldenWave();
+      var op=document.getElementById('out-prompt-full');
+      if(op&&lcIsMobileDrawer()){try{op.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){}}
     });
-    document.getElementById('output-section').scrollIntoView({behavior:'smooth'});
+    var outSec=document.getElementById('output-section');
+    if(outSec){
+      try{outSec.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){}
+    }
   },800);
 }
 function getCopywrite(retryCount){retryCount=retryCount||0;if(!cachedPrompt){alert('请先生成提示词！');return;}var topic=(sessionContext.coreTopic||'').trim();if(!topic){alert('缺少当前主题，请重新「启动大脑」。');return;}var inputTopic=extractCoreTopicFromInput(((document.getElementById('main-textarea')||{}).value||'').trim());if(inputTopic) topic=inputTopic;sessionContext.coreTopic=topic;if(getFreeTrialsRemaining()<=0&&!hasValidCardKey()){handleFreeTrialExhausted();return;}if(canUseFreeTrialWithoutCardKey()){var leftCw=consumeFreeTrial();showFreeTrialToast(leftCw);}var genToken=copywriteGenToken;document.getElementById('copywrite-ask').style.display='none';clearCopywriteOutputs();hideCopywriteSection();var loading=document.getElementById('copywrite-loading');if(!loading){loading=document.createElement('div');loading.id='copywrite-loading';loading.style.cssText='text-align:center;padding:20px;color:var(--tx2);font-size:13px;';document.getElementById('output-section').appendChild(loading);}loading.textContent='✍️ 正在为【'+topic+'】生成配套爆款文案…'+(retryCount>0?'（第'+(retryCount+1)+'次校正）':'');syncSessionRecommendations();callCoze(buildCopywriteQuery(topic),null,false,'✍️ 爆款文案生成中…',{intent:'copywrite',forceNewSession:true}).then(function(res){if(genToken&&genToken!==copywriteGenToken)return;currentConversationId=res.conversation_id||currentConversationId;currentChatId=res.chat_id||currentChatId;var content=purifyCopywriteBlocks(extractAssistantContent(res));var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();if(!content||isWelcome(content)){if(retryCount<2)return getCopywrite(retryCount+1);document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败，请重试');return;}if(copywriteTopicMismatch(content,topic)){if(retryCount<2)return getCopywrite(retryCount+1);alert('文案主题与「'+topic+'」不一致，请重新「启动大脑」后再生成文案。');document.getElementById('copywrite-ask').style.display='block';return;}renderCopywriteResult(content);}).catch(function(e){var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败：'+e.message);});}
