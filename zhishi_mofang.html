@@ -14,6 +14,7 @@
 })();
 </script>
 <title>灵创星球 · 图片提示词大师</title>
+<!-- lc-build: uploadfix-20260520 · 修复图片上传 safeFile 报错 -->
 <style>
 :root{
   --bg:#09090d;--panel:#111218;--input-bg:#0b0c10;
@@ -3438,8 +3439,8 @@ function addImageToSlot(file,slotIdx){
   uploadedImageSlots[slotIdx]={name:file.name,type:file.type,size:file.size};
   uploadedImageFileIds[slotIdx]=null;
   setSlotUploadStatus(slotIdx,'压缩并上传中…',false,false);
-  var upPromise=compressImageFileForUpload(file).then(function(safeFile){
-    return uploadFile(safeFile,slotIdx);
+  var upPromise=compressImageFileForUpload(file).then(function(prepared){
+    return uploadFile(prepared,slotIdx);
   }).then(function(fid){
     if(fid){
       setSlotUploadStatus(slotIdx,'✅ 已上传扣子',false,true);
@@ -3448,7 +3449,9 @@ function addImageToSlot(file,slotIdx){
     setSlotUploadStatus(slotIdx,'上传失败（可仅文字分析）',true,false);
     return null;
   }).catch(function(err){
-    setSlotUploadStatus(slotIdx,(err&&err.message)?err.message.slice(0,28):'上传失败',true,false);
+    var em=err&&err.message?String(err.message):'上传失败';
+    if(/safeFile/i.test(em)) em='页面缓存过旧，请 Ctrl+F5 强刷后重试';
+    setSlotUploadStatus(slotIdx,em.slice(0,32),true,false);
     return null;
   });
   pendingUploadPromises.push(upPromise);
@@ -4019,18 +4022,31 @@ function uploadFile(file,slotKey){
   if(!file)return Promise.resolve();
   var isImage=String(file.type||'').indexOf('image/')===0;
   if(!checkUploadSize(file)) return Promise.reject(new Error(lcUploadLimitMsg(file,isImage)));
-  var uploadMeta={name:file.name||'upload.bin',type:file.type||'application/octet-stream',size:file.size};
   var prep=isImage?compressImageFileForUpload(file):Promise.resolve(file);
-  return prep.then(function(safeFile){
-    uploadMeta.name=safeFile.name||uploadMeta.name;
-    uploadMeta.type=safeFile.type||uploadMeta.type;
-    uploadMeta.size=safeFile.size||uploadMeta.size;
+  return prep.then(function(preparedFile){
+    var f=preparedFile||file;
+    var meta={
+      name:f.name||file.name||'upload.bin',
+      type:f.type||file.type||'application/octet-stream',
+      size:f.size||file.size||0
+    };
     var maxB=isImage?LC_MAX_IMAGE_BYTES:LC_MAX_DOC_BYTES;
-    if(safeFile.size>maxB) throw new Error(lcUploadLimitMsg(safeFile,isImage));
-    return fileToBase64(safeFile);
-  }).then(function(b64){
-    if(b64.length>LC_MAX_B64_CHARS) throw new Error('上传体积超限，请压缩至单张图片＜2MB 或换更小文档');
-    return fetch(API_BASE+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze-upload',file_base64:b64,file_name:uploadMeta.name,file_type:uploadMeta.type})});
+    if(meta.size>maxB) return Promise.reject(new Error(lcUploadLimitMsg(f,isImage)));
+    return fileToBase64(f).then(function(b64){
+      if(!b64||b64.length>LC_MAX_B64_CHARS){
+        return Promise.reject(new Error('上传体积超限，请压缩至单张图片＜2MB 或换更小文档'));
+      }
+      return fetch(API_BASE+'/api/generate',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          mode:'coze-upload',
+          file_base64:b64,
+          file_name:meta.name,
+          file_type:meta.type
+        })
+      });
+    });
   }).then(parseApiResponse).then(function(data){
     if(data&&data.code===0&&data.data&&data.data.id){
       var fid=String(data.data.id);
