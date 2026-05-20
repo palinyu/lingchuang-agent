@@ -20,9 +20,14 @@ const { finalizeCozeResponse } = require(path.join(ROOT, 'coze-response-pipeline
 const PROMPT_QUALITY_INTENTS = ['prompt', 'custom'];
 const MAX_MASTERS_PROMPT_RETRIES = 2;
 const MAX_ANALYZE_RETRIES = 2;
+const COZE_FETCH_TIMEOUT_MS = parseInt(process.env.COZE_FETCH_TIMEOUT_MS, 10) || 280000;
 
-function maxCozeAttempts(intent) {
-  if (intent === 'analyze') return MAX_ANALYZE_RETRIES;
+function maxCozeAttempts(intent, fileCount) {
+  if (intent === 'analyze') {
+    if (fileCount >= 2) return 0;
+    if (fileCount >= 1) return 1;
+    return MAX_ANALYZE_RETRIES;
+  }
   if (PROMPT_QUALITY_INTENTS.indexOf(intent) !== -1) return MAX_MASTERS_PROMPT_RETRIES;
   return 0;
 }
@@ -148,17 +153,17 @@ async function handleDeepseekCopywriter(res, body) {
 }
 
 module.exports = async function handler(req, res) {
-  // 强行锁死跨域，防止前端拿不到真实死因
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
+  try {
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    return res.status(405).json({ code: -1, msg: 'Method Not Allowed' });
   }
 
   const bodyEarly = readJsonBody(req);
@@ -194,7 +199,16 @@ module.exports = async function handler(req, res) {
     }
   }
   if (!resolvedToken) {
-    return res.status(500).json({ error: '【诊断提示】.env.local 里的 COZE_TOKEN 没被服务器读到，请检查文件保存状态！' });
+    return res.status(500).json({
+      code: -1,
+      msg: '【诊断】未配置 COZE_TOKEN，请在 Vercel 环境变量中填写扣子 Token',
+    });
+  }
+  if (!resolvedBotId) {
+    return res.status(500).json({
+      code: -1,
+      msg: '【诊断】未配置 COZE_BOT_ID，请在 Vercel 环境变量中填写智能体 Bot ID',
+    });
   }
 
   async function ensureConversationId(token, botId, existingId, forceNew) {
@@ -248,6 +262,12 @@ module.exports = async function handler(req, res) {
       const b64 = String(body.file_base64 || '').trim();
       if (!b64) {
         return res.status(400).json({ code: -1, msg: '缺少 file_base64' });
+      }
+      if (b64.length > 3.2 * 1024 * 1024) {
+        return res.status(413).json({
+          code: -1,
+          msg: '上传文件过大（超过平台 4MB 限制），请压缩图片至 2MB 以内，或仅上传文档文字',
+        });
       }
       const fileId = await uploadCozeFile(
         resolvedToken,
@@ -349,9 +369,10 @@ module.exports = async function handler(req, res) {
     let lastValidation = { valid: true, reason: '' };
 
     const rawQueryForValidate = rawQuery || user_notes || coreTopic;
-    for (let attempt = 0; attempt <= maxCozeAttempts(intent); attempt++) {
+    const cozeAttempts = maxCozeAttempts(intent, cozeFileIds.length);
+    for (let attempt = 0; attempt <= cozeAttempts; attempt++) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 120000);
+      const timeoutId = setTimeout(() => controller.abort(), COZE_FETCH_TIMEOUT_MS);
       const outgoing = {
         bot_id: targetBotId,
         user_id: clientUserId,
@@ -564,4 +585,11 @@ module.exports = async function handler(req, res) {
       : `【链路本地崩溃诊断】: ${error.message}。如果提示 fetch failed，说明是网络/梯子阻断了本地与 Coze.cn 的连接！`;
     return res.status(500).json({ code: -1, msg, error: msg });
   }
-}
+  } catch (fatal) {
+    console.error('【api/generate 致命错误】', fatal);
+    return res.status(500).json({
+      code: -1,
+      msg: '【服务器内部错误】' + (fatal && fatal.message ? fatal.message : '请稍后重试'),
+    });
+  }
+};

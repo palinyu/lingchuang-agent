@@ -862,6 +862,9 @@ html.lc-await-intro #lc-mobile-legal-bar{visibility:hidden!important;pointer-eve
 #preview-images-row.is-dual{display:flex;}
 .preview-slot{flex:1;min-width:140px;position:relative;border-radius:8px;overflow:hidden;border:1px solid rgba(243,175,66,0.25);background:#0c0d14;}
 .preview-slot .slot-label{position:absolute;top:6px;left:6px;z-index:2;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,0.75);color:var(--gold);}
+.preview-slot .slot-status{position:absolute;bottom:6px;left:6px;right:6px;z-index:2;font-size:10px;font-weight:700;padding:3px 6px;border-radius:6px;background:rgba(0,0,0,0.72);color:#93c5fd;text-align:center;}
+.preview-slot .slot-status.is-err{color:#fca5a5;}
+.preview-slot .slot-status.is-ok{color:#86efac;}
 .preview-slot img{width:100%;max-height:200px;object-fit:contain;display:block;}
 .preview-slot .btn-rm-slot{position:absolute;top:6px;right:6px;z-index:2;background:rgba(0,0,0,0.7);border:none;color:#fff;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:12px;line-height:22px;}
 #preview-doc{padding:20px;display:flex;align-items:center;gap:12px;}
@@ -1421,8 +1424,8 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
     <div id="img-preview-area">
       <button class="btn-rm-preview" onclick="removeFile()">✕</button>
       <div id="preview-images-row">
-        <div class="preview-slot" id="preview-slot-0" style="display:none;"><span class="slot-label">图B 产品</span><button type="button" class="btn-rm-slot" onclick="removeImageSlot(0)">✕</button><img id="preview-img-0" src="" alt="图B"></div>
-        <div class="preview-slot" id="preview-slot-1" style="display:none;"><span class="slot-label">图A 风格</span><button type="button" class="btn-rm-slot" onclick="removeImageSlot(1)">✕</button><img id="preview-img-1" src="" alt="图A"></div>
+        <div class="preview-slot" id="preview-slot-0" style="display:none;"><span class="slot-label">图B 产品</span><span class="slot-status" id="preview-status-0"></span><button type="button" class="btn-rm-slot" onclick="removeImageSlot(0)">✕</button><img id="preview-img-0" src="" alt="图B"></div>
+        <div class="preview-slot" id="preview-slot-1" style="display:none;"><span class="slot-label">图A 风格</span><span class="slot-status" id="preview-status-1"></span><button type="button" class="btn-rm-slot" onclick="removeImageSlot(1)">✕</button><img id="preview-img-1" src="" alt="图A"></div>
       </div>
       <img id="preview-img" src="" style="display:none;">
       <div id="preview-doc" style="display:none;" class="doc-preview">
@@ -1974,6 +1977,14 @@ var API_BASE=(function(){
   }catch(e){return '';}
 })();
 var LC_NETWORK_TIP='🌍 网络环境波动，连接大脑超时，请刷新页面重试~';
+function lcFetchJson(url,options,timeoutMs){
+  options=options||{};
+  timeoutMs=timeoutMs||90000;
+  var ctrl=new AbortController();
+  var tid=setTimeout(function(){ctrl.abort();},timeoutMs);
+  var opts=Object.assign({},options,{signal:ctrl.signal});
+  return fetch(url,opts).finally(function(){clearTimeout(tid);});
+}
 function appendConfigCacheBust(url){
   var u=String(url||'').trim();
   if(!u) return u;
@@ -1983,9 +1994,10 @@ function appendConfigCacheBust(url){
 function isNetworkFailure(err){
   if(!err) return true;
   var msg=String(err.message||err||'').toLowerCase();
-  return msg.indexOf('failed to fetch')>=0||msg.indexOf('networkerror')>=0||msg.indexOf('load failed')>=0||msg.indexOf('network request failed')>=0||msg.indexOf('err_internet_disconnected')>=0||(err.name==='TypeError'&&msg.indexOf('fetch')>=0);
+  return msg.indexOf('failed to fetch')>=0||msg.indexOf('networkerror')>=0||msg.indexOf('load failed')>=0||msg.indexOf('network request failed')>=0||msg.indexOf('err_internet_disconnected')>=0||(err.name==='TypeError'&&msg.indexOf('fetch')>=0)||err.name==='AbortError'||msg.indexOf('aborted')>=0;
 }
 function resolveUserFacingApiError(err){
+  if(err&&err.name==='AbortError') return '分析耗时较长已超时，双图识别更慢，请稍后重试或先只用一张图';
   if(isNetworkFailure(err)) return LC_NETWORK_TIP;
   var msg=err&&err.message?String(err.message):'';
   msg=msg.replace(/扣子智能体|扣子服务|扣子官方|扣子/g,'AI大脑');
@@ -3116,24 +3128,64 @@ function refreshImagePreviewUI(){
   else if(n===1){if(row){row.className='';row.style.display='flex';}if(pi)pi.style.display='none';}
   else{if(row)row.style.display='none';if(pi){pi.style.display='none';pi.src='';}}
 }
+function setSlotUploadStatus(slotIdx,text,isErr,isOk){
+  var el=document.getElementById('preview-status-'+slotIdx);
+  if(!el)return;
+  el.textContent=text||'';
+  el.classList.remove('is-err','is-ok');
+  if(isErr) el.classList.add('is-err');
+  if(isOk) el.classList.add('is-ok');
+}
+function revokeSlotPreviewUrl(img){
+  if(img&&img._lcObjectUrl){
+    try{URL.revokeObjectURL(img._lcObjectUrl);}catch(e){}
+    img._lcObjectUrl=null;
+  }
+}
 function addImageToSlot(file,slotIdx){
   if(slotIdx<0||slotIdx>1)return;
   var slot=document.getElementById('preview-slot-'+slotIdx);var img=document.getElementById('preview-img-'+slotIdx);
   if(!slot||!img)return;
-  var r=new FileReader();
-  r.onload=function(e){img.src=e.target.result;slot.style.display='block';refreshImagePreviewUI();};
-  r.readAsDataURL(file);
-  uploadedImageSlots[slotIdx]={name:file.name,type:file.type};
+  revokeSlotPreviewUrl(img);
+  try{
+    img._lcObjectUrl=URL.createObjectURL(file);
+    img.src=img._lcObjectUrl;
+    img.onerror=function(){setSlotUploadStatus(slotIdx,'预览失败，请换 JPG/PNG',true,false);};
+  }catch(e){
+    var r=new FileReader();
+    r.onload=function(ev){img.src=ev.target.result;};
+    r.readAsDataURL(file);
+  }
+  slot.style.display='block';
+  uploadedImageSlots[slotIdx]={name:file.name,type:file.type,size:file.size};
   uploadedImageFileIds[slotIdx]=null;
-  pendingUploadPromises.push(uploadFile(file,slotIdx));
+  setSlotUploadStatus(slotIdx,'压缩并上传中…',false,false);
+  var upPromise=compressImageFileForUpload(file).then(function(safeFile){
+    return uploadFile(safeFile,slotIdx);
+  }).then(function(fid){
+    if(fid){
+      setSlotUploadStatus(slotIdx,'✅ 已上传扣子',false,true);
+      return fid;
+    }
+    setSlotUploadStatus(slotIdx,'上传失败，将仅文字分析',true,false);
+    return null;
+  }).catch(function(err){
+    setSlotUploadStatus(slotIdx,(err&&err.message)?err.message.slice(0,28):'上传失败',true,false);
+    return null;
+  });
+  pendingUploadPromises.push(upPromise);
   isFileAttached=true;
   var pa=document.getElementById('img-preview-area');if(pa)pa.style.display='block';
   var pd=document.getElementById('preview-doc');if(pd)pd.style.display='none';
+  refreshImagePreviewUI();
 }
 function processImageFiles(imageFiles){
   var imgs=imageFiles.filter(function(f){return f.type.indexOf('image/')===0;}).slice(0,2);
   if(!imgs.length)return;
-  if(imgs.length>=2){uploadedImageSlots=[null,null];uploadedImageFileIds=[null,null];pendingUploadPromises=[];}
+  if(imgs.length>=2){
+    for(var si=0;si<2;si++){var im0=document.getElementById('preview-img-'+si);if(im0)revokeSlotPreviewUrl(im0);setSlotUploadStatus(si,'',false,false);}
+    uploadedImageSlots=[null,null];uploadedImageFileIds=[null,null];pendingUploadPromises=[];
+  }
   docTextContent='';attachedFileName='';docUploadFileId=null;
   var pd=document.getElementById('preview-doc');if(pd)pd.style.display='none';
   var startSlot=uploadedImageSlots[0]?1:0;
@@ -3152,7 +3204,12 @@ function processDocumentFile(file){
   if(pa)pa.style.display='block';if(pi)pi.style.display='none';if(row)row.style.display='none';
   if(pd)pd.style.display='flex';if(pdn)pdn.textContent=file.name;if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 读取中…';
   var ext=file.name.split('.').pop().toLowerCase();
-  var upBackup=function(){pendingUploadPromises.push(uploadFile(file,'doc'));};
+  var upBackup=function(){
+    if(docTextContent&&docTextContent.length>20&&!/^\[(解析失败|PDF文件)/.test(docTextContent)){
+      return;
+    }
+    pendingUploadPromises.push(uploadFile(file,'doc'));
+  };
   if(ext==='txt'){
     var r2=new FileReader();
     r2.onload=function(e){docTextContent=String(e.target.result||'').substring(0,20000);if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · ✅ 已读取 '+docTextContent.length+' 字';upBackup();finishDocParseWait();};
@@ -3188,7 +3245,9 @@ function handleFile(input){
 function removeImageSlot(idx){
   uploadedImageSlots[idx]=null;uploadedImageFileIds[idx]=null;
   var slot=document.getElementById('preview-slot-'+idx);var img=document.getElementById('preview-img-'+idx);
-  if(slot)slot.style.display='none';if(img)img.src='';
+  if(img){revokeSlotPreviewUrl(img);img.src='';}
+  if(slot)slot.style.display='none';
+  setSlotUploadStatus(idx,'',false,false);
   refreshImagePreviewUI();
   if(uploadedImageCount===0&&!docTextContent&&!getDocumentContent())removeFile();
 }
@@ -3450,7 +3509,11 @@ function parseApiResponse(r){
     var data=null;
     try{data=text?JSON.parse(text):null;}catch(e){data=null;}
     if(!r.ok){
-      var errMsg=(data&&(data.msg||data.error))||('HTTP '+r.status);
+      var errMsg=(data&&(data.msg||data.error))||'';
+      if(r.status===413) errMsg=errMsg||'上传文件过大，请换更小图片（建议单张＜2MB）或只上传文档文字';
+      else if((r.status===504||r.status===502)&&!errMsg) errMsg='云端分析超时（双图更慢），请换更小图片或稍后重试';
+      else if(r.status===500&&!errMsg) errMsg='服务器内部错误：请检查 Vercel 是否已配置 COZE_TOKEN、COZE_BOT_ID、DEEPSEEK_API_KEY';
+      else if(!errMsg) errMsg='HTTP '+r.status;
       throw new Error(errMsg);
     }
     return data;
@@ -3554,10 +3617,42 @@ function fetchDeepseekCopywriteApi(){
   };
   return fetch(url,opts).then(parseApiResponse);
 }
+function compressImageFileForUpload(file){
+  return new Promise(function(resolve){
+    if(!file||String(file.type||'').indexOf('image/')!==0){resolve(file);return;}
+    if(file.size<500000){resolve(file);return;}
+    var img=new Image();
+    var url=URL.createObjectURL(file);
+    img.onload=function(){
+      URL.revokeObjectURL(url);
+      var w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
+      var maxW=1280;
+      var scale=Math.min(1,maxW/Math.max(w,h,1));
+      var cw=Math.max(1,Math.round(w*scale)),ch=Math.max(1,Math.round(h*scale));
+      var canvas=document.createElement('canvas');
+      canvas.width=cw;canvas.height=ch;
+      var ctx=canvas.getContext('2d');
+      if(!ctx){resolve(file);return;}
+      ctx.drawImage(img,0,0,cw,ch);
+      canvas.toBlob(function(blob){
+        if(!blob||blob.size>=file.size){resolve(file);return;}
+        var name=(file.name||'upload.jpg').replace(/\.[^.]+$/,'')+'.jpg';
+        resolve(new File([blob],name,{type:'image/jpeg'}));
+      },'image/jpeg',0.82);
+    };
+    img.onerror=function(){URL.revokeObjectURL(url);resolve(file);};
+    img.src=url;
+  });
+}
 function uploadFile(file,slotKey){
   if(!file)return Promise.resolve();
-  return fileToBase64(file).then(function(b64){
-    return fetch(API_BASE+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze-upload',file_base64:b64,file_name:file.name,file_type:file.type||'application/octet-stream'})});
+  var prep=String(file.type||'').indexOf('image/')===0?compressImageFileForUpload(file):Promise.resolve(file);
+  return prep.then(function(safeFile){
+    if(safeFile.size>2.5*1024*1024) throw new Error('文件过大，请换更小图片（建议＜2MB）');
+    return fileToBase64(safeFile);
+  }).then(function(b64){
+    if(b64.length>3.2*1024*1024) throw new Error('上传体积超限，请压缩图片或只使用文档提取的文字');
+    return fetch(API_BASE+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'coze-upload',file_base64:b64,file_name:safeFile.name,file_type:safeFile.type||'application/octet-stream'})});
   }).then(parseApiResponse).then(function(data){
     if(data&&data.code===0&&data.data&&data.data.id){
       var fid=String(data.data.id);
@@ -3575,7 +3670,7 @@ function removeFile(){
   document.getElementById('img-preview-area').style.display='none';
   document.getElementById('preview-img').src='';
   uploadedImageSlots=[null,null];uploadedImageFileIds=[null,null];docUploadFileId=null;uploadedImageCount=0;
-  for(var si=0;si<2;si++){var sl=document.getElementById('preview-slot-'+si);var im=document.getElementById('preview-img-'+si);if(sl)sl.style.display='none';if(im)im.src='';}
+  for(var si=0;si<2;si++){var sl=document.getElementById('preview-slot-'+si);var im=document.getElementById('preview-img-'+si);if(im){revokeSlotPreviewUrl(im);im.src='';}if(sl)sl.style.display='none';setSlotUploadStatus(si,'',false,false);}
   var row=document.getElementById('preview-images-row');if(row){row.style.display='none';row.className='';}
   isFileAttached=false;uploadedFileIds=[];docTextContent='';attachedFileName='';
   pendingUploadPromises=[];docParsePromise=Promise.resolve();docParseResolve=null;
@@ -4105,11 +4200,12 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
   setApiLoading(true,loadingLabel||'⚡ AI大脑运算中…');
   deductFreeTrialOnFetch();
   try{
-    return fetch(API_BASE+'/api/generate',{
+    var fetchMs=(ctx.intent==='analyze'&&uploadedImageCount>=2)?120000:(ctx.intent==='analyze'?95000:90000);
+    return lcFetchJson(API_BASE+'/api/generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(body)
-    })
+    },fetchMs)
       .then(parseApiResponse)
       .then(function(data){
         if(!data) throw new Error(LC_NETWORK_TIP);
@@ -4201,7 +4297,20 @@ function runEngine(){
   sessionUserId='lc_'+Date.now()+'_'+Math.random().toString(36).slice(2,9);
   updateStyleDisplays();
   runQuantumScan(topic||'上传文件');
-  waitForFileReady(12000).then(function(){
+  var waitMs=uploadedImageCount>=2?25000:12000;
+  waitForFileReady(waitMs).then(function(){
+    if(uploadedImageCount>=2){
+      var miss=[];
+      if(!uploadedImageFileIds[0]) miss.push('图B产品');
+      if(!uploadedImageFileIds[1]) miss.push('图A风格');
+      if(miss.length){
+        unlockGenBtn();
+        _lcFreeTrialRunActive=false;
+        document.getElementById('quantum-stage').style.display='none';
+        alert(miss.join('、')+' 未上传成功，请换更小图片（建议单张＜2MB）或重新选择后再点启动大脑');
+        return Promise.reject(new Error('dual image upload incomplete'));
+      }
+    }
   lockSessionFromInput(topic);
   var query=buildUserQuery(topic);
   qLog('📡 <span class="q-gold">CALLING</span> · 呼叫AI大脑…',null,0);
