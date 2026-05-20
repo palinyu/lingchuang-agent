@@ -457,9 +457,11 @@ body{
 }
 .gen-particle-canvas{position:fixed;inset:0;z-index:40;pointer-events:none;opacity:0;transition:opacity .25s;}
 .gen-particle-canvas.is-active{opacity:1;}
-#out-prompt.is-typing::after{content:'▋';animation:case-cursor-blink .8s step-end infinite;color:var(--gold);margin-left:2px;}
+#out-prompt-full.is-typing::after,#out-prompt-short.is-typing::after{content:'▋';animation:case-cursor-blink .8s step-end infinite;color:var(--gold);margin-left:2px;}
 @keyframes case-cursor-blink{50%{opacity:0;}}
 .prompt-block.prompt-wave{animation:prompt-golden-wave .6s ease-out;}
+.prompt-meta-note{margin:-4px 0 16px;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);font-size:11px;line-height:1.6;color:var(--tx3);}
+.prompt-meta-note strong{color:var(--tx2);}
 @keyframes prompt-golden-wave{
   0%{box-shadow:0 0 0 0 rgba(243,175,66,0.55);}
   100%{box-shadow:0 0 0 18px rgba(243,175,66,0);}
@@ -1579,13 +1581,21 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
     </div>
   </div>
   <div id="output-section">
-    <div class="prompt-block" id="main-prompt-block">
+    <div class="prompt-block" id="main-prompt-full-block">
       <div class="block-head">
-        <div class="block-head-left"><div class="block-icon">🔮</div><div><div class="block-title">①提示词：工业级生图提示词</div><div class="block-sub">复制 → 即梦文生图（已去除易违规描述：无画面写字、无具体品牌名；标题与商标请在醒图/PS后期处理）</div></div></div>
-        <button class="btn-copy" onclick="copyBlock('out-prompt')">复制</button>
+        <div class="block-head-left"><div class="block-icon">🔮</div><div><div class="block-title">①完整版提示词（英文）</div><div class="block-sub">仅含可粘贴即梦文生图的英文正文 · 无知识点/设置/话题</div></div></div>
+        <button class="btn-copy" onclick="copyPromptBox('full')">复制</button>
       </div>
-      <div class="block-body prompt-style" id="out-prompt"></div>
+      <div class="block-body prompt-style" id="out-prompt-full"></div>
     </div>
+    <div class="prompt-block" id="main-prompt-short-block" style="display:none;">
+      <div class="block-head">
+        <div class="block-head-left"><div class="block-icon">📱</div><div><div class="block-title">①精简版提示词（中文）</div><div class="block-sub">手机端适配描述 · 仅含精简版正文</div></div></div>
+        <button class="btn-copy" onclick="copyPromptBox('short')">复制</button>
+      </div>
+      <div class="block-body" id="out-prompt-short"></div>
+    </div>
+    <div id="out-prompt-meta" class="prompt-meta-note" style="display:none;"></div>
     <div id="copywrite-ask">
       <div class="copywrite-ask-card">
         <h3>✍️ 需要配套爆款文案吗？</h3>
@@ -2177,7 +2187,7 @@ function bootHeadlessConfig(){
 }
 var sessionUserId=null;
 var sessionContext={coreTopic:'',style:'',technique:'',size:'',userNotes:'',promptProfile:'standard',routeHumanLabel:''};
-var uploadedFileIds=[],isFileAttached=false,cachedPrompt='',selectedBubbles=[],currentConversationId=null,currentChatId=null;
+var uploadedFileIds=[],isFileAttached=false,cachedPrompt='',cachedPromptShort='',selectedBubbles=[],currentConversationId=null,currentChatId=null;
 var promptReadyTopic='',copywriteGenToken=0;
 var aiRecSize='',aiRecStyle='',userCustomSize='',userCustomStyle='';
 var docTextContent='',attachedFileName='';
@@ -2661,7 +2671,7 @@ function setupDsCopyPanel(){
   var cpAll=document.getElementById('ds-copy-all');
   if(cpAll) cpAll.addEventListener('click',function(){
     var pack=packDsCopyText();
-    var op=document.getElementById('out-prompt');
+    var op=document.getElementById('out-prompt-full');
     var extra=op&&op.textContent&&op.textContent.trim() ? '\n\n【配图提示词】\n'+op.textContent.trim() : '';
     clipText((pack+extra).trim());
   });
@@ -2890,7 +2900,7 @@ function typewriterPrompt(el,text,done){
   step();
 }
 function triggerPromptGoldenWave(){
-  var block=document.getElementById('main-prompt-block');
+  var block=document.getElementById('main-prompt-full-block');
   if(!block) return;
   block.classList.remove('prompt-wave');
   void block.offsetWidth;
@@ -3771,7 +3781,7 @@ function isKnowledgeTopic(){
   return /知识图解|英语|单元|课时|上册|下册|古诗|诗词|做法|菜谱|科普|原理|图解/.test(t);
 }
 function isWelcome(content){if(!content)return true;var hasW=WELCOME_KW.some(function(kw){return content.indexOf(kw)>=0;});var hasR=content.indexOf('品类判定')>=0||content.indexOf('内容识别')>=0||content.indexOf('匹配手法')>=0||content.indexOf('推荐尺寸')>=0||/[A-Za-z ,.\-]{60,}/.test(content);return hasW&&!hasR;}
-function resetState(){stopGenParticleFlow();var keepStyleId=selectedVisualStyleId;currentConversationId=null;currentChatId=null;sessionUserId=null;selectedVisualStyleId=keepStyleId;sessionContext={coreTopic:'',style:keepStyleId?getSelectedVisualStyleValue():'',technique:'',size:'',userNotes:'',promptProfile:'standard',routeHumanLabel:'',randomStyleName:''};cachedPrompt='';promptReadyTopic='';copywriteGenToken=0;aiRecSize='';aiRecStyle='';userCustomSize='';userCustomStyle='';clearCopywriteOutputs();hideCopywriteSection();var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();var legal=document.getElementById('legal-risk-notice');if(legal)legal.style.display='none';['analysis-stage','custom-stage','thinking-stage','output-section','copywrite-ask','copywrite-section'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});var ring=document.getElementById('t-ring');if(ring){ring.style.animation='spin-ring .9s linear infinite';ring.style.borderColor='';ring.innerHTML='';}var s=document.getElementById('t-status');if(s){s.style.color='#cbd5e1';s.textContent='AI大脑联网搜索爆款参数中…\n完整提示词生成中…';}var sz=document.getElementById('t-size');if(sz)sz.textContent='--';var st=document.getElementById('t-style');if(st)st.textContent='--';}
+function resetState(){stopGenParticleFlow();var keepStyleId=selectedVisualStyleId;currentConversationId=null;currentChatId=null;sessionUserId=null;selectedVisualStyleId=keepStyleId;sessionContext={coreTopic:'',style:keepStyleId?getSelectedVisualStyleValue():'',technique:'',size:'',userNotes:'',promptProfile:'standard',routeHumanLabel:'',randomStyleName:''};cachedPrompt='';cachedPromptShort='';promptReadyTopic='';copywriteGenToken=0;aiRecSize='';aiRecStyle='';userCustomSize='';userCustomStyle='';clearCopywriteOutputs();hideCopywriteSection();var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();var legal=document.getElementById('legal-risk-notice');if(legal)legal.style.display='none';['analysis-stage','custom-stage','thinking-stage','output-section','copywrite-ask','copywrite-section'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});var ring=document.getElementById('t-ring');if(ring){ring.style.animation='spin-ring .9s linear infinite';ring.style.borderColor='';ring.innerHTML='';}var s=document.getElementById('t-status');if(s){s.style.color='#cbd5e1';s.textContent='AI大脑联网搜索爆款参数中…\n完整提示词生成中…';}var sz=document.getElementById('t-size');if(sz)sz.textContent='--';var st=document.getElementById('t-style');if(st)st.textContent='--';}
 function runEngine(){
   var btn=document.getElementById('gen-btn');
   if(btn&&btn.disabled)return;
@@ -4199,7 +4209,8 @@ function parseCozeOutputPackage(raw){
     return body.slice(0,endAt).trim();
   }
   var knowledgeStruct=sliceBetween(['📊【知识点结构化','知识点结构化','【知识点结构化'],['🎨【即梦','即梦生图提示词']);
-  var englishFull=sliceBetween(['完整版（推荐）','完整版(推荐)','【完整版（推荐）','📋 完整版','完整版'],['精简版','中文版','📱 精简版','⚙️ 即梦','即梦设置','配套爆款']);
+  var englishFull=sliceBetween(['完整版（推荐）','完整版(推荐)','【完整版（推荐）','📋 完整版','完整版'],['精简版','中文版','📱 精简版','⚙️ 即梦','即梦设置','配套爆款','📊','知识点结构化']);
+  englishFull=cleanEnglishPromptText(englishFull);
   if(englishFull.length<60){
     var blocks=text.match(/[A-Za-z][A-Za-z0-9\s,.\-:;'"()\/\[\]{}–—]{80,}/g);
     if(blocks&&blocks.length){blocks.sort(function(a,b){return b.length-a.length;});englishFull=blocks[0].replace(/\s+/g,' ').trim();}
@@ -4210,14 +4221,77 @@ function parseCozeOutputPackage(raw){
   var hasPackage=(englishFull&&englishFull.length>=60)||(chineseShort&&chineseShort.length>=20)||(knowledgeStruct&&knowledgeStruct.length>=30);
   return {hasPackage:hasPackage,knowledgeStruct:knowledgeStruct,englishFull:englishFull,chineseShort:chineseShort,jimengSettings:jimengSettings,hashtags:hashtags,jimengTip:''};
 }
-function formatCozePackageDisplay(pkg,englishForJimeng){
-  var lines=[];
-  if(pkg.knowledgeStruct) lines.push('📊 知识点结构化\n'+pkg.knowledgeStruct);
-  lines.push('📋 完整版（推荐）· 复制到即梦\n'+(englishForJimeng||pkg.englishFull||''));
-  if(pkg.chineseShort) lines.push('\n📱 精简版（手机端）\n'+pkg.chineseShort);
-  if(pkg.jimengSettings) lines.push('\n⚙️ 即梦设置\n'+pkg.jimengSettings);
-  if(pkg.hashtags) lines.push('\n📣 话题标签\n'+pkg.hashtags);
-  return lines.join('\n');
+function cleanEnglishPromptText(raw){
+  var s=String(raw||'').trim();
+  if(!s) return '';
+  var lines=s.split(/\r?\n/);
+  var enParts=[];
+  var i=0;
+  for(;i<lines.length;i++){
+    var t=lines[i].trim();
+    if(!t) continue;
+    if(/^📊|^📋|^📱|^⚙️|^📣|^🎨|^【|^处理】|^知识点/.test(t)) continue;
+    if(/^完整版|^精简版|复制到即梦/.test(t)) continue;
+    if(/^[\d]+[\.、．)\]]\s*[\u4e00-\u9fff]/.test(t)&&!/^[A-Za-z]/.test(t)) continue;
+    var latin=t.replace(/[^A-Za-z0-9 ,.\-:;'"()\/\[\]{}–—%]/g,' ').replace(/\s+/g,' ').trim();
+    if(latin.length>=50) enParts.push(latin);
+  }
+  if(enParts.length) return enParts.join('\n\n');
+  var pe=extractPureEnglishPrompt(s);
+  return pe||s;
+}
+function cleanChineseShortText(raw){
+  var s=String(raw||'').trim();
+  if(!s) return '';
+  s=s.replace(/^📱\s*精简版[^\n]*\n?/m,'');
+  s=s.replace(/\[AI提示词生成[^\]]*\]/g,'');
+  s=s.replace(/⚠️[^\n]*/g,'');
+  var lines=s.split(/\r?\n/);
+  var out=[];
+  var j=0;
+  for(;j<lines.length;j++){
+    var t=lines[j].trim();
+    if(!t) continue;
+    if(/^📊|^📋|^⚙️|^📣|^🎨|^【即梦|知识点结构化|完整版（推荐）/.test(t)) continue;
+    if(/确认后直接|配套爆款|建议回复/.test(t)) continue;
+    out.push(t);
+  }
+  return out.join('\n').trim();
+}
+function renderPromptOutputBoxes(englishText,chineseText,metaPkg,done){
+  var fullEl=document.getElementById('out-prompt-full');
+  var shortEl=document.getElementById('out-prompt-short');
+  var shortBlock=document.getElementById('main-prompt-short-block');
+  var metaEl=document.getElementById('out-prompt-meta');
+  var full=cleanEnglishPromptText(englishText||'');
+  var short=cleanChineseShortText(chineseText||'');
+  cachedPrompt=full;
+  cachedPromptShort=short;
+  if(shortBlock){
+    shortBlock.style.display=short&&short.length>8?'block':'none';
+  }
+  if(metaEl&&metaPkg){
+    var metaBits=[];
+    if(metaPkg.jimengSettings) metaBits.push('⚙️ '+metaPkg.jimengSettings.replace(/\s+/g,' ').trim());
+    if(metaPkg.hashtags) metaBits.push('📣 '+metaPkg.hashtags.replace(/\s+/g,' ').trim());
+    if(metaBits.length){
+      metaEl.innerHTML='<strong>参考信息（不在复制框内）：</strong><br>'+metaBits.join('<br>');
+      metaEl.style.display='block';
+    }else{metaEl.style.display='none';metaEl.innerHTML='';}
+  }else if(metaEl){metaEl.style.display='none';}
+  var pending=0;
+  function tick(){pending--;if(pending<=0&&done) done();}
+  pending=1;
+  typewriterPrompt(fullEl,full,function(){tick();});
+  if(short&&short.length>8&&shortEl){
+    pending++;
+    typewriterPrompt(shortEl,short,function(){tick();});
+  }else if(shortEl){shortEl.textContent='';}
+}
+function copyPromptBox(which){
+  var t=which==='short'?cachedPromptShort:cachedPrompt;
+  if(!t||!String(t).trim()){alert(which==='short'?'精简版为空，请重新生成':'完整版为空，请重新生成');return;}
+  navigator.clipboard.writeText(String(t).trim()).then(function(){showToast();}).catch(function(){alert('复制失败');});
 }
 function stripJimengKnownBrands(s){
   /* 与 prompt-engine.js 中 BRAND_STRIP_RES 保持同步；浏览器端二次净化 */
@@ -4437,7 +4511,12 @@ function showResult(raw,retryCount,fromConfirm){
       return;
     }
   }
-  cachedPrompt=extracted;
+  var fullForBox=extracted;
+  var shortForBox='';
+  if(cozePkg.hasPackage){
+    fullForBox=cleanEnglishPromptText(cozePkg.englishFull)||extracted;
+    shortForBox=cleanChineseShortText(cozePkg.chineseShort);
+  }
   promptReadyTopic=(sessionContext.coreTopic||'').trim();
   copywriteGenToken=Date.now();
   clearCopywriteOutputs();
@@ -4446,15 +4525,16 @@ function showResult(raw,retryCount,fromConfirm){
   var ring=document.getElementById('t-ring');
   if(ring){ring.style.animation='none';ring.style.borderColor='#f3af42';ring.innerHTML='<span style="color:#f3af42;font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;height:100%;">✓</span>';}
   var s=document.getElementById('t-status');
-  if(s){s.style.color='#f3af42';s.textContent=cozePkg.hasPackage?'✨ 扣子标准出图包已就绪（完整版+精简版+即梦设置）':'✨ 纯净英文提示词已就绪！';}
-  var displayText=cozePkg.hasPackage?formatCozePackageDisplay(cozePkg,extracted):extracted;
+  if(s){
+    s.style.color='#f3af42';
+    s.textContent=shortForBox?'✨ 完整版+精简版已分框就绪，请分别复制':'✨ 完整版英文提示词已就绪！';
+  }
   setTimeout(function(){
     stopGenParticleFlow();
     document.getElementById('thinking-stage').style.display='none';
-    var outEl=document.getElementById('out-prompt');
     document.getElementById('output-section').style.display='block';
     document.getElementById('copywrite-ask').style.display='block';
-    typewriterPrompt(outEl,displayText,function(){
+    renderPromptOutputBoxes(fullForBox,shortForBox,cozePkg.hasPackage?cozePkg:null,function(){
       triggerPromptGoldenWave();
     });
     document.getElementById('output-section').scrollIntoView({behavior:'smooth'});
@@ -4463,10 +4543,8 @@ function showResult(raw,retryCount,fromConfirm){
 function getCopywrite(retryCount){retryCount=retryCount||0;if(!cachedPrompt){alert('请先生成提示词！');return;}var topic=(sessionContext.coreTopic||'').trim();if(!topic){alert('缺少当前主题，请重新「启动大脑」。');return;}var inputTopic=extractCoreTopicFromInput(((document.getElementById('main-textarea')||{}).value||'').trim());if(inputTopic) topic=inputTopic;sessionContext.coreTopic=topic;if(getFreeTrialsRemaining()<=0&&!hasValidCardKey()){handleFreeTrialExhausted();return;}if(canUseFreeTrialWithoutCardKey()){var leftCw=consumeFreeTrial();showFreeTrialToast(leftCw);}var genToken=copywriteGenToken;document.getElementById('copywrite-ask').style.display='none';clearCopywriteOutputs();hideCopywriteSection();var loading=document.getElementById('copywrite-loading');if(!loading){loading=document.createElement('div');loading.id='copywrite-loading';loading.style.cssText='text-align:center;padding:20px;color:var(--tx2);font-size:13px;';document.getElementById('output-section').appendChild(loading);}loading.textContent='✍️ 正在为【'+topic+'】生成配套爆款文案…'+(retryCount>0?'（第'+(retryCount+1)+'次校正）':'');syncSessionRecommendations();callCoze(buildCopywriteQuery(topic),null,false,'✍️ 爆款文案生成中…',{intent:'copywrite',forceNewSession:true}).then(function(res){if(genToken&&genToken!==copywriteGenToken)return;currentConversationId=res.conversation_id||currentConversationId;currentChatId=res.chat_id||currentChatId;var content=purifyCopywriteBlocks(extractAssistantContent(res));var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();if(!content||isWelcome(content)){if(retryCount<2)return getCopywrite(retryCount+1);document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败，请重试');return;}if(copywriteTopicMismatch(content,topic)){if(retryCount<2)return getCopywrite(retryCount+1);alert('文案主题与「'+topic+'」不一致，请重新「启动大脑」后再生成文案。');document.getElementById('copywrite-ask').style.display='block';return;}renderCopywriteResult(content);}).catch(function(e){var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败：'+e.message);});}
 function showToast(){var t=document.getElementById('clip-toast');if(!t)return;t.style.display='block';setTimeout(function(){t.style.display='none';},1200);}
 function copyBlock(id){
-  if(id==='out-prompt'&&cachedPrompt){
-    navigator.clipboard.writeText(cachedPrompt).then(function(){showToast();}).catch(function(){alert('复制失败');});
-    return;
-  }
+  if(id==='out-prompt-full'||id==='out-prompt'){copyPromptBox('full');return;}
+  if(id==='out-prompt-short'){copyPromptBox('short');return;}
   var el=document.getElementById(id);
   if(!el||!el.textContent.trim()){alert('内容为空，请先生成！');return;}
   navigator.clipboard.writeText(el.textContent).then(function(){showToast();});
