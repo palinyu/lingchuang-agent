@@ -3008,7 +3008,8 @@ function purifyAnalysisDisplay(raw){
   return raw.split(/\r?\n/).filter(function(line){
     var t=line.trim();
     if(!t) return false;
-    if(/^(好的|好的！|确认|确认后直接出图|我要换|换一套|用这套|建议回复|⭕|👆|长按|复制\s*→)/.test(t)) return false;
+    if(/^(好的|好的！|确认|确认后直接出图|我要换|换一套|用这套|建议回复|⭕|👆|👉|长按|复制\s*→)/.test(t)) return false;
+    if(/👉\s*确认|建议回复选项/.test(t)) return false;
     if(/(我要换尺寸|我要自定义风格|换一套风格|用这套风格|建议回复选项)/.test(t)) return false;
     if(topic&&(t.indexOf('母亲节')>=0||t.indexOf('父亲节')>=0)){
       if(topic.indexOf('母亲')<0&&topic.indexOf('父亲')<0&&topic.indexOf('爸妈')<0) return false;
@@ -3869,34 +3870,61 @@ function parseFieldFromRaw(raw, keys){
   });
   return found;
 }
+function isAnalysisMenuLine(line){
+  var t=String(line||'').trim();
+  if(!t||t.length<2) return true;
+  if(/^(好的|确认|建议|⭕|👆|👉|💡|发送|回复\s*\d|⭕\s*\d)/.test(t)) return true;
+  if(/确认后直接出图|建议回复选项|换一套风格|用这套风格|我要换尺寸|我要自定义/.test(t)) return true;
+  if(/^👉\s*确认/.test(t)) return true;
+  return false;
+}
 function parseContentList(raw){
-  var lines = raw.split('\n');
-  var inContent = false;
-  var items = [];
-  var stopKeys = ['品类判定','用户类型','匹配手法','推荐尺寸'];
+  var text=String(raw||'');
+  var sectionMatch=text.match(/(?:^|\n)\s*(?:6[\.、\s]*|[✅✔]?\s*)?内容(?:要点|识别)[^\n]*[：:\s]*\n([\s\S]*?)(?=\n\s*(?:7[\.、\s]*|联想记忆|场景延伸|电商应用|全息深度|建议回复|确认直接|用这套|换一套|📊|🎨【即梦)|$)/i);
+  if(sectionMatch&&sectionMatch[1]){
+    var fromSec=sectionMatch[1].split(/\r?\n/).map(function(l){return l.trim();}).filter(function(l){
+      return l&&!isAnalysisMenuLine(l)&&l.length>3&&!/^(品类|用户|匹配|推荐|本次)/.test(l);
+    });
+    if(fromSec.length) return fromSec.slice(0,6);
+  }
+  var lines=text.split(/\r?\n/);
+  var inContent=false;
+  var items=[];
+  var startKeys=['内容要点','内容识别','6. 内容','6、内容','6．内容'];
+  var stopKeys=['品类判定','用户类型','匹配手法','推荐尺寸','本次随机风格','本次指定风格','联想记忆点','场景延伸','电商应用','全息深度','建议回复','确认直接','用这套','换一套','我要换'];
   lines.forEach(function(rawLine){
-    if(items.length >= 6) return;
-    var line = rawLine.trim();
+    if(items.length>=6) return;
+    var line=rawLine.trim();
+    if(!line) return;
     if(!inContent){
-      if(line.indexOf('内容识别') !== -1) inContent = true;
+      var hit=false,i=0;
+      for(;i<startKeys.length;i++){
+        if(line.indexOf(startKeys[i])>=0){hit=true;break;}
+      }
+      if(!hit) return;
+      inContent=true;
+      var colon=line.indexOf('：');if(colon<0) colon=line.indexOf(':');
+      if(colon>=0){
+        var headVal=line.slice(colon+1).trim();
+        if(headVal.length>3&&!isAnalysisMenuLine(headVal)) items.push(headVal);
+      }
       return;
     }
-    var shouldStop = false;
-    stopKeys.forEach(function(k){ if(line.indexOf(k) !== -1) shouldStop = true; });
-    if(shouldStop) return;
-    var numMatch = line.match(/^\d+[.,\u3001]\s*(.+)/);
-    if(numMatch && numMatch[1].trim().length > 1){ items.push(numMatch[1].trim()); return; }
-    var dashMatch = line.match(/^[-*]\s*(.+)/);
-    if(dashMatch && dashMatch[1].trim().length > 1){ items.push(dashMatch[1].trim()); return; }
-    if(line.length > 4){
-      var skip = false;
-      ['✅','📂','👤','🎯','🎨','📐','🎲','⭕','：',':','。','；'].forEach(function(s){
-        if(line.indexOf(s) === 0) skip = true;
-      });
-      if(!skip) items.push(line);
-    }
+    var shouldStop=false;
+    stopKeys.forEach(function(k){
+      if(line.indexOf(k)>=0&&line.indexOf('内容要点')<0&&line.indexOf('内容识别')<0) shouldStop=true;
+    });
+    if(shouldStop){inContent=false;return;}
+    if(isAnalysisMenuLine(line)) return;
+    var numMatch=line.match(/^\d+[.,、．)\]]\s*(.+)/);
+    if(numMatch&&numMatch[1].trim().length>2){items.push(numMatch[1].trim());return;}
+    var dashMatch=line.match(/^[-*•·]\s*(.+)/);
+    if(dashMatch&&dashMatch[1].trim().length>2){items.push(dashMatch[1].trim());return;}
+    if(line.length>4&&!/^[📂👤🎯🎨📐🎲✅]/.test(line)) items.push(line);
   });
-  return items.slice(0,4);
+  return items.filter(function(t){
+    return t&&!isAnalysisMenuLine(t)&&!/确认后直接出图/.test(t);
+  }).slice(0,6);
 }
 function showAnalysisCard(raw){
   raw=purifyAnalysisDisplay(raw);
@@ -3941,7 +3969,15 @@ function showAnalysisCard(raw){
   }
 
   var contentItems=parseContentList(raw);
-  if(contentItems.length===0){var sv=parseFieldFromRaw(raw,['内容识别']);if(sv)contentItems=[sv];}
+  if(contentItems.length===0){
+    var sv=parseFieldFromRaw(raw,['内容识别','内容要点']);
+    if(sv&&!isAnalysisMenuLine(sv)) contentItems=[sv];
+  }
+  if(contentItems.length===1&&isAnalysisMenuLine(contentItems[0])) contentItems=[];
+  if(contentItems.length===0){
+    var insight=parseInsightSection(raw,['内容要点','内容识别','联想记忆点']);
+    if(insight.length) contentItems=insight.slice(0,6);
+  }
   if(contentItems.length>0){
     var block=document.createElement('div');
     block.className='analysis-content-block';
@@ -3955,7 +3991,7 @@ function showAnalysisCard(raw){
       var num=document.createElement('span');
       num.style.cssText='flex-shrink:0;width:17px;height:17px;background:rgba(243,175,66,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#f3af42;';
       num.textContent=i+1;
-      var tx=document.createElement('span');tx.textContent=txt.substring(0,36);
+      var tx=document.createElement('span');tx.textContent=txt.substring(0,48);
       li.appendChild(num);li.appendChild(tx);
       ul.appendChild(li);
     });
