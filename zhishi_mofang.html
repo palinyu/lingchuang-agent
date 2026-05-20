@@ -247,8 +247,13 @@ body{
 .gallery-header{border-left:3px solid var(--gold);padding-left:12px;margin-bottom:16px;}
 .gallery-title{font-size:14px;font-weight:800;color:#fff;}
 .gallery-sub{font-size:11px;color:var(--tx3);margin-top:4px;}
-.gallery-track{display:flex;gap:14px;justify-content:center;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;cursor:grab;padding:6px 16px 14px;box-sizing:border-box;}
-.gallery-track::-webkit-scrollbar{display:none;}
+.gallery-track{display:flex;gap:14px;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;cursor:grab;padding:6px 16px 14px;box-sizing:border-box;-webkit-overflow-scrolling:touch;}
+.gallery-track::-webkit-scrollbar{height:6px;}
+.gallery-track::-webkit-scrollbar-thumb{background:rgba(243,175,66,0.35);border-radius:6px;}
+.gallery-scroll-ctrl{display:flex;flex-direction:column;gap:8px;margin-top:4px;padding:6px 12px 10px;border-top:1px solid rgba(255,255,255,0.06);}
+.gallery-scroll-ctrl[hidden]{display:none!important;}
+.gallery-scroll-hint{font-size:11px;font-weight:600;color:rgba(226,232,240,0.55);text-align:center;letter-spacing:0.02em;}
+.gallery-scroll-range{width:100%;height:32px;margin:0;padding:0;accent-color:#e2c07d;cursor:pointer;}
 .g-card{flex-shrink:0;width:138px;background:#171922;border-radius:10px;padding:6px;border:1px solid rgba(255,255,255,0.02);}
 .g-img{
   position:relative;width:126px;height:178px;border-radius:7px;overflow:hidden;cursor:zoom-in;
@@ -1111,6 +1116,9 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
     display:flex!important;position:fixed;top:0;bottom:0;margin:0;z-index:85600;
     width:min(92vw,320px);max-width:100%;transition:transform .34s cubic-bezier(.22,1,.36,1);
     box-shadow:0 0 48px rgba(0,0,0,0.55);border-radius:0;
+    -webkit-transform:translateZ(0);
+    transform:translateZ(0);
+    isolation:isolate;
   }
   .case-sidebar-wrap{left:0;flex-direction:row;transform:translateX(-105%);}
   .case-sidebar-wrap.is-open{transform:translateX(0);}
@@ -1122,7 +1130,16 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
     transform:none!important;opacity:1!important;pointer-events:auto!important;
     flex:1 1 auto!important;width:100%!important;min-width:0!important;max-height:100vh;
     border-radius:0;
+    -webkit-backdrop-filter:none!important;
+    backdrop-filter:none!important;
+    background:#13131c!important;
+    background-image:linear-gradient(180deg,#1a1a24 0%,#12121a 100%)!important;
+    color:#e2e8f0!important;
+    -webkit-transform:translateZ(0);
+    transform:translateZ(0);
+    isolation:isolate;
   }
+  .case-sidebar-wrap .case-sidebar-nebula{display:none!important;}
   .analysis-grid{grid-template-columns:1fr 1fr;}
   .platform-grid{grid-template-columns:repeat(2,1fr);}
   .custom-selects{grid-template-columns:1fr;}
@@ -1247,6 +1264,10 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
       <div class="gallery-sub">底层内置工业级高精光影参数，44种专业手法，全品类自动匹配</div>
     </div>
     <div class="gallery-track" id="gallery-track"></div>
+    <div class="gallery-scroll-ctrl" id="gallery-scroll-ctrl" hidden>
+      <div class="gallery-scroll-hint">◀ 拖动滑块浏览更多出图案例 ▶</div>
+      <input type="range" id="gallery-scroll-range" min="0" max="100" value="0" step="1" aria-label="横向浏览出图案例" />
+    </div>
   </div>
   <div class="keywords-section">
     <div class="keywords-label">💡 快捷关键词（点击直接填入，或自己手打大白话）</div>
@@ -1848,13 +1869,13 @@ var _systemConfigCache=null;
 var _apiLoadingCount=0;
 function getSystemConfigUrls(){
   var urls=[];
-  var cloud=(window.LC_SYSTEM_CONFIG_URL||SYSTEM_CONFIG_CDN_URL||SYSTEM_CONFIG_CLOUD_URL||'').trim();
-  if(cloud) urls.push(cloud);
+  urls.push('/system_config.json');
   try{
     var base=(typeof API_BASE==='string'&&API_BASE)?API_BASE.replace(/\/$/,''):'';
     if(base) urls.push(base+'/system_config.json');
   }catch(e){}
-  urls.push('/system_config.json');
+  var cloud=(window.LC_SYSTEM_CONFIG_URL||SYSTEM_CONFIG_CDN_URL||SYSTEM_CONFIG_CLOUD_URL||'').trim();
+  if(cloud) urls.push(cloud);
   var seen={};
   return urls.filter(function(u){
     if(!u||seen[u]) return false;
@@ -2252,7 +2273,7 @@ function syncSessionRecommendations(){
 function initGallery(){
   var track=document.getElementById('gallery-track');
   if(!track)return;
-  GALLERY_IMGS.forEach(function(item){
+  GALLERY_IMGS.forEach(function(item,idx){
     var card=document.createElement('div');
     card.className='g-card';
     var imgWrap=document.createElement('div');
@@ -2263,7 +2284,7 @@ function initGallery(){
     var img=document.createElement('img');
     img.src=item.url;
     img.alt=item.label||'出图案例';
-    img.loading='lazy';
+    img.loading=idx<2?'eager':'lazy';
     img.decoding='async';
     img.addEventListener('load',function(){
       imgWrap.classList.add('is-loaded');
@@ -2287,6 +2308,47 @@ function initGallery(){
   track.addEventListener('mouseleave',function(){isDown=false;track.style.cursor='grab';});
   track.addEventListener('mouseup',function(){isDown=false;track.style.cursor='grab';});
   track.addEventListener('mousemove',function(e){if(!isDown)return;e.preventDefault();var x=e.pageX-track.offsetLeft;track.scrollLeft=scrollLeft-(x-startX);});
+  wireGalleryScrollRange();
+}
+function wireGalleryScrollRange(){
+  var track=document.getElementById('gallery-track');
+  var ctrl=document.getElementById('gallery-scroll-ctrl');
+  var rng=document.getElementById('gallery-scroll-range');
+  if(!track||!ctrl||!rng||track.dataset.rangeBound==='1') return;
+  track.dataset.rangeBound='1';
+  function update(){
+    var max=Math.max(0,Math.round(track.scrollWidth-track.clientWidth));
+    if(max<12){
+      ctrl.setAttribute('hidden','');
+      return;
+    }
+    ctrl.removeAttribute('hidden');
+    rng.max=String(max);
+    rng.step=String(Math.max(1,Math.round(max/150)));
+    var v=Math.round(track.scrollLeft);
+    if(v>max) v=max;
+    rng.value=String(v);
+  }
+  rng.addEventListener('input',function(){
+    track.scrollLeft=parseFloat(rng.value)||0;
+  });
+  track.addEventListener('scroll',function(){
+    var max=Math.max(0,Math.round(track.scrollWidth-track.clientWidth));
+    if(max<12) return;
+    rng.value=String(Math.round(track.scrollLeft));
+  },{passive:true});
+  function debResize(){
+    clearTimeout(track._galRszT);
+    track._galRszT=setTimeout(update,100);
+  }
+  window.addEventListener('resize',debResize);
+  if(typeof ResizeObserver==='function'){
+    try{new ResizeObserver(update).observe(track);}catch(e){}
+  }
+  var imgs=track.querySelectorAll('img');
+  imgs.forEach(function(im){im.addEventListener('load',update);});
+  setTimeout(update,80);
+  setTimeout(update,600);
 }
 function initAppMarquee(conf){
   try{
@@ -2424,14 +2486,14 @@ function setCaseSidebarOpen(open){
   syncLcMobileBackdrop();
 }
 function parseDsCopyAnswer(raw){
-  var text=String(raw||'');
+  var text=coerceApiTextual(raw);
   var title='',body='',tags='';
   var mT=text.match(/【标题】\s*([\s\S]*?)(?=【正文】)/);
   var mB=text.match(/【正文】\s*([\s\S]*?)(?=【话题标签】)/);
   var mTa=text.match(/【话题标签】\s*([\s\S]*)/);
-  if(mT) title=mT[1].trim();
-  if(mB) body=mB[1].trim();
-  if(mTa) tags=mTa[1].trim();
+  if(mT) title=coerceApiTextual(mT[1].trim());
+  if(mB) body=coerceApiTextual(mB[1].trim());
+  if(mTa) tags=coerceApiTextual(mTa[1].trim());
   if(!title&&!body&&!tags) body=text.trim();
   return {title:title,body:body,tags:tags,raw:text};
 }
@@ -2549,9 +2611,9 @@ function setupDsCopyPanel(){
         var tb=document.getElementById('ds-ta-body');
         var tg=document.getElementById('ds-ta-tags');
         var ou=document.getElementById('ds-copy-out');
-        if(tt) tt.value=p.title||'';
-        if(tb) tb.value=p.body||p.raw||'';
-        if(tg) tg.value=p.tags||'';
+        if(tt) tt.value=coerceApiTextual(p.title||'');
+        if(tb) tb.value=coerceApiTextual(p.body||p.raw||'');
+        if(tg) tg.value=coerceApiTextual(p.tags||'');
         if(ou) ou.style.display='block';
       })
       .catch(function(err){alert(err.message||String(err));})
@@ -2931,20 +2993,43 @@ function parseApiResponse(r){
     return data;
   });
 }
+/** 将接口里可能是 string / 数组 / {text,content} 的字段安全转成纯文本，避免出现 [object Object] */
+function coerceApiTextual(v){
+  if(v==null) return '';
+  if(typeof v==='string') return v.trim();
+  if(typeof v==='number'||typeof v==='boolean') return String(v);
+  if(Array.isArray(v)){
+    var buf=[];
+    var i=0;
+    for(;i<v.length;i++){
+      var s=coerceApiTextual(v[i]);
+      if(s) buf.push(s);
+    }
+    return buf.join('\n').trim();
+  }
+  if(typeof v==='object'){
+    if(typeof v.text==='string') return v.text.trim();
+    if(typeof v.content==='string') return v.content.trim();
+    if(Array.isArray(v.content)) return coerceApiTextual(v.content);
+    if(v.type==='text'&&typeof v.text==='string') return v.text.trim();
+  }
+  var bad=String(v);
+  return bad==='[object Object]'?'':bad.trim();
+}
 /** 兼容网关改写后的 JSON：answer 可能在 data / messages 等字段 */
 function normalizeDsApiAnswer(data){
   if(!data||typeof data!=='object') return '';
   var keys=['answer','result','text','content','output'];
   var i=0;
   for(;i<keys.length;i++){
-    var v=data[keys[i]];
-    if(v!=null&&String(v).trim()) return String(v).trim();
+    var s=coerceApiTextual(data[keys[i]]);
+    if(s) return s;
   }
   if(data.data&&typeof data.data==='object'){
     var j=0;
     for(;j<keys.length;j++){
-      var v2=data.data[keys[j]];
-      if(v2!=null&&String(v2).trim()) return String(v2).trim();
+      var s2=coerceApiTextual(data.data[keys[j]]);
+      if(s2) return s2;
     }
   }
   if(Array.isArray(data.messages)){
@@ -2953,7 +3038,8 @@ function normalizeDsApiAnswer(data){
       var m=data.messages[k];
       if(m&&m.role==='assistant'){
         var c=m.content!=null?m.content:m.text;
-        if(c!=null&&String(c).trim()) return String(c).trim();
+        var s3=coerceApiTextual(c);
+        if(s3) return s3;
       }
     }
   }
