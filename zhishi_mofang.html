@@ -67,84 +67,6 @@ body{
 .gear.g2{width:18px;height:18px;animation-duration:7s;animation-direction:reverse;border-style:dashed;opacity:0.8;}
 @keyframes gear-spin{to{transform:rotate(360deg);}}
 @media(max-width:1180px){.cockpit-left,.cockpit-right{display:none;}}
-/* 算力卡密 · 极简文字入口，展开后输入面板 */
-.cardkey-bar{
-  display:block;margin-bottom:14px;padding:0;
-  background:transparent;border:none;border-radius:0;box-shadow:none;
-  text-align:center;
-}
-.cardkey-bar.is-forced{background:transparent;border:none;box-shadow:none;}
-.btn-cardkey-activate{
-  display:inline-block;width:auto;max-width:100%;
-  margin:0 auto 4px;padding:2px 4px;
-  background:transparent;border:none;border-radius:0;box-shadow:none;
-  color:#E2C07D;font-size:14px;font-weight:600;letter-spacing:0.35px;line-height:1.4;
-  cursor:pointer;font-family:inherit;
-  transition:color .22s ease,text-shadow .28s ease,opacity .22s ease;
-}
-.btn-cardkey-activate:hover{color:#f3e4bc;text-shadow:0 0 16px rgba(226,192,125,0.42);opacity:1;}
-.btn-cardkey-activate:active{opacity:0.82;text-shadow:0 0 10px rgba(226,192,125,0.28);}
-.btn-cardkey-activate.lux-tap:active{transform:none!important;}
-.cardkey-collapse{
-  display:none!important;max-height:0;opacity:0;overflow:hidden;visibility:hidden;
-  transition:max-height .42s cubic-bezier(0.4,0,0.2,1),opacity .35s ease,margin-top .35s ease,padding .35s ease;
-  margin-top:0;padding:0;border:none;background:transparent;box-shadow:none;
-}
-.cardkey-bar.is-expanded .cardkey-collapse,.cardkey-bar.is-forced .cardkey-collapse{
-  display:block!important;visibility:visible;
-  max-height:220px;opacity:1;margin:10px auto 0;width:100%;max-width:450px;
-  padding:14px 16px;box-sizing:border-box;
-  background:linear-gradient(165deg,rgba(18,19,26,0.88),rgba(8,8,12,0.82));
-  border:1px solid rgba(243,175,66,0.22);border-radius:14px;
-  box-shadow:0 8px 32px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.04);
-}
-.cardkey-bar.is-forced .cardkey-collapse{
-  border-color:rgba(243,175,66,0.4);
-  box-shadow:0 12px 40px rgba(0,0,0,0.45),0 0 28px rgba(243,175,66,0.08);
-}
-.cardkey-row{display:flex;align-items:center;gap:12px;flex-wrap:nowrap;width:100%;}
-@media(max-width:420px){.cardkey-row{flex-wrap:wrap;}.btn-cardkey-verify{width:100%;}}
-.cardkey-label{font-size:12px;font-weight:800;color:rgba(243,175,66,0.9);white-space:nowrap;letter-spacing:0.5px;}
-.btn-cardkey-verify{
-  flex-shrink:0;padding:11px 16px;background:linear-gradient(135deg,var(--gold),var(--gold2));
-  color:#000;border:none;border-radius:10px;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap;
-  transition:transform .1s cubic-bezier(0.4,0,0.2,1),filter .2s;
-}
-.btn-cardkey-verify:hover{filter:brightness(1.06);}
-.btn-cardkey-verify:active{transform:scale(0.97);}
-.cardkey-input{flex:1;min-width:0;padding:12px 14px;background:rgba(6,7,10,0.9);border:1px solid rgba(243,175,66,0.35);border-radius:10px;color:#f5e6c8;font-size:14px;outline:none;font-family:inherit;transition:border-color .25s,box-shadow .25s;}
-.cardkey-input:focus{border-color:rgba(243,175,66,0.75);box-shadow:0 0 20px rgba(243,175,66,0.18);}
-.cardkey-input.is-ok{border-color:rgba(34,197,94,0.55);}
-.get-cardkey-link{display:inline-block;margin-top:10px;font-size:12px;font-weight:700;color:#c9a24d;text-decoration:none;letter-spacing:0.3px;transition:color .2s,text-shadow .2s,opacity .2s;cursor:pointer;border:none;background:none;font-family:inherit;padding:0;}
-.get-cardkey-link:hover{color:#f3d78a;text-shadow:0 0 16px rgba(243,175,66,0.45);opacity:1;}
-/* 使用教程 · 克制黑金说明书卡片 */
-.usage-tutorial-card{
-  display:none;margin:0 auto 14px;width:100%;max-width:450px;box-sizing:border-box;
-  padding:12px 14px 11px;
-  background:rgba(10,10,14,0.52);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-  border:1px solid rgba(226,192,125,0.14);border-radius:12px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.28),inset 0 1px 0 rgba(255,255,255,0.03);
-}
-.usage-tutorial-card.is-visible{display:block;}
-.usage-tutorial-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
-.usage-tutorial-badge{
-  flex-shrink:0;padding:2px 6px;border-radius:4px;
-  font:700 9px/1 'Menlo',system-ui,sans-serif;letter-spacing:0.8px;color:rgba(226,192,125,0.85);
-  background:rgba(226,192,125,0.08);border:1px solid rgba(226,192,125,0.16);
-}
-.usage-tutorial-title{
-  margin:0;font-size:12px;font-weight:700;color:rgba(241,245,249,0.88);letter-spacing:0.25px;line-height:1.35;
-}
-.usage-tutorial-list{margin:0;padding:0;list-style:none;}
-.usage-tutorial-list li{
-  position:relative;padding:0 0 0 14px;margin:0 0 6px;
-  font-size:11px;font-weight:500;line-height:1.55;color:rgba(148,163,184,0.92);letter-spacing:0.15px;
-}
-.usage-tutorial-list li:last-child{margin-bottom:0;}
-.usage-tutorial-list li::before{
-  content:'';position:absolute;left:0;top:0.55em;width:4px;height:4px;margin-top:-2px;border-radius:50%;
-  background:#E2C07D;box-shadow:0 0 6px rgba(226,192,125,0.45);
-}
 .system-notice-bar{
   display:none;max-width:450px;margin:0 auto 12px;padding:7px 12px;box-sizing:border-box;
   font-size:11px;font-weight:500;line-height:1.5;color:rgba(203,213,225,0.82);text-align:center;
@@ -295,10 +217,15 @@ body{
   font-size:12px;line-height:1.45;color:#E2C07D;font-weight:600;letter-spacing:0.2px;
 }
 @media(max-width:768px){
-  .wechat-float{right:14px;bottom:22px;width:116px;padding:10px 8px 8px;}
-  .wechat-float-qr-wrap{width:96px;height:96px;}
-  .wechat-float-qr-wrap img{width:88px;height:88px;}
-  .wechat-float-text{font-size:11px;}
+  .wechat-float{
+    position:static;right:auto;bottom:auto;left:auto;
+    width:100%;max-width:280px;margin:36px auto 12px;padding:14px 12px 12px;
+    transform:none;z-index:1;
+  }
+  .wechat-float:hover{transform:none;}
+  .wechat-float-qr-wrap{width:108px;height:108px;margin-left:auto;margin-right:auto;}
+  .wechat-float-qr-wrap img{width:100px;height:100px;}
+  .wechat-float-text{font-size:12px;}
 }
 .hero{text-align:center;margin-bottom:28px;}
 .brand-badge{display:inline-flex;align-items:center;gap:8px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:30px;padding:5px 16px;font-size:12px;color:var(--gold);font-weight:700;margin-bottom:14px;}
@@ -307,17 +234,102 @@ body{
 .hero-sub{color:#cbd5e1;font-size:14px;margin-bottom:6px;}
 .hero-feat{color:var(--tx3);font-size:12px;}
 .hero-feat span{color:#fff;margin:0 6px;}
-.gallery-wall{background:var(--panel);border:1px solid var(--bd);border-radius:18px;padding:22px;margin-bottom:28px;}
-.gallery-header{border-left:3px solid var(--gold);padding-left:12px;margin-bottom:16px;}
-.gallery-title{font-size:14px;font-weight:800;color:#fff;}
-.gallery-sub{font-size:11px;color:var(--tx3);margin-top:4px;}
-.gallery-track{display:flex;gap:12px;overflow-x:auto;scrollbar-width:none;cursor:grab;padding-bottom:4px;}
-.gallery-track::-webkit-scrollbar{display:none;}
-.g-card{flex-shrink:0;width:138px;background:#171922;border-radius:10px;padding:6px;border:1px solid rgba(255,255,255,0.02);}
-.g-img{width:126px;height:178px;border-radius:7px;overflow:hidden;cursor:zoom-in;}
-.g-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s;}
-.g-img:hover img{transform:scale(1.06);}
-.g-label{font-size:11px;color:var(--tx2);margin-top:7px;display:block;text-align:center;font-weight:600;}
+/* 顶部系统跑马灯（桌面端） */
+.app-top-bar{max-width:1320px;margin:0 auto;padding:10px 16px 0;position:relative;z-index:3;}
+.app-marquee-wrap{overflow:hidden;border-radius:10px;border:1px solid rgba(243,175,66,0.12);background:rgba(15,16,26,0.75);}
+.app-marquee-track{display:flex;width:max-content;animation:app-marquee-scroll 28s linear infinite;}
+.app-marquee-track span{font-size:10px;font-weight:600;color:rgba(226,192,125,0.82);letter-spacing:0.35px;white-space:nowrap;padding:8px 48px 8px 0;}
+.app-marquee-track .marquee-dot{color:#4ade80;margin-right:6px;}
+@keyframes app-marquee-scroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+/* 桌面双栏布局 */
+.app-layout{max-width:1320px;margin:0 auto;padding:0 16px 80px;position:relative;z-index:2;}
+.case-sidebar{
+  display:none;position:relative;overflow:hidden;
+  background:rgba(15,16,26,0.95);border:1px solid rgba(243,175,66,0.15);border-radius:16px;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+}
+.case-sidebar-nebula{
+  position:absolute;inset:0;pointer-events:none;opacity:0.06;
+  background:radial-gradient(ellipse 80% 60% at 20% 20%,rgba(243,175,66,0.35),transparent 55%),
+    radial-gradient(ellipse 70% 50% at 80% 80%,rgba(139,92,246,0.25),transparent 50%);
+  background-size:200% 200%;animation:case-nebula 15s ease-in-out infinite;
+}
+@keyframes case-nebula{0%{background-position:0% 0%;}50%{background-position:100% 100%;}100%{background-position:0% 0%;}}
+.case-sidebar-inner{position:relative;z-index:1;padding:14px 12px 16px;}
+.case-sidebar-head{font-size:13px;font-weight:700;color:#fff;letter-spacing:0.5px;margin-bottom:12px;padding-left:2px;}
+.case-tabs{display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:2px;}
+.case-tab{
+  flex:1;min-width:0;padding:8px 4px;border:none;background:transparent;cursor:pointer;
+  font-size:10px;font-weight:600;color:rgba(255,255,255,0.45);font-family:inherit;
+  border-radius:8px 8px 0 0;transition:color .2s,background .2s;border-bottom:2px solid transparent;
+}
+.case-tab .case-tab-icon{display:block;font-size:14px;margin-bottom:2px;}
+.case-tab.is-active{color:var(--gold);background:rgba(243,175,66,0.08);border-bottom-color:var(--gold);}
+.case-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.case-card{
+  background:rgba(255,255,255,0.03);border:1px solid rgba(243,175,66,0.12);border-radius:10px;
+  overflow:hidden;transition:transform .35s ease,box-shadow .35s ease;
+}
+.case-card.is-flyin{opacity:0;transform:translateX(30px);}
+.case-card.is-visible{opacity:1;transform:translateX(0);transition:opacity .3s ease,transform .3s ease,box-shadow .35s ease;}
+.case-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(243,175,66,0.2);}
+.case-thumb{position:relative;width:100%;height:72px;overflow:hidden;cursor:zoom-in;background:linear-gradient(135deg,rgba(243,175,66,0.12),rgba(15,16,26,0.95));}
+.case-thumb img{width:100%;height:100%;object-fit:cover;display:block;filter:blur(3px) brightness(0.7);transition:filter .4s ease;}
+.case-card:hover .case-thumb img{filter:blur(0) brightness(1);}
+.case-body{padding:8px 8px 10px;}
+.case-title{font-size:12px;font-weight:600;color:var(--tx);line-height:1.35;margin-bottom:4px;}
+.case-tag{font-size:10px;font-weight:500;color:rgba(255,255,255,0.45);margin-bottom:6px;}
+.case-meta{font-size:9px;color:rgba(243,175,66,0.55);margin-bottom:8px;}
+.btn-case-apply{
+  width:100%;padding:6px 0;border:1px solid rgba(243,175,66,0.35);border-radius:6px;
+  background:rgba(243,175,66,0.08);color:var(--gold);font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;
+  transition:background .2s,color .2s;
+}
+.btn-case-apply:hover{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;}
+.app-main{min-width:0;}
+.app-main .shell{max-width:none;margin:0;padding:32px 20px 80px;}
+/* 套用底部滑栏 */
+.case-apply-backdrop{display:none;position:fixed;inset:0;z-index:100001;background:rgba(2,2,8,0.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+.case-apply-backdrop.is-open{display:block;}
+.case-apply-sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:100002;
+  transform:translateY(110%);transition:transform .3s ease-out;
+  background:linear-gradient(168deg,#1c1c22 0%,#0a0a0e 55%,#121218 100%);
+  border-top:1px solid rgba(243,175,66,0.25);border-radius:18px 18px 0 0;
+  padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -20px 60px rgba(0,0,0,0.65);
+}
+.case-apply-sheet.is-open{transform:translateY(0);}
+.case-apply-title{font-size:15px;font-weight:800;color:#fff;margin-bottom:14px;}
+.case-apply-label{font-size:12px;color:var(--tx2);margin-bottom:8px;}
+.case-apply-input{
+  width:100%;padding:12px 14px;margin-bottom:12px;background:rgba(6,7,10,0.92);
+  border:1px solid rgba(243,175,66,0.35);border-radius:10px;color:#f5e6c8;font-size:14px;outline:none;font-family:inherit;
+}
+.case-apply-input:focus{border-color:rgba(243,175,66,0.75);box-shadow:0 0 18px rgba(243,175,66,0.15);}
+.case-apply-meta{display:flex;flex-wrap:wrap;gap:10px 16px;font-size:11px;color:var(--tx2);margin-bottom:16px;}
+.case-apply-meta strong{color:var(--gold);font-weight:700;}
+.btn-case-confirm{
+  display:block;width:100%;padding:14px;border:none;border-radius:12px;cursor:pointer;
+  font-size:15px;font-weight:900;font-family:inherit;color:#0c0a06;
+  background:linear-gradient(135deg,#E2C07D 0%,#c9a24d 48%,#b8923f 100%);
+  box-shadow:0 10px 32px rgba(226,192,125,0.28);
+}
+.gen-particle-canvas{position:fixed;inset:0;z-index:40;pointer-events:none;opacity:0;transition:opacity .25s;}
+.gen-particle-canvas.is-active{opacity:1;}
+#out-prompt.is-typing::after{content:'▋';animation:case-cursor-blink .8s step-end infinite;color:var(--gold);margin-left:2px;}
+@keyframes case-cursor-blink{50%{opacity:0;}}
+.prompt-block.prompt-wave{animation:prompt-golden-wave .6s ease-out;}
+@keyframes prompt-golden-wave{
+  0%{box-shadow:0 0 0 0 rgba(243,175,66,0.55);}
+  100%{box-shadow:0 0 0 18px rgba(243,175,66,0);}
+}
+@media(min-width:769px){
+  .app-layout{display:flex;align-items:flex-start;gap:16px;padding-top:8px;}
+  .case-sidebar{display:block;width:260px;flex-shrink:0;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto;}
+  .case-sidebar::-webkit-scrollbar{width:4px;}
+  .case-sidebar::-webkit-scrollbar-thumb{background:rgba(243,175,66,0.25);border-radius:4px;}
+  .app-main{flex:1;}
+}
 /* 快捷关键词 · 黑金奢华胶囊 */
 @keyframes kw-gold-sweep{0%{transform:translateX(-120%) skewX(-18deg);opacity:0;}40%{opacity:1;}100%{transform:translateX(220%) skewX(-18deg);opacity:0;}}
 .keywords-section{
@@ -623,7 +635,12 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
 .p-name{font-size:12px;font-weight:800;color:#fff;display:block;margin-bottom:4px;}
 .p-tag{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;display:inline-block;}
 .tag-gold{background:rgba(243,175,66,0.1);color:var(--gold);}.tag-green{background:rgba(34,197,94,0.1);color:#22c55e;}
-@media(max-width:768px){.analysis-grid{grid-template-columns:1fr 1fr;}.platform-grid{grid-template-columns:repeat(2,1fr);}.custom-selects{grid-template-columns:1fr;}.quantum-box{grid-template-columns:1fr;}.quantum-visual{border-left:none;border-top:1px solid rgba(255,255,255,0.04);padding-left:0;padding-top:12px;}}
+@media(max-width:768px){
+  .case-sidebar,.app-top-bar{display:none!important;}
+  .app-layout{padding:0;}
+  .app-main .shell{padding:20px 16px 80px;}
+  .analysis-grid{grid-template-columns:1fr 1fr;}.platform-grid{grid-template-columns:repeat(2,1fr);}.custom-selects{grid-template-columns:1fr;}.quantum-box{grid-template-columns:1fr;}.quantum-visual{border-left:none;border-top:1px solid rgba(255,255,255,0.04);padding-left:0;padding-top:12px;}
+}
 @media(max-width:480px){.analysis-grid{grid-template-columns:1fr;}.analysis-actions{grid-template-columns:1fr;}.shell{padding:20px 14px 80px;}.hero h1{font-size:24px;letter-spacing:1px;}}
 </style>
 </head>
@@ -663,16 +680,24 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
 <div id="api-status-toast"></div>
 <div id="clip-toast">✓ 已复制到剪贴板</div>
 <div id="free-trial-toast" aria-live="polite"></div>
-<aside id="wechat-float" class="wechat-float" aria-label="扫码加主理人微信">
-  <div class="wechat-float-qr-wrap">
-    <img id="wechat-float-qr" src="" alt="主理人微信二维码" width="100" height="100" referrerpolicy="no-referrer">
-    <div id="wechat-float-qr-fallback" class="wechat-float-qr-fallback" aria-hidden="true">请配置主理人微信码</div>
+<div class="app-top-bar">
+  <div class="app-marquee-wrap">
+    <div class="app-marquee-track" id="app-marquee-track">
+      <span id="app-marquee-text"><span class="marquee-dot">●</span> 系统运行正常 · AI大脑已就绪 · 实时联网搜索 · 今日已生成 8,432 张</span>
+      <span class="app-marquee-dup" aria-hidden="true"><span class="marquee-dot">●</span> 系统运行正常 · AI大脑已就绪 · 实时联网搜索 · 今日已生成 8,432 张</span>
+    </div>
   </div>
-  <p class="wechat-float-text">
-    <span>💬 扫码加主理人</span>
-    <span>获取专属变现玩法</span>
-  </p>
+</div>
+<div class="app-layout">
+<aside class="case-sidebar" id="case-sidebar" aria-label="案例灵感库">
+  <div class="case-sidebar-nebula" aria-hidden="true"></div>
+  <div class="case-sidebar-inner">
+    <div class="case-sidebar-head">✨ 案例灵感库 · 点套用即生成</div>
+    <div class="case-tabs" id="case-tabs" role="tablist"></div>
+    <div class="case-grid" id="case-grid" role="tabpanel"></div>
+  </div>
 </aside>
+<main class="app-main">
 <div class="shell">
   <div class="hero">
     <div class="brand-badge">🌐 灵创星球 · 图片提示词大师</div>
@@ -680,13 +705,6 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
     <p class="hero-sub">大白话描述你的想法 ➔ AI联网分析 ➔ 完整提示词直接生图</p>
     <p class="hero-feat">全品类覆盖<span>•</span>联网搜爆款<span>•</span>傻瓜式操作</p>
     <div id="system-notice-bar" class="system-notice-bar" aria-live="polite"></div>
-  </div>
-  <div class="gallery-wall">
-    <div class="gallery-header">
-      <div class="gallery-title">✨ 真实出图效果（复制提示词 ➔ 灵创星球/即梦 ➔ 直接出图）</div>
-      <div class="gallery-sub">底层内置工业级高精光影参数，44种专业手法，全品类自动匹配</div>
-    </div>
-    <div class="gallery-track" id="gallery-track"></div>
   </div>
   <div class="keywords-section">
     <div class="keywords-label">💡 快捷关键词（点击直接填入，或自己手打大白话）</div>
@@ -721,23 +739,6 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
       <span>· 单击选中 · 再次点击可取消</span>
     </div>
     <div class="style-pick-grid" id="style-pick-grid"></div>
-  </div>
-  <div id="usage-tutorial-card" class="usage-tutorial-card" aria-label="使用教程">
-    <div class="usage-tutorial-head">
-      <span class="usage-tutorial-badge">GUIDE</span>
-      <h3 id="usage-tutorial-title" class="usage-tutorial-title">使用教程</h3>
-    </div>
-    <ul id="usage-tutorial-list" class="usage-tutorial-list"></ul>
-  </div>
-  <div id="cardkey-bar" class="cardkey-bar">
-    <button type="button" class="btn-cardkey-activate lux-tap" id="cardkey-toggle-btn" aria-expanded="false">💎 激活专属算力卡密</button>
-    <div class="cardkey-collapse" id="cardkey-collapse">
-      <div class="cardkey-row">
-        <input type="text" id="card-key-input" class="cardkey-input" placeholder="请输入体验卡密后解锁核心出图" autocomplete="off">
-        <button type="button" class="btn-cardkey-verify lux-tap" id="btn-cardkey-verify">🔓 验证解锁</button>
-      </div>
-      <button type="button" class="get-cardkey-link lux-tap" id="get-cardkey-link">🔑 暂无卡密？点击获取</button>
-    </div>
   </div>
   <div class="gen-launch-wrap" id="gen-launch-wrap">
     <button type="button" id="gen-btn" class="btn-generate lux-tap" onclick="runEngine()">🔮 启动大脑 · 开始全行业智能生图充能</button>
@@ -941,7 +942,7 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
     </div>
   </div>
   <div id="output-section">
-    <div class="prompt-block">
+    <div class="prompt-block" id="main-prompt-block">
       <div class="block-head">
         <div class="block-head-left"><div class="block-icon">🔮</div><div><div class="block-title">①提示词：工业级生图提示词</div><div class="block-sub">复制 → 打开即梦/灵创星球 → 文生图 → 粘贴生成</div></div></div>
         <button class="btn-copy" onclick="copyBlock('out-prompt')">复制</button>
@@ -999,7 +1000,32 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
       </div>
     </div>
   </div>
+<aside id="wechat-float" class="wechat-float" aria-label="扫码加主理人微信">
+  <div class="wechat-float-qr-wrap">
+    <img id="wechat-float-qr" src="" alt="主理人微信二维码" width="100" height="100" referrerpolicy="no-referrer">
+    <div id="wechat-float-qr-fallback" class="wechat-float-qr-fallback" aria-hidden="true">请配置主理人微信码</div>
+  </div>
+  <p class="wechat-float-text">
+    <span>💬 扫码加主理人</span>
+    <span>获取专属变现玩法</span>
+  </p>
+</aside>
 </div>
+</main>
+</div>
+<div id="case-apply-backdrop" class="case-apply-backdrop" onclick="closeApplySheet()"></div>
+<div id="case-apply-sheet" class="case-apply-sheet" role="dialog" aria-labelledby="apply-case-title">
+  <h3 class="case-apply-title" id="apply-case-title">套用案例风格</h3>
+  <p class="case-apply-label">📝 改一下主题，其他不用动：</p>
+  <input type="text" id="apply-theme-input" class="case-apply-input" maxlength="200" placeholder="输入你的主题">
+  <div class="case-apply-meta">
+    <span>🎨 风格：<strong id="apply-meta-style">--</strong></span>
+    <span>📐 尺寸：<strong id="apply-meta-size">--</strong></span>
+    <span>👥 <strong id="apply-meta-tag">--</strong></span>
+  </div>
+  <button type="button" class="btn-case-confirm lux-tap" onclick="confirmCaseApply()">立即生成提示词 →</button>
+</div>
+<canvas id="gen-particle-canvas" class="gen-particle-canvas" aria-hidden="true"></canvas>
 <div id="cardkey-modal" class="cardkey-modal" aria-hidden="true" role="dialog" aria-labelledby="cardkey-modal-title">
   <div class="cardkey-modal-backdrop"></div>
   <div class="cardkey-modal-panel">
@@ -1040,7 +1066,36 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
 </div>
 <script src="https://unpkg.com/mammoth@1.6.0/mammoth.browser.min.js"></script>
 <script>
-var API_BASE='http://localhost:3000';
+var API_BASE=(function(){
+  try{
+    var h=location.hostname||'';
+    if(h==='localhost'||h==='127.0.0.1') return 'http://localhost:3000';
+    return '';
+  }catch(e){return '';}
+})();
+var LC_NETWORK_TIP='🌍 网络环境波动，连接大脑超时，请刷新页面重试~';
+function appendConfigCacheBust(url){
+  var u=String(url||'').trim();
+  if(!u) return u;
+  var sep=u.indexOf('?')>=0?'&':'?';
+  return u+sep+'t='+new Date().getTime();
+}
+function isNetworkFailure(err){
+  if(!err) return true;
+  var msg=String(err.message||err||'').toLowerCase();
+  return msg.indexOf('failed to fetch')>=0||msg.indexOf('networkerror')>=0||msg.indexOf('load failed')>=0||msg.indexOf('network request failed')>=0||msg.indexOf('err_internet_disconnected')>=0||(err.name==='TypeError'&&msg.indexOf('fetch')>=0);
+}
+function resolveUserFacingApiError(err){
+  if(isNetworkFailure(err)) return LC_NETWORK_TIP;
+  var msg=err&&err.message?String(err.message):'';
+  if(/[\u4e00-\u9fff]/.test(msg)) return msg;
+  return LC_NETWORK_TIP;
+}
+function notifyApiFailure(err){
+  var msg=resolveUserFacingApiError(err);
+  showApiError(msg);
+  try{alert(msg);}catch(e){}
+}
 /** 腾讯云 COS 公网配置（可被 window.LC_SYSTEM_CONFIG_URL 覆盖） */
 var SYSTEM_CONFIG_CDN_URL='https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/system_config.json';
 var SYSTEM_CONFIG_CLOUD_URL=SYSTEM_CONFIG_CDN_URL;
@@ -1063,7 +1118,9 @@ var LC_HEADLESS_FALLBACK={
     wechat_float_qr_url:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%BE%AE%E4%BF%A1%E4%BA%8C%E7%BB%B4%E7%A0%81.jpg',
     pay_qr_url:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%BE%AE%E4%BF%A1%E6%94%B6%E6%AC%BE%E7%A0%81/%E6%94%B6%E6%AC%BE%E7%A0%81.jpg',
     redirect_tip:'⚠️ 您的免费体验算力已耗尽！请获取专属卡密，解锁工业级无限出图特权。',
-    default_free_trials:3
+    default_free_trials:10,
+    new_user_free_trials:10,
+    daily_free_trials:3
   },
   system_status:{
     notice_text:'灵创星球系统运行正常 · 工业级出图通道已就绪 · 新人享免费体验'
@@ -1092,7 +1149,7 @@ function fetchSystemConfigFromUrls(urls,idx){
   if(idx>=urls.length) return Promise.reject(new Error('system_config unavailable'));
   var url=urls[idx];
   var sep=url.indexOf('?')>=0?'&':'?';
-  return fetch(url+sep+'_t='+Date.now(),{cache:'no-store'}).then(function(r){
+  return fetch(appendConfigCacheBust(url),{cache:'no-store',headers:{'Cache-Control':'no-cache','Pragma':'no-cache'}}).then(function(r){
     if(!r.ok) throw new Error('HTTP '+r.status);
     return r.json();
   }).catch(function(){
@@ -1122,41 +1179,7 @@ function mergeHeadlessConfig(remote){
     return cloneHeadlessFallback();
   }
 }
-function applyUsageTutorial(tutorial){
-  try{
-    var card=document.getElementById('usage-tutorial-card');
-    var titleEl=document.getElementById('usage-tutorial-title');
-    var listEl=document.getElementById('usage-tutorial-list');
-    if(!card||!titleEl||!listEl) return;
-    if(!tutorial||typeof tutorial!=='object'){
-      card.classList.remove('is-visible');
-      return;
-    }
-    var title=String(tutorial.title||'').trim();
-    var raw=Array.isArray(tutorial.content)?tutorial.content:[];
-    var items=[];
-    var i=0;
-    while(i!==raw.length){
-      var line=String(raw[i]||'').trim();
-      if(line) items.push(line);
-      i++;
-    }
-    if(!title&&!items.length){
-      card.classList.remove('is-visible');
-      return;
-    }
-    titleEl.textContent=title||'使用教程';
-    listEl.innerHTML='';
-    i=0;
-    while(i!==items.length){
-      var li=document.createElement('li');
-      li.textContent=items[i];
-      listEl.appendChild(li);
-      i++;
-    }
-    card.classList.add('is-visible');
-  }catch(e){}
-}
+function applyUsageTutorial(_tutorial){/* 首页教程框已移除，保留空函数兼容配置加载 */}
 function buildCheckoutCardElement(plan,isFirst){
   var icon=String(plan.icon||'✨');
   var name=String(plan.name||plan.title||'套餐');
@@ -1297,15 +1320,7 @@ function applyBusinessFunnel(funnel){
     var payQr=document.getElementById('checkout-pay-qr');
     var payQrUrl=getPayQrUrl(funnel);
     if(payQr&&payQrUrl) payQr.src=normalizeQrUrl(payQrUrl);
-    var trials=parseInt(funnel.default_free_trials,10);
-    if(!isNaN(trials)&&trials>=0){
-      MAX_FREE_TRIALS=trials;
-      try{
-        var cur=localStorage.getItem(LC_FREE_TRIALS_KEY);
-        if(cur===null||cur==='') localStorage.setItem(LC_FREE_TRIALS_KEY,String(MAX_FREE_TRIALS));
-      }catch(e){}
-      updateFreeTrialHint();
-    }
+    initFreeTrialQuota(funnel);
     var tip=String(funnel.redirect_tip||'').trim();
     if(tip){
       var title=document.getElementById('cardkey-modal-title');
@@ -1321,6 +1336,7 @@ function applyHeadlessConfig(cfg){
     applyProductLadder(conf.product_ladder);
     applyBusinessFunnel(conf.business_funnel);
     applySystemNotice(conf.system_status);
+    initAppMarquee(conf);
   }catch(e){
     try{applyHeadlessConfig(cloneHeadlessFallback());}catch(e2){}
   }
@@ -1384,14 +1400,50 @@ var BUBBLE_MAP=[
   {keys:['古诗','诗词','春晓','静夜思','明月','床前'],bubbles:[{e:'📜',t:'卷轴沉浸式'},{e:'🎋',t:'国风水彩插画'},{e:'📰',t:'民国复古报纸风'}]},
   {keys:['基金','理财','股票','投资','复利'],bubbles:[{e:'📊',t:'数据可视化图'},{e:'💰',t:'金融信息图'}]},
 ];
-var GALLERY_IMGS=[
-  {url:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/3D%E8%8D%B7%E8%8A%B1.png',label:'🌿 植物科普'},
-  {url:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E6%A1%82%E8%8A%B1.png',label:'🌸 国风水彩'},
-  {url:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E8%8B%8F%E5%B7%9E3D.png',label:'🏙️ 城市浮雕'},
-  {url:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E9%95%BF%E6%B2%99.png',label:'🗺️ 手绘地图'},
-  {url:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E7%81%AB%E9%94%85.png',label:'🦞 美食菜谱'},
-  {url:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/ChatGPT%20Image%202026%E5%B9%B45%E6%9C%8815%E6%97%A5%2012_30_04.png',label:'📚 知识图文'},
-  {url:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E9%BB%84%E5%B1%B1.png',label:'🏔️ 山水旅游'},
+var CASE_IMG={
+  lotus:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/3D%E8%8D%B7%E8%8A%B1.png',
+  osmanthus:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E6%A1%82%E8%8A%B1.png',
+  suzhou:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E8%8B%8F%E5%B7%9E3D.png',
+  changsha:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E9%95%BF%E6%B2%99.png',
+  hotpot:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E7%81%AB%E9%94%85.png',
+  knowledge:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/ChatGPT%20Image%202026%E5%B9%B45%E6%9C%8815%E6%97%A5%2012_30_04.png',
+  huangshan:'https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%9B%BE%E7%89%87%E6%A1%88%E4%BE%8B/%E9%BB%84%E5%B1%B1.png'
+};
+var CASE_ACTIVE_TAB='edu';
+var _pendingCaseItem=null;
+var _caseApplyPreset=null;
+var _genParticleRaf=null;
+var CASE_TABS=[
+  {id:'edu',icon:'📚',label:'教学图'},
+  {id:'ecom',icon:'🛍️',label:'电商'},
+  {id:'3d',icon:'🌟',label:'3D'},
+  {id:'card',icon:'🔥',label:'知识卡'}
+];
+var CASE_LIBRARY=[
+  {id:'edu_01',category:'edu',title:'数学口诀图',img:'',defaultTheme:'一年级加减法口诀',style:'卡通彩色插画',size:'9:16竖版',tag:'教育类',count:2341},
+  {id:'edu_02',category:'edu',title:'语文古诗图',img:CASE_IMG.osmanthus,defaultTheme:'静夜思全文解析',style:'国风水墨插画',size:'9:16竖版',tag:'教育类',count:1892},
+  {id:'edu_03',category:'edu',title:'英语单词卡',img:'',defaultTheme:'常见动物英语单词',style:'萌系卡通',size:'1:1方图',tag:'教育类',count:1567},
+  {id:'edu_04',category:'edu',title:'科学探索图',img:CASE_IMG.lotus,defaultTheme:'植物光合作用原理',style:'科普信息图',size:'9:16竖版',tag:'教育类',count:2103},
+  {id:'edu_05',category:'edu',title:'历史时间轴',img:CASE_IMG.changsha,defaultTheme:'中国朝代顺序',style:'古典图文风',size:'16:9横版',tag:'教育类',count:1432},
+  {id:'edu_06',category:'edu',title:'思维导图',img:'',defaultTheme:'语文阅读理解方法',style:'简约色块风',size:'9:16竖版',tag:'教育类',count:987},
+  {id:'ecom_01',category:'ecom',title:'促销爆款海报',img:CASE_IMG.hotpot,defaultTheme:'夏季护肤品限时5折',style:'电商红金风',size:'9:16竖版',tag:'电商类',count:3210},
+  {id:'ecom_02',category:'ecom',title:'产品主图',img:'',defaultTheme:'玻尿酸精华液产品图',style:'高端白底风',size:'1:1方图',tag:'电商类',count:2788},
+  {id:'ecom_03',category:'ecom',title:'节日活动图',img:'',defaultTheme:'618大促活动海报',style:'节日喜庆风',size:'16:9横版',tag:'电商类',count:1956},
+  {id:'ecom_04',category:'ecom',title:'种草笔记封面',img:'',defaultTheme:'平价好物推荐清单',style:'小红书清新风',size:'3:4竖版',tag:'电商类',count:2644},
+  {id:'ecom_05',category:'ecom',title:'带货短视频封面',img:'',defaultTheme:'今日必买好物分享',style:'直播带货风',size:'9:16竖版',tag:'电商类',count:1833},
+  {id:'ecom_06',category:'ecom',title:'品牌宣传图',img:'',defaultTheme:'国货护肤品牌故事',style:'国潮设计风',size:'16:9横版',tag:'电商类',count:1204},
+  {id:'3d_01',category:'3d',title:'3D文字海报',img:'',defaultTheme:'灵创星球品牌3D字',style:'金属质感3D',size:'9:16竖版',tag:'3D类',count:1560},
+  {id:'3d_02',category:'3d',title:'科技感场景',img:'',defaultTheme:'AI数字宇宙空间站',style:'赛博朋克',size:'16:9横版',tag:'3D类',count:1899},
+  {id:'3d_03',category:'3d',title:'产品3D展示',img:'',defaultTheme:'高端香水瓶3D渲染',style:'奢华3D渲染',size:'1:1方图',tag:'3D类',count:1345},
+  {id:'3d_04',category:'3d',title:'悬浮岛场景',img:CASE_IMG.suzhou,defaultTheme:'云端上的微缩城市',style:'奇幻3D',size:'9:16竖版',tag:'3D类',count:2456},
+  {id:'3d_05',category:'3d',title:'水晶球场景',img:'',defaultTheme:'水晶球里的四季森林',style:'魔法3D',size:'1:1方图',tag:'3D类',count:1678},
+  {id:'3d_06',category:'3d',title:'机甲战士',img:'',defaultTheme:'未来机甲战士全身像',style:'硬核科幻3D',size:'9:16竖版',tag:'3D类',count:2234},
+  {id:'card_01',category:'card',title:'干货清单图',img:CASE_IMG.knowledge,defaultTheme:'普通人3个副业方向',style:'商务简约风',size:'9:16竖版',tag:'知识类',count:3122},
+  {id:'card_02',category:'card',title:'对比卡片',img:'',defaultTheme:'高效率vs低效率的区别',style:'撞色设计风',size:'1:1方图',tag:'知识类',count:1789},
+  {id:'card_03',category:'card',title:'步骤流程图',img:'',defaultTheme:'5步学会时间管理',style:'信息图表风',size:'9:16竖版',tag:'知识类',count:2045},
+  {id:'card_04',category:'card',title:'金句海报',img:'',defaultTheme:'每天进步1%的力量',style:'极简文字风',size:'3:4竖版',tag:'知识类',count:1433},
+  {id:'card_05',category:'card',title:'数据可视化',img:CASE_IMG.huangshan,defaultTheme:'中国新媒体用户画像',style:'科技数据风',size:'16:9横版',tag:'知识类',count:1677},
+  {id:'card_06',category:'card',title:'避坑指南',img:'',defaultTheme:'新手做自媒体的5个坑',style:'警示红色风',size:'9:16竖版',tag:'知识类',count:1988}
 ];
 var VISUAL_STYLES=[
   {id:'neo',emoji:'🎋',label:'新中式',value:'新中式极简风（留白+浅灰+墨色线条）'},
@@ -1408,7 +1460,7 @@ var VISUAL_STYLES=[
   {id:'luxury',emoji:'🖤',label:'暗调奢华',value:'暗调奢华风（深色背景+金色元素+高端感）'}
 ];
 var selectedVisualStyleId=null;
-var currentCatIdx=0,chipOffset=0,CHIPS_PER_PAGE=5;
+var currentCatIdx=-1,chipOffset=0,CHIPS_PER_PAGE=5;
 function getSelectedVisualStyleValue(){
   if(!selectedVisualStyleId) return '';
   var i=0;while(i!==VISUAL_STYLES.length){if(VISUAL_STYLES[i].id===selectedVisualStyleId) return VISUAL_STYLES[i].value;i++;}
@@ -1469,10 +1521,221 @@ function syncSessionRecommendations(){
   else if(picked) sessionContext.style=picked;
   else if(aiRecStyle) sessionContext.style=aiRecStyle;
 }
-function initGallery(){var track=document.getElementById('gallery-track');if(!track)return;GALLERY_IMGS.forEach(function(item){var card=document.createElement('div');card.className='g-card';card.innerHTML='<div class="g-img" onclick="document.getElementById(\'img-zoom-src\').src=\''+item.url+'\';document.getElementById(\'img-zoom\').style.display=\'flex\';"><img src="'+item.url+'" loading="lazy"></div><span class="g-label">'+item.label+'</span>';track.appendChild(card);});var isDown=false,startX,scrollLeft;track.addEventListener('mousedown',function(e){isDown=true;track.style.cursor='grabbing';startX=e.pageX-track.offsetLeft;scrollLeft=track.scrollLeft;});track.addEventListener('mouseleave',function(){isDown=false;track.style.cursor='grab';});track.addEventListener('mouseup',function(){isDown=false;track.style.cursor='grab';});track.addEventListener('mousemove',function(e){if(!isDown)return;e.preventDefault();var x=e.pageX-track.offsetLeft;track.scrollLeft=scrollLeft-(x-startX);});}
-function initKeywords(){var tabs=document.getElementById('kw-tabs');if(!tabs)return;KW_CATS.forEach(function(cat,idx){var tab=document.createElement('div');tab.className='kw-tab'+(cat.rec?' rec-tab':'')+(idx===0?' active':'');tab.textContent=cat.icon+' '+cat.name;tab.onclick=function(){document.querySelectorAll('.kw-tab').forEach(function(t){t.classList.remove('active');});tab.classList.add('active');currentCatIdx=idx;chipOffset=0;renderChips();};tabs.appendChild(tab);});renderChips();}
-function renderChips(){var chips=document.getElementById('kw-chips');chips.innerHTML='';var cat=KW_CATS[currentCatIdx];var words=cat.words;var start=chipOffset%words.length;var subset=[];var _cl=Math.min(CHIPS_PER_PAGE,words.length);for(var i=0;i!==_cl;i++)subset.push(words[(start+i)%words.length]);subset.forEach(function(w){var chip=document.createElement('div');chip.className='kw-chip lux-tap';chip.textContent=w;chip.onclick=function(){document.querySelectorAll('.kw-chip.is-active').forEach(function(c){c.classList.remove('is-active');});chip.classList.add('is-active');document.getElementById('main-textarea').value=w;document.getElementById('main-textarea').focus();matchBubbles(w);setTimeout(function(){chip.classList.remove('is-active');},700);};chips.appendChild(chip);});}
-function refreshChips(){var cat=KW_CATS[currentCatIdx];chipOffset=(chipOffset+CHIPS_PER_PAGE)%cat.words.length;renderChips();}
+function initAppMarquee(conf){
+  try{
+    var el=document.getElementById('app-marquee-text');
+    if(!el) return;
+    var n=8432;
+    if(conf&&conf.business_funnel&&conf.business_funnel.today_generations) n=conf.business_funnel.today_generations;
+    else if(conf&&conf.today_generations) n=conf.today_generations;
+    var txt='系统运行正常 · AI大脑已就绪 · 实时联网搜索 · 今日已生成 '+Number(n).toLocaleString()+' 张';
+    el.innerHTML='<span class="marquee-dot">●</span> '+txt;
+    var dup=document.querySelector('.app-marquee-dup');
+    if(dup) dup.innerHTML=el.innerHTML;
+  }catch(e){}
+}
+function matchVisualStyleFromCase(styleText){
+  if(!styleText) return null;
+  var s=String(styleText);
+  var i=0,best=null;
+  while(i!==VISUAL_STYLES.length){
+    var st=VISUAL_STYLES[i];
+    if(s.indexOf(st.label)>=0||(st.value&&s.indexOf(st.value.split('（')[0])>=0)){best=st.id;break;}
+    i++;
+  }
+  if(!best){
+    if(s.indexOf('赛博')>=0) best='cyber';
+    else if(s.indexOf('国潮')>=0) best='guochao';
+    else if(s.indexOf('水墨')>=0||s.indexOf('古典')>=0) best='ink';
+    else if(s.indexOf('极简')>=0) best='minimal';
+    else if(s.indexOf('日系')>=0||s.indexOf('萌')>=0) best='heal';
+    else if(s.indexOf('3D')>=0) best='float3d';
+  }
+  return best;
+}
+function renderCaseGrid(category){
+  var grid=document.getElementById('case-grid');
+  if(!grid) return;
+  grid.innerHTML='';
+  var items=CASE_LIBRARY.filter(function(c){return c.category===category;});
+  items.forEach(function(item,idx){
+    var card=document.createElement('article');
+    card.className='case-card is-flyin';
+    card.setAttribute('data-case-id',item.id);
+    var thumb=document.createElement('d'+'iv');
+    thumb.className='case-thumb';
+    if(item.img){
+      var img=document.createElement('img');
+      img.src=item.img;
+      img.alt=item.title;
+      img.loading='lazy';
+      img.decoding='async';
+      thumb.appendChild(img);
+      thumb.addEventListener('click',function(e){
+        e.stopPropagation();
+        document.getElementById('img-zoom-src').src=item.img;
+        document.getElementById('img-zoom').style.display='flex';
+      });
+    }
+    var body=document.createElement('d'+'iv');
+    body.className='case-body';
+    var t=document.createElement('d'+'iv');
+    t.className='case-title';
+    t.textContent=item.title;
+    var tg=document.createElement('d'+'iv');
+    tg.className='case-tag';
+    tg.textContent=item.style;
+    var meta=document.createElement('d'+'iv');
+    meta.className='case-meta';
+    meta.textContent='✨ '+item.count.toLocaleString()+' 人已生成';
+    var btn=document.createElement('button');
+    btn.type='button';
+    btn.className='btn-case-apply lux-tap';
+    btn.textContent='套用 →';
+    btn.addEventListener('click',function(e){e.stopPropagation();openApplySheet(item);});
+    body.appendChild(t);
+    body.appendChild(tg);
+    body.appendChild(meta);
+    body.appendChild(btn);
+    card.appendChild(thumb);
+    card.appendChild(body);
+    grid.appendChild(card);
+    setTimeout(function(){
+      card.classList.remove('is-flyin');
+      card.classList.add('is-visible');
+    },40+idx*50);
+  });
+}
+function switchCaseTab(tabId){
+  CASE_ACTIVE_TAB=tabId;
+  var tabs=document.querySelectorAll('.case-tab');
+  tabs.forEach(function(t){t.classList.toggle('is-active',t.getAttribute('data-tab')===tabId);});
+  renderCaseGrid(tabId);
+}
+function initCaseSidebar(){
+  var tabsEl=document.getElementById('case-tabs');
+  if(!tabsEl) return;
+  tabsEl.innerHTML='';
+  CASE_TABS.forEach(function(tab){
+    var btn=document.createElement('button');
+    btn.type='button';
+    btn.className='case-tab'+(CASE_ACTIVE_TAB===tab.id?' is-active':'');
+    btn.setAttribute('data-tab',tab.id);
+    btn.setAttribute('role','tab');
+    btn.innerHTML='<span class="case-tab-icon">'+tab.icon+'</span>'+tab.label;
+    btn.onclick=function(){switchCaseTab(tab.id);};
+    tabsEl.appendChild(btn);
+  });
+  renderCaseGrid(CASE_ACTIVE_TAB);
+}
+function openApplySheet(item){
+  _pendingCaseItem=item;
+  var titleEl=document.getElementById('apply-case-title');
+  var input=document.getElementById('apply-theme-input');
+  if(titleEl) titleEl.textContent='套用「'+(item.title||'')+'」风格';
+  if(input) input.value=item.defaultTheme||'';
+  var ms=document.getElementById('apply-meta-style');
+  var mz=document.getElementById('apply-meta-size');
+  var mt=document.getElementById('apply-meta-tag');
+  if(ms) ms.textContent=item.style||'--';
+  if(mz) mz.textContent=item.size||'--';
+  if(mt) mt.textContent=item.tag||'--';
+  document.getElementById('case-apply-sheet').classList.add('is-open');
+  document.getElementById('case-apply-backdrop').classList.add('is-open');
+}
+function closeApplySheet(){
+  _pendingCaseItem=null;
+  var sheet=document.getElementById('case-apply-sheet');
+  var bd=document.getElementById('case-apply-backdrop');
+  if(sheet) sheet.classList.remove('is-open');
+  if(bd) bd.classList.remove('is-open');
+}
+function confirmCaseApply(){
+  var item=_pendingCaseItem;
+  if(!item) return;
+  var theme=(document.getElementById('apply-theme-input').value||'').trim();
+  if(!theme){alert('请输入主题');return;}
+  var styleId=matchVisualStyleFromCase(item.style);
+  _caseApplyPreset={style:item.style||'',size:item.size||'',styleId:styleId||null};
+  closeApplySheet();
+  var ta=document.getElementById('main-textarea');
+  if(ta) ta.value=theme;
+  if(typeof matchBubbles==='function') matchBubbles(theme);
+  runEngine();
+}
+function startGenParticleFlow(){
+  var canvas=document.getElementById('gen-particle-canvas');
+  var ta=document.getElementById('main-textarea');
+  var out=document.getElementById('output-section');
+  if(!canvas||!ta) return;
+  stopGenParticleFlow();
+  canvas.classList.add('is-active');
+  var ctx=canvas.getContext('2d');
+  var W=canvas.width=window.innerWidth;
+  var H=canvas.height=window.innerHeight;
+  var r1=ta.getBoundingClientRect();
+  var x0=r1.left+r1.width/2,y0=r1.top+r1.height/2;
+  var x1=W/2,y1=H*0.72;
+  if(out&&out.style.display!=='none'){var r2=out.getBoundingClientRect();x1=r2.left+r2.width/2;y1=r2.top+40;}
+  var pts=[];
+  var n=20,i=0;
+  while(i<n){pts.push({t:Math.random(),sp:0.004+Math.random()*0.008,a:0.35+Math.random()*0.35,r:1.5+Math.random()*2});i++;}
+  function tick(){
+    if(!ctx)return;
+    ctx.clearRect(0,0,W,H);
+    var j=0;
+    while(j!==pts.length){
+      var p=pts[j];
+      p.t+=p.sp;
+      if(p.t>1) p.t=0;
+      var tt=p.t;
+      var x=x0+(x1-x0)*tt+Math.sin(tt*12+j)*18;
+      var y=y0+(y1-y0)*tt+Math.cos(tt*10+j)*12;
+      ctx.fillStyle='rgba(243,175,66,'+p.a+')';
+      ctx.beginPath();
+      ctx.arc(x,y,p.r,0,Math.PI*2);
+      ctx.fill();
+      j++;
+    }
+    _genParticleRaf=requestAnimationFrame(tick);
+  }
+  tick();
+}
+function stopGenParticleFlow(){
+  if(_genParticleRaf){cancelAnimationFrame(_genParticleRaf);_genParticleRaf=null;}
+  var canvas=document.getElementById('gen-particle-canvas');
+  if(canvas){canvas.classList.remove('is-active');var ctx=canvas.getContext('2d');if(ctx) ctx.clearRect(0,0,canvas.width,canvas.height);}
+}
+function typewriterPrompt(el,text,done){
+  if(!el){if(done)done();return;}
+  var full=String(text||'');
+  var i=0;
+  el.textContent='';
+  el.classList.add('is-typing');
+  function step(){
+    if(i>=full.length){
+      el.classList.remove('is-typing');
+      el.textContent=full;
+      if(done) done();
+      return;
+    }
+    i+=Math.min(3,full.length-i);
+    el.textContent=full.slice(0,i);
+    setTimeout(step,15);
+  }
+  step();
+}
+function triggerPromptGoldenWave(){
+  var block=document.getElementById('main-prompt-block');
+  if(!block) return;
+  block.classList.remove('prompt-wave');
+  void block.offsetWidth;
+  block.classList.add('prompt-wave');
+  setTimeout(function(){block.classList.remove('prompt-wave');},700);
+}
+function initKeywords(){var tabs=document.getElementById('kw-tabs');if(!tabs)return;KW_CATS.forEach(function(cat,idx){var tab=document.createElement('div');tab.className='kw-tab'+(cat.rec?' rec-tab':'');tab.textContent=cat.icon+' '+cat.name;tab.onclick=function(){currentCatIdx=idx;chipOffset=0;renderChips();tab.classList.add('active');setTimeout(function(){tab.classList.remove('active');},420);};tabs.appendChild(tab);});renderChips();}
+function renderChips(){var chips=document.getElementById('kw-chips');if(!chips)return;chips.innerHTML='';if(currentCatIdx<0||currentCatIdx>=KW_CATS.length)return;var cat=KW_CATS[currentCatIdx];var words=cat.words;var start=chipOffset%words.length;var subset=[];var _cl=Math.min(CHIPS_PER_PAGE,words.length);for(var i=0;i!==_cl;i++)subset.push(words[(start+i)%words.length]);subset.forEach(function(w){var chip=document.createElement('div');chip.className='kw-chip lux-tap';chip.textContent=w;chip.onclick=function(){document.querySelectorAll('.kw-chip.is-active').forEach(function(c){c.classList.remove('is-active');});chip.classList.add('is-active');document.getElementById('main-textarea').value=w;document.getElementById('main-textarea').focus();matchBubbles(w);setTimeout(function(){chip.classList.remove('is-active');},700);};chips.appendChild(chip);});}
+function refreshChips(){if(currentCatIdx<0||currentCatIdx>=KW_CATS.length)return;var cat=KW_CATS[currentCatIdx];chipOffset=(chipOffset+CHIPS_PER_PAGE)%cat.words.length;renderChips();}
 var debounceTimer=null;
 function setupBubbles(){var ta=document.getElementById('main-textarea');if(ta)ta.addEventListener('input',function(){clearTimeout(debounceTimer);debounceTimer=setTimeout(function(){matchBubbles(ta.value);},400);});}
 function matchBubbles(text){if(!document.getElementById('bubble-label'))return;if(!text||text.trim().length===0){hideBubbles();return;}var lower=text.toLowerCase();var matched=null;var _blen=BUBBLE_MAP.length;for(var i=0;i!==_blen;i++){if(BUBBLE_MAP[i].keys.some(function(k){return lower.indexOf(k)>=0;})){matched=BUBBLE_MAP[i];break;}}if(!matched){hideBubbles();return;}document.getElementById('bubble-label').style.display='flex';document.getElementById('bubble-hint').style.display='block';var wrap=document.getElementById('bubbles-wrap');wrap.innerHTML='';matched.bubbles.forEach(function(b){var chip=document.createElement('div');chip.className='bubble-chip'+(selectedBubbles.indexOf(b.t)>=0?' selected':'');chip.innerHTML=b.e+' '+b.t;chip.onclick=function(){if(selectedBubbles.indexOf(b.t)>=0){selectedBubbles=selectedBubbles.filter(function(t){return t!==b.t;});chip.classList.remove('selected');}else{selectedBubbles.push(b.t);chip.classList.add('selected');}};wrap.appendChild(chip);});}
@@ -1623,8 +1886,85 @@ function extractAssistantContent(res){
   var msg=answers.length>0?answers[answers.length-1]:null;
   return msg&&(msg.content||msg.text)||'';
 }
-var MAX_FREE_TRIALS=3;
+var NEW_USER_FREE_TRIALS=10;
+var DAILY_FREE_TRIALS=3;
 var LC_FREE_TRIALS_KEY='lc_free_trials';
+var LC_FIRST_VISIT_KEY='lc_free_trials_first_date';
+var LC_QUOTA_DATE_KEY='lc_free_trials_quota_date';
+var LC_FREE_TRIALS_VERSION='v3';
+function todayYmd(){
+  var d=new Date();
+  return ''+d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2);
+}
+function resolveTrialConfig(funnel){
+  var fb=LC_HEADLESS_FALLBACK.business_funnel||{};
+  var src=funnel||fb;
+  var newUser=parseInt(src.new_user_free_trials,10);
+  if(isNaN(newUser)||newUser<1) newUser=parseInt(src.default_free_trials,10);
+  if(isNaN(newUser)||newUser<1) newUser=10;
+  var daily=parseInt(src.daily_free_trials,10);
+  if(isNaN(daily)||daily<1) daily=3;
+  return {newUser:newUser,daily:daily};
+}
+function isFirstVisitDay(){
+  try{return localStorage.getItem(LC_FIRST_VISIT_KEY)===todayYmd();}catch(e){return true;}
+}
+function syncFreeTrialQuota(funnel){
+  var cfg=resolveTrialConfig(funnel||(_systemConfigCache&&_systemConfigCache.business_funnel));
+  NEW_USER_FREE_TRIALS=cfg.newUser;
+  DAILY_FREE_TRIALS=cfg.daily;
+  var today=todayYmd();
+  try{
+    var first=localStorage.getItem(LC_FIRST_VISIT_KEY);
+    if(!first){
+      localStorage.setItem(LC_FIRST_VISIT_KEY,today);
+      localStorage.setItem(LC_QUOTA_DATE_KEY,today);
+      localStorage.setItem(LC_FREE_TRIALS_KEY,String(cfg.newUser));
+      return;
+    }
+    if(first===today){
+      var cur0=parseInt(localStorage.getItem(LC_FREE_TRIALS_KEY),10);
+      if(isNaN(cur0)||cur0<0){
+        localStorage.setItem(LC_FREE_TRIALS_KEY,String(cfg.newUser));
+      }else if(cur0>cfg.newUser){
+        localStorage.setItem(LC_FREE_TRIALS_KEY,String(cfg.newUser));
+      }
+      localStorage.setItem(LC_QUOTA_DATE_KEY,today);
+      return;
+    }
+    var quotaDate=localStorage.getItem(LC_QUOTA_DATE_KEY);
+    if(quotaDate!==today){
+      localStorage.setItem(LC_QUOTA_DATE_KEY,today);
+      localStorage.setItem(LC_FREE_TRIALS_KEY,String(cfg.daily));
+    }
+  }catch(e){}
+}
+function initFreeTrialQuota(funnel){
+  var cfg=resolveTrialConfig(funnel);
+  NEW_USER_FREE_TRIALS=cfg.newUser;
+  DAILY_FREE_TRIALS=cfg.daily;
+  try{
+    var ver=localStorage.getItem('lc_free_trials_version');
+    if(ver!==LC_FREE_TRIALS_VERSION){
+      var today=todayYmd();
+      var cur=parseInt(localStorage.getItem(LC_FREE_TRIALS_KEY),10);
+      if(isNaN(cur)||cur<0) cur=cfg.newUser;
+      if(!localStorage.getItem(LC_FIRST_VISIT_KEY)){
+        localStorage.setItem(LC_FIRST_VISIT_KEY,today);
+        localStorage.setItem(LC_QUOTA_DATE_KEY,today);
+        if(cur>cfg.newUser) cur=cfg.newUser;
+        localStorage.setItem(LC_FREE_TRIALS_KEY,String(cur));
+      }else{
+        syncFreeTrialQuota(funnel);
+      }
+      localStorage.setItem('lc_free_trials_version',LC_FREE_TRIALS_VERSION);
+      updateFreeTrialHint();
+      return;
+    }
+    syncFreeTrialQuota(funnel);
+  }catch(e){}
+  updateFreeTrialHint();
+}
 var GEN_BTN_LABEL='🔮 启动大脑 · 开始全行业智能生图充能';
 var _lcFreeTrialRunActive=false;
 var _lcTrialDeductedThisRun=false;
@@ -1632,12 +1972,12 @@ var _freeTrialToastTimer=null;
 
 function getFreeTrialsRemaining(){
   try{
+    syncFreeTrialQuota();
     var v=localStorage.getItem(LC_FREE_TRIALS_KEY);
-    if(v===null||v===''){localStorage.setItem(LC_FREE_TRIALS_KEY,String(MAX_FREE_TRIALS));return MAX_FREE_TRIALS;}
     var n=parseInt(v,10);
-    if(isNaN(n)||n<0){localStorage.setItem(LC_FREE_TRIALS_KEY,String(MAX_FREE_TRIALS));return MAX_FREE_TRIALS;}
+    if(isNaN(n)||n<0) n=0;
     return n;
-  }catch(e){return MAX_FREE_TRIALS;}
+  }catch(e){return 0;}
 }
 function setFreeTrialsRemaining(n){
   try{localStorage.setItem(LC_FREE_TRIALS_KEY,String(Math.max(0,n)));}catch(e){}
@@ -1649,40 +1989,12 @@ function consumeFreeTrial(){
   setFreeTrialsRemaining(next);
   return next;
 }
-function isCardKeyFormExpanded(){
-  var bar=document.getElementById('cardkey-bar');
-  return !!(bar&&(bar.classList.contains('is-expanded')||bar.classList.contains('is-forced')));
+function openCheckoutPasswordView(){
+  showCardkeyModal(getFreeTrialsRemaining()<=0);
+  setCheckoutModalView('password');
+  var inp=document.getElementById('checkout-pw-input');
+  if(inp)setTimeout(function(){try{inp.focus();}catch(e){}},120);
 }
-function expandCardkeyForm(forced){
-  var bar=document.getElementById('cardkey-bar');
-  var toggle=document.getElementById('cardkey-toggle-btn');
-  if(!bar)return;
-  bar.classList.add('is-expanded');
-  if(forced)bar.classList.add('is-forced');
-  if(toggle)toggle.setAttribute('aria-expanded','true');
-}
-function resetCardkeyFormCollapsed(){
-  var bar=document.getElementById('cardkey-bar');
-  if(bar)bar.classList.remove('is-expanded','is-forced');
-  var toggle=document.getElementById('cardkey-toggle-btn');
-  if(toggle)toggle.setAttribute('aria-expanded','false');
-}
-function toggleCardkeyForm(){
-  var bar=document.getElementById('cardkey-bar');
-  var toggle=document.getElementById('cardkey-toggle-btn');
-  if(!bar)return;
-  var open=!bar.classList.contains('is-expanded');
-  if(open){
-    bar.classList.add('is-expanded');
-    if(toggle)toggle.setAttribute('aria-expanded','true');
-    var input=document.getElementById('card-key-input');
-    if(input)setTimeout(function(){try{input.focus();}catch(e){}},360);
-  }else{
-    bar.classList.remove('is-expanded','is-forced');
-    if(toggle)toggle.setAttribute('aria-expanded','false');
-  }
-}
-function showCardkeyBar(){expandCardkeyForm(true);}
 function canUseFreeTrialWithoutCardKey(){
   return getFreeTrialsRemaining()>0&&!hasValidCardKey();
 }
@@ -1691,6 +2003,7 @@ function lockGenBtn(){
   if(btn){btn.disabled=true;btn.textContent='⚡ AI大脑启动中…';}
 }
 function unlockGenBtn(){
+  stopGenParticleFlow();
   var btn=document.getElementById('gen-btn');
   if(btn){btn.disabled=false;btn.textContent=GEN_BTN_LABEL;}
 }
@@ -1705,23 +2018,31 @@ function updateFreeTrialHint(){
   if(!hint)return;
   var left=getFreeTrialsRemaining();
   if(left>0&&!hasValidCardKey()){
-    hint.textContent='✨ 灵创星球新人福利：剩余免费体验 '+left+' 次';
+    if(isFirstVisitDay()){
+      hint.textContent='✨ 新人首日福利：今日剩余免费体验 '+left+' 次（共 '+NEW_USER_FREE_TRIALS+' 次）';
+    }else{
+      hint.textContent='✨ 今日免费体验：剩余 '+left+' 次（每天 '+DAILY_FREE_TRIALS+' 次，0点刷新）';
+    }
+    hint.style.display='';
   }else if(hasValidCardKey()){
     hint.textContent='🔐 专属卡密已激活 · 无限算力通道已解锁';
+    hint.style.display='';
   }else{
-    hint.textContent='';
+    hint.textContent='免费体验已用完 · 购买算力或关注公众号领【算力】体验码';
+    hint.style.display='';
   }
 }
 function verifyCardKeyUnlock(){
   if(!hasValidCardKey()){alert('请先输入体验卡密');return;}
   persistCardKey();
-  expandCardkeyForm(true);
   updateFreeTrialHint();
 }
 function showFreeTrialToast(remaining){
   var toast=document.getElementById('free-trial-toast');
   if(!toast)return;
-  toast.textContent='✨ 灵创星球新人福利：本次消耗 1 点算力，剩余免费额度 '+remaining+' 次';
+  toast.textContent=isFirstVisitDay()
+    ?'✨ 新人首日：本次消耗 1 次，今日剩余 '+remaining+' 次'
+    :'✨ 今日免费额度：本次消耗 1 次，剩余 '+remaining+' 次';
   toast.classList.add('is-show');
   if(_freeTrialToastTimer)clearTimeout(_freeTrialToastTimer);
   _freeTrialToastTimer=setTimeout(function(){
@@ -1730,23 +2051,24 @@ function showFreeTrialToast(remaining){
   updateFreeTrialHint();
 }
 function handleFreeTrialExhausted(){
-  expandCardkeyForm(true);
-  showCardkeyModal(true);
-  var input=document.getElementById('card-key-input');
-  if(input){try{input.focus();}catch(e){}}
+  openCheckoutPasswordView();
   return false;
 }
 function getCardKeyValue(){
-  var el=document.getElementById('card-key-input');
+  try{
+    var saved=sessionStorage.getItem('lc_card_key');
+    if(saved&&String(saved).trim()) return String(saved).trim();
+  }catch(e){}
+  var el=document.getElementById('checkout-pw-input');
   return el?String(el.value||'').trim():'';
 }
 function hasValidCardKey(){return getCardKeyValue().length>0;}
-function persistCardKey(){
-  var k=getCardKeyValue();
+function persistCardKey(explicitKey){
+  var k=explicitKey!=null?String(explicitKey).trim():getCardKeyValue();
   if(!k)return;
   try{sessionStorage.setItem('lc_card_key',k);}catch(e){}
-  var el=document.getElementById('card-key-input');
-  if(el)el.classList.add('is-ok');
+  var el=document.getElementById('checkout-pw-input');
+  if(el){el.value=k;el.classList.add('is-ok');}
   updateFreeTrialHint();
 }
 function getSelectedCheckoutCard(){
@@ -1839,8 +2161,10 @@ function setCheckoutModalView(mode){
     if(mode==='password'){
       var inp=document.getElementById('checkout-pw-input');
       if(inp){
-        var main=document.getElementById('card-key-input');
-        if(main&&main.value) inp.value=main.value;
+        try{
+          var saved=sessionStorage.getItem('lc_card_key');
+          if(saved) inp.value=saved;
+        }catch(e){}
         setTimeout(function(){try{inp.focus();}catch(e){}},120);
       }
     }
@@ -1862,13 +2186,10 @@ function handleCheckoutUnlock(){
 }
 function verifyCheckoutPassword(){
   var inp=document.getElementById('checkout-pw-input');
-  var main=document.getElementById('card-key-input');
   var v=inp?String(inp.value||'').trim():'';
   if(!v){alert('请先输入体验卡密');return;}
-  if(main) main.value=v;
-  verifyCardKeyUnlock();
+  persistCardKey(v);
   closeCardkeyModal();
-  expandCardkeyForm(true);
 }
 function initCheckoutStore(){
   var cards=document.querySelectorAll('#checkout-cards .checkout-card');
@@ -1924,11 +2245,8 @@ function ensureCardKey(){
   if(_lcFreeTrialRunActive)return true;
   if(canUseFreeTrialWithoutCardKey())return true;
   if(hasValidCardKey()){persistCardKey();return true;}
-  if(getFreeTrialsRemaining()<=0)showCardkeyBar();
   alert('请先填写体验卡密！关注公众号发送【算力】即可自动获取体验卡密。');
-  showCardkeyModal(getFreeTrialsRemaining()<=0);
-  var input=document.getElementById('card-key-input');
-  if(input){try{input.focus();}catch(e){}}
+  openCheckoutPasswordView();
   return false;
 }
 function spawnGenRipple(btn,e){
@@ -1957,10 +2275,6 @@ function initLuxMicroInteractions(){
   }
 }
 function initCardkeyModal(){
-  resetCardkeyFormCollapsed();
-  var toggleBtn=document.getElementById('cardkey-toggle-btn');
-  var verifyBtn=document.getElementById('btn-cardkey-verify');
-  var link=document.getElementById('get-cardkey-link');
   var modal=document.getElementById('cardkey-modal');
   var backdrop=modal?modal.querySelector('.cardkey-modal-backdrop'):null;
   var unlockBtn=document.getElementById('btn-checkout-unlock');
@@ -1975,9 +2289,6 @@ function initCardkeyModal(){
   var payWechatToggle=document.getElementById('btn-pay-wechat-toggle');
   var checkoutVerify=document.getElementById('checkout-pw-verify');
   var checkoutPwInput=document.getElementById('checkout-pw-input');
-  if(toggleBtn)toggleBtn.addEventListener('click',function(e){e.preventDefault();toggleCardkeyForm();});
-  if(verifyBtn)verifyBtn.addEventListener('click',function(e){e.preventDefault();verifyCardKeyUnlock();});
-  if(link)link.addEventListener('click',function(e){e.preventDefault();showCardkeyModal(false);});
   if(unlockBtn)unlockBtn.addEventListener('click',function(e){e.preventDefault();handleCheckoutUnlock();});
   if(toPassword)toPassword.addEventListener('click',function(e){e.preventDefault();setCheckoutModalView('password');});
   if(toFreecode)toFreecode.addEventListener('click',function(e){e.preventDefault();setCheckoutModalView('freecode');});
@@ -1995,22 +2306,22 @@ function initCardkeyModal(){
       if(e.key==='Enter'){e.preventDefault();verifyCheckoutPassword();}
     });
     checkoutPwInput.addEventListener('input',function(){
-      var main=document.getElementById('card-key-input');
-      if(main) main.value=checkoutPwInput.value;
+      var v=String(checkoutPwInput.value||'').trim();
+      if(v) persistCardKey(v);
+      else{
+        try{sessionStorage.removeItem('lc_card_key');}catch(e){}
+        checkoutPwInput.classList.remove('is-ok');
+        updateFreeTrialHint();
+      }
     });
   }
   try{
     var saved=sessionStorage.getItem('lc_card_key');
-    if(saved){
-      var el=document.getElementById('card-key-input');
-      if(el){el.value=saved;el.classList.add('is-ok');}
+    if(saved&&checkoutPwInput){
+      checkoutPwInput.value=saved;
+      checkoutPwInput.classList.add('is-ok');
     }
   }catch(e){}
-  var input=document.getElementById('card-key-input');
-  if(input)input.addEventListener('input',function(){
-    if(getCardKeyValue())persistCardKey();
-    else input.classList.remove('is-ok');
-  });
 }
 function callCoze(query,convId,withFiles,loadingLabel,opts){
   opts=opts||{};
@@ -2050,39 +2361,43 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
   if(withFiles&&uploadedFileIds.length>0) body.file_ids=uploadedFileIds;
   setApiLoading(true,loadingLabel||'⚡ 扣子智能体运算中…');
   deductFreeTrialOnFetch();
-  return fetch(API_BASE+'/api/generate',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(body)
-  })
-    .then(parseApiResponse)
-    .then(function(data){
-      if(!data) throw new Error('API 返回为空，请确认本地服务已启动 (npm start)');
-      try{
-        if(window.DEBUG_COZE){
-          var ra=document.getElementById('analysis-raw');
-          if(ra){ra.textContent=JSON.stringify(data,null,2);ra.style.display='block';}
+  try{
+    return fetch(API_BASE+'/api/generate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    })
+      .then(parseApiResponse)
+      .then(function(data){
+        if(!data) throw new Error(LC_NETWORK_TIP);
+        try{
+          if(window.DEBUG_COZE){
+            var ra=document.getElementById('analysis-raw');
+            if(ra){ra.textContent=JSON.stringify(data,null,2);ra.style.display='block';}
+          }
+        }catch(e){}
+        if(typeof data.code!=='undefined'){
+          if(data.code!==0) throw new Error(data.msg||data.error||LC_NETWORK_TIP);
+          return data;
         }
-      }catch(e){}
-      if(typeof data.code!=='undefined'){
-        if(data.code!==0) throw new Error(data.msg||data.error||JSON.stringify(data));
+        if(data.error) throw new Error(data.error||LC_NETWORK_TIP);
         return data;
-      }
-      if(data.error) throw new Error(data.error);
-      return data;
-    })
-    .catch(function(err){
-      var msg=err.message||String(err);
-      if(msg.indexOf('Failed to fetch')>=0||msg.indexOf('NetworkError')>=0){
-        msg='无法连接本地后端 http://localhost:3000 ，请先在项目目录运行 npm start';
-      }
-      showApiError(msg);
-      throw new Error(msg);
-    })
-    .finally(function(){setApiLoading(false);});
+      })
+      .catch(function(err){
+        var msg=resolveUserFacingApiError(err);
+        notifyApiFailure(err);
+        throw new Error(msg);
+      })
+      .finally(function(){setApiLoading(false);});
+  }catch(syncErr){
+    setApiLoading(false);
+    var syncMsg=resolveUserFacingApiError(syncErr);
+    notifyApiFailure(syncErr);
+    return Promise.reject(new Error(syncMsg));
+  }
 }
 function isWelcome(content){if(!content)return true;var hasW=WELCOME_KW.some(function(kw){return content.indexOf(kw)>=0;});var hasR=content.indexOf('品类判定')>=0||content.indexOf('内容识别')>=0||content.indexOf('匹配手法')>=0||content.indexOf('推荐尺寸')>=0||/[A-Za-z ,.\-]{60,}/.test(content);return hasW&&!hasR;}
-function resetState(){var keepStyleId=selectedVisualStyleId;currentConversationId=null;currentChatId=null;sessionUserId=null;selectedVisualStyleId=keepStyleId;sessionContext={coreTopic:'',style:keepStyleId?getSelectedVisualStyleValue():'',technique:'',size:'',userNotes:''};cachedPrompt='';aiRecSize='';aiRecStyle='';userCustomSize='';userCustomStyle='';['analysis-stage','custom-stage','thinking-stage','output-section','copywrite-ask','copywrite-section'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});var ring=document.getElementById('t-ring');if(ring){ring.style.animation='spin-ring .9s linear infinite';ring.style.borderColor='';ring.innerHTML='';}var s=document.getElementById('t-status');if(s){s.style.color='#cbd5e1';s.textContent='AI大脑联网搜索爆款参数中…\n完整提示词生成中…';}var sz=document.getElementById('t-size');if(sz)sz.textContent='--';var st=document.getElementById('t-style');if(st)st.textContent='--';}
+function resetState(){stopGenParticleFlow();var keepStyleId=selectedVisualStyleId;currentConversationId=null;currentChatId=null;sessionUserId=null;selectedVisualStyleId=keepStyleId;sessionContext={coreTopic:'',style:keepStyleId?getSelectedVisualStyleValue():'',technique:'',size:'',userNotes:''};cachedPrompt='';aiRecSize='';aiRecStyle='';userCustomSize='';userCustomStyle='';['analysis-stage','custom-stage','thinking-stage','output-section','copywrite-ask','copywrite-section'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});var ring=document.getElementById('t-ring');if(ring){ring.style.animation='spin-ring .9s linear infinite';ring.style.borderColor='';ring.innerHTML='';}var s=document.getElementById('t-status');if(s){s.style.color='#cbd5e1';s.textContent='AI大脑联网搜索爆款参数中…\n完整提示词生成中…';}var sz=document.getElementById('t-size');if(sz)sz.textContent='--';var st=document.getElementById('t-style');if(st)st.textContent='--';}
 function runEngine(){
   var btn=document.getElementById('gen-btn');
   if(btn&&btn.disabled)return;
@@ -2106,7 +2421,23 @@ function runEngine(){
     unlockGenBtn();
     return;
   }
+  var preset=_caseApplyPreset;
   resetState();
+  if(preset){
+    if(preset.styleId) selectedVisualStyleId=preset.styleId;
+    userCustomSize=preset.size||'';
+    userCustomStyle=(preset.style||'').substring(0,20);
+    sessionContext.style=preset.style||'';
+    sessionContext.size=preset.size||'';
+    aiRecSize=preset.size||'';
+    aiRecStyle=preset.style||'';
+    _caseApplyPreset=null;
+    updateStyleDisplays();
+    initStylePicker();
+    var szPre=document.getElementById('t-size');
+    if(szPre) szPre.textContent=preset.size||'--';
+  }
+  startGenParticleFlow();
   sessionUserId='lc_'+Date.now()+'_'+Math.random().toString(36).slice(2,9);
   updateStyleDisplays();
   runQuantumScan(topic||'上传文件');
@@ -2136,7 +2467,6 @@ function runEngine(){
       },500);
     }).catch(function(e){
       document.getElementById('quantum-stage').style.display='none';
-      if(e&&e.message) alert('生成失败：'+e.message);
     }).finally(function(){
       _lcFreeTrialRunActive=false;
       _lcTrialDeductedThisRun=false;
@@ -2309,8 +2639,8 @@ function confirmAI(){
     requestPromptFromCoze(session,0).then(function(content){
       showResult(content,0,true);
     }).catch(function(e){
-      var msg=e&&e.message?e.message:'未知错误';
-      if(tStatus){tStatus.style.color='#ef4444';tStatus.innerHTML='❌ 失败：'+msg+'<br><span style="font-size:11px;color:#94a3b8;">可点击下方按钮重试，无需重新分析</span>';}
+      var msg=resolveUserFacingApiError(e);
+      if(tStatus){tStatus.style.color='#ef4444';tStatus.innerHTML='❌ '+msg+'<br><span style="font-size:11px;color:#94a3b8;">可点击下方按钮重试，无需重新分析</span>';}
       if(!document.getElementById('confirm-retry-btn')){
         var retryBtn=document.createElement('button');
         retryBtn.id='confirm-retry-btn';
@@ -2326,7 +2656,7 @@ function confirmAI(){
 
 function showCustomPanel(){document.getElementById('custom-stage').style.display='block';handleCustomStyleChange();document.getElementById('custom-stage').scrollIntoView({behavior:'smooth'});}
 function handleCustomStyleChange(){var val=(document.getElementById('custom-style')||{}).value;var d=document.getElementById('custom-style-text');if(d){if(val==='custom_input'){d.classList.add('is-visible');}else{d.classList.remove('is-visible');d.value='';}}}
-function launchCustom(){var sizeEl=document.getElementById('custom-size');var sizeVal=sizeEl?sizeEl.value:'A';var sizeTxt=sizeEl&&sizeEl.selectedOptions[0]?sizeEl.selectedOptions[0].text.split('·')[0].trim():sizeVal;var styleVal=(document.getElementById('custom-style')||{}).value||'custom_input';var styleText='';if(styleVal==='custom_input'){styleText=((document.getElementById('custom-style-text')||{}).value||'').trim();if(!styleText){alert('请输入你的专属风格词组！');return;}}else{styleText=styleVal;}userCustomSize=sizeTxt;userCustomStyle=styleText.substring(0,20);document.getElementById('custom-stage').style.display='none';var ts=document.getElementById('thinking-stage');ts.style.display='flex';var sz=document.getElementById('t-size');var sy=document.getElementById('t-style');if(sz)sz.textContent=userCustomSize;if(sy)sy.textContent=userCustomStyle;ts.scrollIntoView({behavior:'smooth'});var session=getCurrentSession();if(!session){alert('请先生成主题分析');document.getElementById('thinking-stage').style.display='none';return;}sessionContext.size=sizeTxt;sessionContext.style=styleText;callCoze('按自定义方案出图',session,false,'🚀 自定义方案生成中…',{intent:'custom',style:styleText,size:sizeTxt}).then(function(r){currentConversationId=r.conversation_id||currentConversationId;currentChatId=r.chat_id||currentChatId;var content=extractAssistantContent(r);if(!content)throw new Error('未获取到内容');showResult(content);}).catch(function(e){var s=document.getElementById('t-status');if(s){s.style.color='#ef4444';s.textContent='❌ 失败：'+e.message;}setTimeout(function(){document.getElementById('thinking-stage').style.display='none';},2000);}); }
+function launchCustom(){var sizeEl=document.getElementById('custom-size');var sizeVal=sizeEl?sizeEl.value:'A';var sizeTxt=sizeEl&&sizeEl.selectedOptions[0]?sizeEl.selectedOptions[0].text.split('·')[0].trim():sizeVal;var styleVal=(document.getElementById('custom-style')||{}).value||'custom_input';var styleText='';if(styleVal==='custom_input'){styleText=((document.getElementById('custom-style-text')||{}).value||'').trim();if(!styleText){alert('请输入你的专属风格词组！');return;}}else{styleText=styleVal;}userCustomSize=sizeTxt;userCustomStyle=styleText.substring(0,20);document.getElementById('custom-stage').style.display='none';var ts=document.getElementById('thinking-stage');ts.style.display='flex';var sz=document.getElementById('t-size');var sy=document.getElementById('t-style');if(sz)sz.textContent=userCustomSize;if(sy)sy.textContent=userCustomStyle;ts.scrollIntoView({behavior:'smooth'});var session=getCurrentSession();if(!session){alert('请先生成主题分析');document.getElementById('thinking-stage').style.display='none';return;}sessionContext.size=sizeTxt;sessionContext.style=styleText;callCoze('按自定义方案出图',session,false,'🚀 自定义方案生成中…',{intent:'custom',style:styleText,size:sizeTxt}).then(function(r){currentConversationId=r.conversation_id||currentConversationId;currentChatId=r.chat_id||currentChatId;var content=extractAssistantContent(r);if(!content)throw new Error('未获取到内容');showResult(content);}).catch(function(e){var s=document.getElementById('t-status');if(s){s.style.color='#ef4444';s.textContent='❌ '+resolveUserFacingApiError(e);}setTimeout(function(){document.getElementById('thinking-stage').style.display='none';},2000);}); }
 function isAnalysisRound(raw){
   var analysisMarkers=['建议回复选项','换一套风格','我要换尺寸','我要自定义风格','用这套风格','确认后直接出图','推荐尺寸：','本次随机风格','本次指定风格','品类判定','匹配手法','用户类型'];
   var hitCount=0;
@@ -2449,10 +2779,14 @@ function showResult(raw,retryCount,fromConfirm){
   var s=document.getElementById('t-status');
   if(s){s.style.color='#f3af42';s.textContent='✨ 纯净英文提示词已就绪！';}
   setTimeout(function(){
+    stopGenParticleFlow();
     document.getElementById('thinking-stage').style.display='none';
-    document.getElementById('out-prompt').textContent=extracted;
+    var outEl=document.getElementById('out-prompt');
     document.getElementById('output-section').style.display='block';
     document.getElementById('copywrite-ask').style.display='block';
+    typewriterPrompt(outEl,extracted,function(){
+      triggerPromptGoldenWave();
+    });
     document.getElementById('output-section').scrollIntoView({behavior:'smooth'});
   },800);
 }
@@ -2516,7 +2850,8 @@ function initCockpitDecor(){
   }
 }
 function bootApp(){
-  try{initGallery();}catch(e){}
+  try{initFreeTrialQuota(_systemConfigCache&&_systemConfigCache.business_funnel);}catch(e){}
+  try{initCaseSidebar();}catch(e){}
   try{initKeywords();}catch(e){}
   try{initStylePicker();}catch(e){}
   try{setupBubbles();}catch(e){}
