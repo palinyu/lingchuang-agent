@@ -221,6 +221,11 @@ async function forwardDeepseekClientChat(body) {
     if (!content) {
       return { code: -1, msg: 'DeepSeek 返回内容为空', httpStatus: 502 };
     }
+    return {
+      code: 0,
+      answer: content,
+      meta: { engine: 'deepseek', mode: 'lc_ds_chat' },
+    };
   } catch (err) {
     clearTimeout(timeoutId);
     const isAbort = err && (err.name === 'AbortError' || /aborted/i.test(err.message || ''));

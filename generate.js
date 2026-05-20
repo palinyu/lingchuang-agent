@@ -142,18 +142,32 @@ function readJsonBody(req) {
 }
 
 async function handleDeepseekCopywriter(res, body) {
-  const result = await fetchDeepseekCopywrite(body);
-  if (result.code !== 0) {
-    return res.status(result.httpStatus || 500).json({
+  try {
+    const result = await fetchDeepseekCopywrite(body);
+    if (!result || typeof result !== 'object') {
+      return res.status(500).json({
+        code: -1,
+        msg: 'DeepSeek 内部返回异常，请优先使用 /api/deepseek-copy',
+      });
+    }
+    if (result.code !== 0) {
+      return res.status(result.httpStatus || 500).json({
+        code: -1,
+        msg: result.msg || '生成失败',
+      });
+    }
+    return res.status(200).json({
+      code: 0,
+      answer: result.answer,
+      meta: result.meta,
+    });
+  } catch (err) {
+    console.error('[handleDeepseekCopywriter]', err);
+    return res.status(500).json({
       code: -1,
-      msg: result.msg || '生成失败',
+      msg: '爆款文案失败：' + (err.message || '请配置 DEEPSEEK_API_KEY'),
     });
   }
-  return res.status(200).json({
-    code: 0,
-    answer: result.answer,
-    meta: result.meta,
-  });
 }
 
 module.exports = async function handler(req, res) {

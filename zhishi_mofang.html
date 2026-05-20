@@ -2923,7 +2923,11 @@ function setupDsCopyPanel(){
         if(ou) ou.style.display='block';
         deductFreeTrialOnDsNotesSuccess();
       })
-      .catch(function(err){alert(err.message||String(err));})
+      .catch(function(err){
+        var m=err&&err.message?String(err.message):'生成失败';
+        if(/DEEPSEEK_API_KEY|FUNCTION_INVOCATION|deepseek-copy/i.test(m)) showApiError(m);
+        alert(m);
+      })
       .finally(function(){
         genBtn.disabled=false;
         genBtn.textContent=old;
@@ -3622,7 +3626,9 @@ function parseApiResponse(r){
       if(r.status===413) errMsg=errMsg||'文件超过大小限制：图片≤2MB，文档≤4MB，请压缩后重试';
       else if((r.status===504||r.status===502)&&!errMsg) errMsg='云端分析超时（双图更慢），请换更小图片或稍后重试';
       else if(r.status===500&&!errMsg){
-        if(/deepseek/i.test(text||'')) errMsg='未配置或无效 DEEPSEEK_API_KEY，请在 Vercel 环境变量添加后重新部署';
+        if(/FUNCTION_INVOCATION_FAILED|Serverless Function.*crashed/i.test(text||'')){
+          errMsg='爆款文案接口未部署成功：请把最新 api/deepseek-copy.js 上传到 GitHub 并 Redeploy，并配置 DEEPSEEK_API_KEY';
+        }else if(/deepseek/i.test(text||'')) errMsg='未配置或无效 DEEPSEEK_API_KEY，请在 Vercel 环境变量添加后重新部署';
         else errMsg='服务器内部错误：请检查 Vercel 环境变量（COZE_TOKEN、COZE_BOT_ID、DEEPSEEK_API_KEY）及 api 文件是否已上传';
       }
       else if(!errMsg) errMsg='HTTP '+r.status;
