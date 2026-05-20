@@ -196,8 +196,22 @@ body{
 }
 #img-zoom.is-open{display:flex;flex-direction:column;justify-content:center;align-items:center;}
 #img-zoom .img-zoom-back{position:absolute;inset:0;background:rgba(0,0,0,0.88);cursor:zoom-out;}
-#img-zoom .img-zoom-inner{position:relative;z-index:1;max-width:96vw;max-height:92vh;display:flex;align-items:center;justify-content:center;pointer-events:auto;}
-#img-zoom .img-zoom-inner img{max-width:96vw;max-height:92vh;width:auto;height:auto;object-fit:contain;border-radius:12px;box-shadow:0 12px 48px rgba(0,0,0,0.55);cursor:pointer;-webkit-tap-highlight-color:transparent;}
+#img-zoom .img-zoom-inner{
+  position:relative;z-index:1;max-width:min(640px,90vw);max-height:min(72vh,720px);
+  display:flex;align-items:center;justify-content:center;pointer-events:auto;
+}
+#img-zoom .img-zoom-inner img{
+  max-width:min(640px,90vw);max-height:min(72vh,720px);width:auto;height:auto;
+  object-fit:contain;border-radius:12px;box-shadow:0 12px 48px rgba(0,0,0,0.55);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  opacity:0;transition:opacity .2s ease;
+}
+#img-zoom .img-zoom-inner img.is-ready{opacity:1;}
+#img-zoom .img-zoom-inner.is-busy::after{
+  content:'';position:absolute;inset:20%;border-radius:50%;
+  border:2px solid rgba(243,175,66,0.25);border-top-color:rgba(243,175,66,0.9);
+  animation:spin-ring .75s linear infinite;pointer-events:none;
+}
 #img-zoom .img-zoom-hint{position:relative;z-index:1;margin-top:12px;font-size:12px;color:rgba(226,232,240,0.85);pointer-events:none;text-align:center;padding:0 16px;line-height:1.5;}
 #img-zoom .img-zoom-hint-d{display:inline;}
 #img-zoom .img-zoom-hint-m{display:none;}
@@ -1249,6 +1263,9 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
   .ds-copy-disclaimer{font-size:9px;line-height:1.45;margin-top:10px;}
   #img-zoom .img-zoom-hint-d{display:none;}
   #img-zoom .img-zoom-hint-m{display:inline;}
+  #img-zoom .img-zoom-inner,#img-zoom .img-zoom-inner img{
+    max-width:min(92vw,520px);max-height:min(65vh,640px);
+  }
   #img-zoom .img-zoom-hint{
     font-size:13px;font-weight:700;color:#f1f5f9;
     text-shadow:0 1px 6px rgba(0,0,0,0.9),0 0 12px rgba(0,0,0,0.65);
@@ -2293,9 +2310,19 @@ function lcCaseImgUrl(url,opt){
   if(!full) return '';
   if(!/\.myqcloud\.com/i.test(full)) return full;
   if(opt.full) return full;
-  var w=Math.max(120,Math.min(640,opt.w||280));
+  var cap=opt.maxW||640;
+  var w=Math.max(120,Math.min(cap,opt.w||280));
   var q=Math.max(60,Math.min(92,opt.q||80));
   return full+'?imageMogr2/thumbnail/'+w+'x/format/webp/quality/'+q+'/interlace/1';
+}
+/** 点击放大：按屏幕算合适预览宽，不拉原图 */
+function lcCaseImgZoomUrl(url){
+  var full=lcCaseImgFull(url);
+  if(!full) return '';
+  var iw=window.innerWidth||390;
+  var ih=window.innerHeight||700;
+  var w=Math.round(Math.min(680,Math.max(360,Math.min(iw*1.35,ih*0.65))));
+  return lcCaseImgUrl(full,{w:w,q:82,maxW:960});
 }
 function lcAttachCaseImg(img,fullUrl,opt){
   if(!img||!fullUrl) return;
@@ -2454,7 +2481,7 @@ function initGallery(){
     var imgWrap=document.createElement('div');
     imgWrap.className='g-img is-loading';
     imgWrap.addEventListener('click',function(){
-      try{openImgZoom(item.url);}catch(e){}
+      try{openImgZoom(lcCaseImgFull(item.url));}catch(e){}
     });
     var img=document.createElement('img');
     img.alt=item.label||'出图案例';
@@ -2888,18 +2915,53 @@ function initCaseSidebar(){
 function openImgZoom(src){
   var z=document.getElementById('img-zoom');
   var im=document.getElementById('img-zoom-src');
-  if(im) im.src=String(src||'');
-  if(z){
-    z.classList.add('is-open');
-    z.setAttribute('aria-hidden','false');
+  var inner=z?z.querySelector('.img-zoom-inner'):null;
+  if(!z||!im) return;
+  var full=lcCaseImgFull(src||'');
+  var preview=full?lcCaseImgZoomUrl(full):'';
+  im.classList.remove('is-ready');
+  im.dataset.lcZoomFb='';
+  if(inner) inner.classList.add('is-busy');
+  function zoomDone(){
+    if(inner) inner.classList.remove('is-busy');
+    im.classList.add('is-ready');
   }
+  im.onload=function(){ zoomDone(); };
+  im.onerror=function(){
+    if(im.dataset.lcZoomFb==='1'){
+      im.dataset.lcZoomFb='2';
+      im.src=lcCaseImgUrl(full,{w:400,q:74,maxW:960});
+      return;
+    }
+    if(im.dataset.lcZoomFb!=='3'&&full){
+      im.dataset.lcZoomFb='3';
+      im.src=full;
+      return;
+    }
+    zoomDone();
+  };
+  im.src=preview||full||'';
+  if(im.complete&&im.naturalWidth>0) zoomDone();
+  z.classList.add('is-open');
+  z.setAttribute('aria-hidden','false');
 }
 function closeImgZoom(){
   var z=document.getElementById('img-zoom');
   if(!z) return;
   z.classList.remove('is-open');
   z.setAttribute('aria-hidden','true');
-  try{var im=document.getElementById('img-zoom-src');if(im) im.src='';}catch(e){}
+  try{
+    var im=document.getElementById('img-zoom-src');
+    var inner=z.querySelector('.img-zoom-inner');
+    if(inner) inner.classList.remove('is-busy');
+    if(im){
+      im.classList.remove('is-ready');
+      im.onload=null;
+      im.onerror=null;
+      im.src='';
+      im.dataset.lcZoomFb='';
+    }
+  }catch(e){}
 }
 function openApplySheet(item){
   _pendingCaseItem=item;
@@ -4035,7 +4097,7 @@ function parseContentList(raw){
   var lines=text.split(/\r?\n/);
   var inContent=false;
   var items=[];
-  var startKeys=['内容要点','内容识别','6. 内容','6、内容','6．内容'];
+  var startKeys=['内容要点','内容识别','✅ 内容识别','6. 内容','6、内容','6．内容'];
   var stopKeys=['品类判定','用户类型','匹配手法','推荐尺寸','本次随机风格','本次指定风格','联想记忆点','场景延伸','电商应用','全息深度','建议回复','确认直接','用这套','换一套','我要换'];
   lines.forEach(function(rawLine){
     if(items.length>=6) return;
@@ -4076,6 +4138,20 @@ function showAnalysisCard(raw){
   var grid=document.getElementById('analysis-grid');
   if(!grid) return;
   grid.innerHTML='';
+
+  var visionRec=parseFieldFromRaw(raw,['内容识别','✅ 内容识别']);
+  if(visionRec&&visionRec.length>2){
+    var vBlock=document.createElement('div');
+    vBlock.style.cssText='margin-bottom:12px;padding:12px 14px;border-radius:10px;background:rgba(34,197,94,0.08);border:1px solid rgba(74,222,128,0.35);';
+    vBlock.innerHTML='<div style="font-size:10px;color:rgba(134,239,172,0.9);margin-bottom:6px;">✅ 内容识别（基于上传图）</div><div style="font-size:14px;font-weight:700;color:#ecfdf5;line-height:1.55;">'+visionRec.substring(0,220)+'</div>';
+    grid.appendChild(vBlock);
+  }
+  if(/已识别你的产品/.test(raw)&&(!visionRec||visionRec.length<4)&&!/牛蛙|美蛙|蛙|火锅/.test(raw)){
+    var warn=document.createElement('div');
+    warn.style.cssText='margin-bottom:10px;padding:10px 12px;border-radius:8px;background:rgba(239,68,68,0.1);border:1px solid rgba(248,113,113,0.4);font-size:12px;line-height:1.5;color:#fecaca;';
+    warn.textContent='⚠️ 当前回复疑似未充分看图（仅为「已识别产品+三方案」模板）。请重新「启动大脑」；若主体是牛蛙/美蛙，请在输入框写明以免与甲鱼混淆。';
+    grid.insertBefore(warn,grid.firstChild);
+  }
 
   // 字段卡片区（横向排列）
   var fields=[
