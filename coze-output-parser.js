@@ -30,6 +30,15 @@ function sliceBetween(text, startMarkers, endMarkers) {
   return body.slice(0, endAt).trim();
 }
 
+function stripChineseShortLabel(s) {
+  let out = safeStr(s);
+  if (!out) return '';
+  out = out.replace(/^[（(]?\s*手机端\s*[）)]?\s*[:：]\s*/, '');
+  out = out.replace(/^📱\s*精简版[^\n]*\n?/m, '');
+  out = out.replace(/^精简版[（(]手机端[）)]?\s*[:：]?\s*/, '');
+  return out.trim();
+}
+
 function extractEnglishBlock(text) {
   const chunk = sliceBetween(
     text,
@@ -65,10 +74,12 @@ function parseCozeOutputPackage(raw) {
 
   const englishFull = extractEnglishBlock(text);
 
-  const chineseShort = sliceBetween(
-    text,
-    ['📱 精简版', '精简版（手机端）', '精简版(手机端)', '【精简版', '精简版'],
-    ['⚙️ 即梦', '即梦设置', '📣', '配套爆款', '需要配套']
+  const chineseShort = stripChineseShortLabel(
+    sliceBetween(
+      text,
+      ['📱 精简版', '精简版（手机端）', '精简版(手机端)', '【精简版', '精简版'],
+      ['⚙️ 即梦', '即梦设置', '📣', '配套爆款', '需要配套']
+    )
   );
 
   const jimengSettings = sliceBetween(

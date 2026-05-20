@@ -632,16 +632,25 @@ html.lc-await-intro #lc-mobile-legal-bar{visibility:hidden!important;pointer-eve
 }
 .lc-intro-slogan-a,.lc-intro-slogan-b{display:inline-block;}
 .lc-intro-slogan-a{
-  opacity:0;transform:translate3d(-48px,18px,0) scale(.9) rotateX(55deg);filter:blur(5px);
-  animation:lc-slog-a-in .95s cubic-bezier(.22,1,.36,1) 2.35s forwards;
+  color:#fff;text-shadow:0 0 18px rgba(255,255,255,0.35);
+  opacity:0;transform:translate3d(-28px,10px,0) scale(.94);filter:blur(4px);
+  animation:lc-slog-a-in .85s cubic-bezier(.22,1,.36,1) 2.2s forwards;
 }
 .lc-intro-slogan-b{
-  margin-left:clamp(4px,1.2vw,10px);
-  opacity:0;transform:translate3d(52px,-16px,0) scale(.88) rotateX(-48deg);filter:blur(6px);
-  animation:lc-slog-b-in 1s cubic-bezier(.22,1,.36,1) 2.48s forwards;
+  margin-left:clamp(4px,1.2vw,10px);color:#f3af42;
+  opacity:0;transform:translate3d(28px,-8px,0) scale(.94);filter:blur(4px);
+  animation:lc-slog-b-in .85s cubic-bezier(.22,1,.36,1) 2.35s forwards;
 }
 @keyframes lc-slog-a-in{to{opacity:1;transform:none;filter:blur(0);}}
 @keyframes lc-slog-b-in{to{opacity:1;transform:none;filter:blur(0);}}
+#lc-intro-overlay.is-leaving{opacity:0;transition:opacity .5s ease;pointer-events:none;}
+#lc-intro-overlay.is-leaving .lc-intro-brand,
+#lc-intro-overlay.is-leaving .lc-intro-tag,
+#lc-intro-overlay.is-leaving .lc-intro-slogan-a,
+#lc-intro-overlay.is-leaving .lc-intro-slogan-b,
+#lc-intro-overlay.is-leaving .lc-intro-sub{
+  animation:none!important;opacity:1!important;transform:none!important;filter:none!important;
+}
 .lc-intro-skip{
   position:absolute;right:16px;bottom:16px;padding:6px 10px;border:none;background:transparent;
   color:rgba(255,255,255,0.45);font-size:12px;cursor:pointer;font-family:inherit;z-index:3;
@@ -917,8 +926,30 @@ body.api-lux-loading .btn-generate{background:linear-gradient(135deg,#1a1408,#2a
 body.api-lux-loading .btn-attach{opacity:0.45;pointer-events:none;}
 body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:none;opacity:0.5;}
 #api-status-toast{display:none;position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:99998;background:rgba(15,16,22,0.95);border:1px solid rgba(243,175,66,0.35);color:var(--gold);font-size:12px;font-weight:700;padding:8px 18px;border-radius:24px;backdrop-filter:blur(8px);}
+body.api-lux-loading .input-stage-body{display:grid;grid-template-columns:minmax(0,36%) minmax(0,64%);gap:14px;align-items:stretch;}
+body.api-lux-loading .input-thinking-panel{display:flex;}
+body.api-lux-loading #main-textarea{min-height:88px;color:rgba(243,175,66,0.9);}
+body.api-lux-loading .gen-wait-hint{display:block!important;}
+.input-stage-body{display:block;}
+.input-thinking-panel{
+  display:none;flex-direction:column;justify-content:center;gap:10px;
+  padding:12px 14px;border-radius:10px;border:1px dashed rgba(243,175,66,0.22);
+  background:rgba(8,9,14,0.55);min-height:100px;box-sizing:border-box;
+}
+.ith-steps{display:flex;flex-direction:column;gap:6px;}
+.ith-step{font-size:11px;color:var(--tx3);padding:4px 8px;border-radius:6px;border-left:2px solid transparent;transition:color .25s,border-color .25s,background .25s;}
+.ith-step.is-active{color:var(--gold);border-left-color:var(--gold);background:rgba(243,175,66,0.08);}
+.ith-step.is-done{color:rgba(148,163,184,0.85);border-left-color:rgba(243,175,66,0.35);}
+.ith-guess{font-size:11px;color:rgba(243,175,66,0.75);font-weight:700;}
+.ith-log{font-family:'Menlo','Monaco',monospace;font-size:10px;color:#4ade80;line-height:1.55;min-height:2.8em;}
+.ith-eta{font-size:10px;color:var(--tx3);line-height:1.45;}
+.gen-wait-hint{display:none;font-size:11px;color:rgba(226,192,125,0.72);text-align:center;line-height:1.5;margin:0 0 6px;letter-spacing:0.2px;}
+@media(max-width:720px){
+  body.api-lux-loading .input-stage-body{grid-template-columns:1fr;}
+  .input-thinking-panel{min-height:72px;}
+}
 /* fix9: 量子扫描 左日志+右可视化 */
-#quantum-stage{display:none;margin-bottom:32px;}
+#quantum-stage{display:none;margin-bottom:16px;}
 .quantum-box{background:#03040a;border:1px solid rgba(243,175,66,0.12);border-radius:14px;padding:20px;font-family:'Menlo','Monaco',monospace;font-size:12px;position:relative;min-height:160px;display:grid;grid-template-columns:1fr 1fr;gap:16px;}
 .quantum-box::before{content:"● ● ●";position:absolute;top:12px;left:16px;font-size:10px;color:rgba(255,255,255,0.12);letter-spacing:5px;}
 #quantum-log{margin-top:28px;color:#4ade80;line-height:2.2;}
@@ -1402,15 +1433,26 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
         </div>
       </div>
     </div>
-    <textarea id="main-textarea" placeholder="直接说你想做什么图，用大白话就行…&#10;&#10;📝 例：红烧肉的做法 / 苏州旅游攻略 / 光合作用&#10;🖼️ 电商可一次选2张图：第1张=产品(图B)，第2张=风格参考(图A)，可说换背景/出海报&#10;📄 上传 txt/docx/pdf 会自动提取文字发给 AI"></textarea>
-    <div class="input-toolbar">
-      <input type="file" id="file-input" style="display:none;" accept="image/*,.pdf,.doc,.docx,.txt" multiple onchange="handleFile(this)">
-      <button class="btn-attach" onclick="document.getElementById('file-input').click()">📎 上传图(最多2张) / 文档 / 手写稿</button>
+    <div class="input-stage-body">
+      <div class="input-stage-main">
+        <textarea id="main-textarea" placeholder="直接说你想做什么图，用大白话就行…&#10;&#10;📝 例：红烧肉的做法 / 苏州旅游攻略 / 光合作用&#10;🖼️ 电商可一次选2张图：第1张=产品(图B)，第2张=风格参考(图A)，可说换背景/出海报&#10;📄 上传 txt/docx/pdf 会自动提取文字发给 AI"></textarea>
+        <div class="input-toolbar">
+          <input type="file" id="file-input" style="display:none;" accept="image/*,.pdf,.doc,.docx,.txt" multiple onchange="handleFile(this)">
+          <button class="btn-attach" onclick="document.getElementById('file-input').click()">📎 上传图(最多2张) / 文档 / 手写稿</button>
+        </div>
+      </div>
+      <div id="input-thinking-panel" class="input-thinking-panel" aria-hidden="true">
+        <div class="ith-guess" id="input-thinking-guess"></div>
+        <div class="ith-steps" id="input-thinking-steps">
+          <div class="ith-step is-active" data-ith="0">① 联网检索爆款参考</div>
+          <div class="ith-step" data-ith="1">② 判定品类与手法</div>
+          <div class="ith-step" data-ith="2">③ 组装工业级 Prompt</div>
+          <div class="ith-step" data-ith="3">④ 扣子大脑分析中</div>
+        </div>
+        <div class="ith-log" id="input-thinking-log"></div>
+        <div class="ith-eta">预计还需约 1～2 分钟 · 请勿关闭页面</div>
+      </div>
     </div>
-  </div>
-  <div class="gen-launch-wrap" id="gen-launch-wrap">
-    <button type="button" id="gen-btn" class="btn-generate lux-tap" onclick="runEngine()">🔮 启动大脑 · 开始全行业智能生图充能</button>
-    <p class="free-trial-hint" id="free-trial-hint" aria-live="polite"></p>
   </div>
   <div id="quantum-stage">
     <div class="quantum-box">
@@ -1423,6 +1465,11 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
         <div class="q-vis-txt" id="q-vis-txt">AI大脑<br>启动中…</div>
       </div>
     </div>
+  </div>
+  <div class="gen-launch-wrap" id="gen-launch-wrap">
+    <button type="button" id="gen-btn" class="btn-generate lux-tap" onclick="runEngine()">🔮 启动大脑 · 开始全行业智能生图充能</button>
+    <p class="gen-wait-hint" id="gen-wait-hint">分析完成后将展示推荐方案，请勿重复点击</p>
+    <p class="free-trial-hint" id="free-trial-hint" aria-live="polite"></p>
   </div>
   <div id="analysis-stage">
     <div class="analysis-card">
@@ -3174,9 +3221,79 @@ var html='<span style="font-size:11px;color:var(--tx3);">'+(isDual?'已上传2�
 items.forEach(function(it){html+='<span onclick="fillEcom(\''+it[0].replace(/'/g,"\\'")+'\')" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">'+it[1]+'</span>';});
 hint.innerHTML=html;hint.style.display='flex';}
 function fillEcom(text){var ta=document.getElementById('main-textarea');if(ta)ta.value=text;var hint=document.getElementById('ecom-hint');if(hint)hint.style.display='none';}
+var _ithStepTimer=null;
+var _ithLogIdx=0;
+var LC_ITH_LOG_LINES=[
+  '检索同题材爆款版式…',
+  '匹配品类模板与 44 种手法…',
+  '注入风格库与合规护栏…',
+  '等待扣子大脑返回…'
+];
+function guessCategoryLabel(topic){
+  var t=String(topic||'');
+  if(/红烧|菜谱|做法|食谱|烘焙|煲汤/.test(t)) return '菜谱教程类';
+  if(/古诗|诗词|文言文|唐诗/.test(t)) return '古诗图解类';
+  if(/英语|单词|Unit|课时/.test(t)) return '教育学科类';
+  if(/本草|枸杞|当归|中药/.test(t)) return '中药本草类';
+  if(/护肤|成分|面膜/.test(t)) return '护肤美妆类';
+  if(/健身|深蹲|减脂/.test(t)) return '健身减脂类';
+  if(/城市|地标|Citywalk|旅游/.test(t)) return '城市文化类';
+  if(/星座|白羊|MBTI/.test(t)) return '星座情感类';
+  return '知识图解类';
+}
+function setInputThinkingStep(idx){
+  var wrap=document.getElementById('input-thinking-steps');
+  if(!wrap) return;
+  var steps=wrap.querySelectorAll('.ith-step');
+  var i=0;
+  for(;i<steps.length;i++){
+    var el=steps[i];
+    el.classList.remove('is-active','is-done');
+    if(i<idx) el.classList.add('is-done');
+    else if(i===idx) el.classList.add('is-active');
+  }
+}
+function startInputThinkingPanel(topic){
+  var panel=document.getElementById('input-thinking-panel');
+  if(!panel) return;
+  panel.setAttribute('aria-hidden','false');
+  var guess=document.getElementById('input-thinking-guess');
+  if(guess) guess.textContent='预判品类：'+guessCategoryLabel(topic);
+  var logEl=document.getElementById('input-thinking-log');
+  if(logEl) logEl.textContent=LC_ITH_LOG_LINES[0];
+  _ithLogIdx=0;
+  setInputThinkingStep(0);
+  if(_ithStepTimer) clearInterval(_ithStepTimer);
+  _ithStepTimer=setInterval(function(){
+    var cur=0;
+    var steps=document.querySelectorAll('#input-thinking-steps .ith-step.is-active');
+    if(steps[0]){
+      var n=parseInt(steps[0].getAttribute('data-ith'),10);
+      if(!isNaN(n)) cur=n;
+    }
+    var next=Math.min(3,cur+1);
+    setInputThinkingStep(next);
+    _ithLogIdx=Math.min(LC_ITH_LOG_LINES.length-1,_ithLogIdx+1);
+    if(logEl) logEl.textContent=LC_ITH_LOG_LINES[_ithLogIdx];
+  },8500);
+}
+function stopInputThinkingPanel(){
+  if(_ithStepTimer){clearInterval(_ithStepTimer);_ithStepTimer=null;}
+  var panel=document.getElementById('input-thinking-panel');
+  if(panel) panel.setAttribute('aria-hidden','true');
+  var logEl=document.getElementById('input-thinking-log');
+  if(logEl) logEl.textContent='';
+  var guess=document.getElementById('input-thinking-guess');
+  if(guess) guess.textContent='';
+}
 function setApiLoading(on,statusText){
   if(on){_apiLoadingCount++;}else{_apiLoadingCount=Math.max(0,_apiLoadingCount-1);}
   document.body.classList.toggle('api-lux-loading',_apiLoadingCount>0);
+  if(_apiLoadingCount>0&&on){
+    var topic=(document.getElementById('main-textarea')||{}).value||'';
+    startInputThinkingPanel(topic);
+  }
+  if(_apiLoadingCount===0) stopInputThinkingPanel();
   var toast=document.getElementById('api-status-toast');
   if(toast){
     if(_apiLoadingCount>0&&statusText){toast.textContent=statusText;toast.style.display='block';}
@@ -4576,7 +4693,9 @@ function cleanEnglishPromptText(raw){
 function cleanChineseShortText(raw){
   var s=String(raw||'').trim();
   if(!s) return '';
+  s=s.replace(/^[（(]?\s*手机端\s*[）)]?\s*[:：]\s*/,'');
   s=s.replace(/^📱\s*精简版[^\n]*\n?/m,'');
+  s=s.replace(/^精简版[（(]手机端[）)]?\s*[:：]?\s*/,'');
   s=s.replace(/\[AI提示词生成[^\]]*\]/g,'');
   s=s.replace(/⚠️[^\n]*/g,'');
   var lines=s.split(/\r?\n/);
@@ -5094,15 +5213,7 @@ function wireLcTermsOnce(){
 function clearLcAwaitIntro(){
   try{document.documentElement.classList.remove('lc-await-intro');}catch(e){}
 }
-function hideIntroShowTerms(){
-  stopLcIntroTunnel();
-  if(_lcIntroTimer){clearTimeout(_lcIntroTimer);_lcIntroTimer=null;}
-  var io=document.getElementById('lc-intro-overlay');
-  if(io){
-    io.classList.remove('is-visible');
-    io.classList.add('is-dismissed');
-    io.setAttribute('aria-hidden','true');
-  }
+function showLcTermsPanel(){
   var to=document.getElementById('lc-terms-overlay');
   if(to){
     to.classList.add('is-visible');
@@ -5113,6 +5224,23 @@ function hideIntroShowTerms(){
   try{localStorage.setItem(LC_LS_INTRO_DONE,'1');}catch(e){}
   clearLcAwaitIntro();
   document.body.style.overflow='';
+}
+function hideIntroShowTerms(){
+  stopLcIntroTunnel();
+  if(_lcIntroTimer){clearTimeout(_lcIntroTimer);_lcIntroTimer=null;}
+  var io=document.getElementById('lc-intro-overlay');
+  if(io){
+    io.classList.remove('is-visible');
+    io.classList.add('is-leaving');
+    io.setAttribute('aria-hidden','true');
+    setTimeout(function(){
+      io.classList.add('is-dismissed');
+      io.classList.remove('is-leaving');
+      showLcTermsPanel();
+    },520);
+    return;
+  }
+  showLcTermsPanel();
 }
 function initLcV4Boot(){
   try{
@@ -5146,7 +5274,7 @@ function initLcV4Boot(){
       var t=ev.target;
       if(t===io||(t&&t.id==='lc-intro-canvas')) hideIntroShowTerms();
     });
-    _lcIntroTimer=setTimeout(hideIntroShowTerms,4000);
+    _lcIntroTimer=setTimeout(hideIntroShowTerms,5200);
   }catch(e){
     clearLcAwaitIntro();
     try{localStorage.setItem(LC_LS_INTRO_DONE,'1');}catch(e2){}
