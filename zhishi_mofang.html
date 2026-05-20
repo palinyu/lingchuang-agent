@@ -460,8 +460,6 @@ body{
 #out-prompt-full.is-typing::after,#out-prompt-short.is-typing::after{content:'▋';animation:case-cursor-blink .8s step-end infinite;color:var(--gold);margin-left:2px;}
 @keyframes case-cursor-blink{50%{opacity:0;}}
 .prompt-block.prompt-wave{animation:prompt-golden-wave .6s ease-out;}
-.prompt-meta-note{margin:-4px 0 16px;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);font-size:11px;line-height:1.6;color:var(--tx3);}
-.prompt-meta-note strong{color:var(--tx2);}
 @keyframes prompt-golden-wave{
   0%{box-shadow:0 0 0 0 rgba(243,175,66,0.55);}
   100%{box-shadow:0 0 0 18px rgba(243,175,66,0);}
@@ -1595,7 +1593,6 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
       </div>
       <div class="block-body" id="out-prompt-short"></div>
     </div>
-    <div id="out-prompt-meta" class="prompt-meta-note" style="display:none;"></div>
     <div id="copywrite-ask">
       <div class="copywrite-ask-card">
         <h3>✍️ 需要配套爆款文案吗？</h3>
@@ -1805,7 +1802,7 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
           <button type="button" class="lux-tap" id="ds-copy-all">📦 全部复制</button>
         </div>
       </div>
-      <p class="ds-copy-disclaimer" id="ds-copy-disclaimer">文案由 DeepSeek 生成；与主生图扣子链路独立。成功生成笔记框架另计 1 次体验额度。生成内容仅供创作参考。</p>
+      <p class="ds-copy-disclaimer" id="ds-copy-disclaimer">文案由 DeepSeek 生成；与主生图智能链路独立。成功生成笔记框架另计 1 次体验额度。生成内容仅供创作参考。</p>
     </div>
   </aside>
   <button type="button" class="ds-copy-rail lux-tap" id="ds-copy-toggle" aria-expanded="false" aria-controls="ds-copy-panel" title="展开笔记框架生成">
@@ -1905,6 +1902,7 @@ function isNetworkFailure(err){
 function resolveUserFacingApiError(err){
   if(isNetworkFailure(err)) return LC_NETWORK_TIP;
   var msg=err&&err.message?String(err.message):'';
+  msg=msg.replace(/扣子智能体|扣子服务|扣子官方|扣子/g,'AI大脑');
   if(/[\u4e00-\u9fff]/.test(msg)) return msg;
   return LC_NETWORK_TIP;
 }
@@ -2186,7 +2184,7 @@ function bootHeadlessConfig(){
   }
 }
 var sessionUserId=null;
-var sessionContext={coreTopic:'',style:'',technique:'',size:'',userNotes:'',promptProfile:'standard',routeHumanLabel:''};
+var sessionContext={coreTopic:'',style:'',technique:'',size:'',userNotes:'',fromDsNotes:false,promptProfile:'standard',routeHumanLabel:'',randomStyleName:''};
 var uploadedFileIds=[],isFileAttached=false,cachedPrompt='',cachedPromptShort='',selectedBubbles=[],currentConversationId=null,currentChatId=null;
 var promptReadyTopic='',copywriteGenToken=0;
 var aiRecSize='',aiRecStyle='',userCustomSize='',userCustomStyle='';
@@ -2644,12 +2642,17 @@ function setupDsCopyPanel(){
     var topic=resolveDsPicCoreTopic();
     var pack=packDsCopyText();
     var cat=(document.getElementById('ds-category')||{}).value||'';
-    var brief=pack.trim()?pack.trim().slice(0,280):'';
+    var titleEl=document.getElementById('ds-ta-title');
+    var title=titleEl?String(titleEl.value||'').trim():'';
+    var brief=pack.trim()?pack.trim().slice(0,1200):'';
+    sessionContext.fromDsNotes=true;
     return (
-      '主题：'+topic+
-      (brief?'\n\n文案要点摘录：\n'+brief:'')+
-      '\n\n品类：'+String(cat).trim()+
-      '\n【要求】画面必须紧扣「'+topic+'」主体，生成知识图文竖版配图提示词。'
+      '【知识图文笔记配图·用户已写好笔记框架】\n'+
+      '核心主题：'+topic+
+      (title?'\n笔记标题：'+title:'')+
+      (brief?'\n\n文案要点摘录（画面须与下列卖点、场景一致）：\n'+brief:'')+
+      '\n品类：'+String(cat).trim()+
+      '\n【铁律】必须输出 STEP2 完整包；完整版英文≥380字符，含主体/版式模块/场景/光影/Chinese typography zones；禁止只写 no text 合规句。'
     );
   }
   var picGo=document.getElementById('ds-pic-go');
@@ -3726,7 +3729,7 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
     }
   }
   if(withFiles&&uploadedFileIds.length>0) body.file_ids=uploadedFileIds;
-  setApiLoading(true,loadingLabel||'⚡ 扣子智能体运算中…');
+  setApiLoading(true,loadingLabel||'⚡ AI大脑运算中…');
   deductFreeTrialOnFetch();
   try{
     return fetch(API_BASE+'/api/generate',{
@@ -3781,7 +3784,7 @@ function isKnowledgeTopic(){
   return /知识图解|英语|单元|课时|上册|下册|古诗|诗词|做法|菜谱|科普|原理|图解/.test(t);
 }
 function isWelcome(content){if(!content)return true;var hasW=WELCOME_KW.some(function(kw){return content.indexOf(kw)>=0;});var hasR=content.indexOf('品类判定')>=0||content.indexOf('内容识别')>=0||content.indexOf('匹配手法')>=0||content.indexOf('推荐尺寸')>=0||/[A-Za-z ,.\-]{60,}/.test(content);return hasW&&!hasR;}
-function resetState(){stopGenParticleFlow();var keepStyleId=selectedVisualStyleId;currentConversationId=null;currentChatId=null;sessionUserId=null;selectedVisualStyleId=keepStyleId;sessionContext={coreTopic:'',style:keepStyleId?getSelectedVisualStyleValue():'',technique:'',size:'',userNotes:'',promptProfile:'standard',routeHumanLabel:'',randomStyleName:''};cachedPrompt='';cachedPromptShort='';promptReadyTopic='';copywriteGenToken=0;aiRecSize='';aiRecStyle='';userCustomSize='';userCustomStyle='';clearCopywriteOutputs();hideCopywriteSection();var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();var legal=document.getElementById('legal-risk-notice');if(legal)legal.style.display='none';['analysis-stage','custom-stage','thinking-stage','output-section','copywrite-ask','copywrite-section'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});var ring=document.getElementById('t-ring');if(ring){ring.style.animation='spin-ring .9s linear infinite';ring.style.borderColor='';ring.innerHTML='';}var s=document.getElementById('t-status');if(s){s.style.color='#cbd5e1';s.textContent='AI大脑联网搜索爆款参数中…\n完整提示词生成中…';}var sz=document.getElementById('t-size');if(sz)sz.textContent='--';var st=document.getElementById('t-style');if(st)st.textContent='--';}
+function resetState(){stopGenParticleFlow();var keepStyleId=selectedVisualStyleId;currentConversationId=null;currentChatId=null;sessionUserId=null;selectedVisualStyleId=keepStyleId;sessionContext={coreTopic:'',style:keepStyleId?getSelectedVisualStyleValue():'',technique:'',size:'',userNotes:'',fromDsNotes:false,promptProfile:'standard',routeHumanLabel:'',randomStyleName:''};cachedPrompt='';cachedPromptShort='';promptReadyTopic='';copywriteGenToken=0;aiRecSize='';aiRecStyle='';userCustomSize='';userCustomStyle='';clearCopywriteOutputs();hideCopywriteSection();var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();var legal=document.getElementById('legal-risk-notice');if(legal)legal.style.display='none';['analysis-stage','custom-stage','thinking-stage','output-section','copywrite-ask','copywrite-section'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});var ring=document.getElementById('t-ring');if(ring){ring.style.animation='spin-ring .9s linear infinite';ring.style.borderColor='';ring.innerHTML='';}var s=document.getElementById('t-status');if(s){s.style.color='#cbd5e1';s.textContent='AI大脑联网搜索爆款参数中…\n完整提示词生成中…';}var sz=document.getElementById('t-size');if(sz)sz.textContent='--';var st=document.getElementById('t-style');if(st)st.textContent='--';}
 function runEngine(){
   var btn=document.getElementById('gen-btn');
   if(btn&&btn.disabled)return;
@@ -3828,10 +3831,10 @@ function runEngine(){
   waitForFileReady(10000).then(function(){
   lockSessionFromInput(topic);
   var query=buildUserQuery(topic);
-  qLog('📡 <span class="q-gold">CALLING</span> · 呼叫扣子AI…',null,0);
+  qLog('📡 <span class="q-gold">CALLING</span> · 呼叫AI大脑…',null,0);
   qLog('⏳ <span class="q-dim">WAIT</span> · 联网分析中…',null,300);
   setVisTxt('等待AI<br>响应…');
-  return callCoze(query,null,true,'🔮 主题分析 · 扣子运算中…',{forceNewSession:true,intent:'analyze'});
+  return callCoze(query,null,true,'🔮 主题分析 · 智能运算中…',{forceNewSession:true,intent:'analyze'});
   }).then(function(res){
       currentConversationId=res.conversation_id||currentConversationId;
       currentChatId=res.chat_id||currentChatId;
@@ -4038,10 +4041,29 @@ function requestPromptFromCoze(session,attempt){
   var tech=sessionContext.technique||'爆款知识图解手法';
   var knowledge=isKnowledgeTopic();
   var styleHint=sessionContext.randomStyleName||'';
+  var fromDsNotes=!!sessionContext.fromDsNotes||/文案要点摘录|笔记配图|【正文】/.test(userOrig);
+  if(fromDsNotes){
+    var dsPrompts=[
+      '【笔记配套出图·STEP2】主题「'+topic+'」。已生成笔记框架，请结合下列素材输出：知识点结构化 + 完整版英文(≥380字) + 精简版 + 即梦设置 + 话题。画面须体现笔记卖点与场景，含 infographic modules / Chinese typography zones / cinematic lighting, 8k, masterpiece。禁止只输出合规尾巴。\n\n'+userOrig,
+      '【重试·笔记配图】上次不合格。必须为「'+topic+'」写真实英文场景与版式（≥400字符），与文案要点一致。禁止仅 no text/no letters 堆砌。\n\n'+userOrig,
+      '【最后重试】完整 STEP2 包，英文段描述主体、构图、色彩、模块，质量≥平台直聊。\n\n'+userOrig
+    ];
+    var queryDs=dsPrompts[Math.min(attempt||0,dsPrompts.length-1)];
+    var statusDs=document.getElementById('t-status');
+    if(statusDs) statusDs.textContent='✨ 第'+(attempt+1)+'轮 · 按笔记要点生成配图提示词…';
+    syncSessionRecommendations();
+    return callCoze(queryDs,session,false,'✨ 生成工业级提示词…',{intent:'prompt'}).then(function(res){
+      currentConversationId=res.conversation_id||currentConversationId;
+      currentChatId=res.chat_id||currentChatId;
+      var content=extractAssistantContent(res);
+    if(!content) throw new Error('AI未返回内容，请重试');
+    return content;
+    });
+  }
   var prompts=knowledge?[
-    '【确认出图·STEP2标准包】为「'+topic+'」按扣子v1.3输出：📊知识点结构化 → 📋完整版（推荐）英文 → 📱精简版中文 → ⚙️即梦设置 → 📣话题。推荐画法：'+label+'；手法：'+tech+(styleHint?'；风格：'+styleHint:'')+'。禁止占位符。用户原话：'+userOrig,
+    '【确认出图·STEP2标准包】为「'+topic+'」按灵创星球标准输出：📊知识点结构化 → 📋完整版（推荐）英文 → 📱精简版中文 → ⚙️即梦设置 → 📣话题。推荐画法：'+label+'；手法：'+tech+(styleHint?'；风格：'+styleHint:'')+'。禁止占位符。用户原话：'+userOrig,
     '【系统重试】必须输出完整 STEP2 包！完整版英文≥350字符，含 infographic/modules/Chinese typography zones。用户原话：'+userOrig,
-    '【最后重试】禁止空壳！必须真实描述「'+topic+'」版式与主体，质量≥扣子直聊。用户原话：'+userOrig
+    '【最后重试】禁止空壳！必须真实描述「'+topic+'」版式与主体，质量≥平台直聊。用户原话：'+userOrig
   ]:[
     '【确认出图·STEP2】为「'+topic+'」输出完整版（推荐）英文+精简版+即梦设置+话题。用户原话：'+userOrig,
     '【系统重试】禁止方括号占位！完整版英文≥300字符。用户原话：'+userOrig,
@@ -4049,13 +4071,13 @@ function requestPromptFromCoze(session,attempt){
   ];
   var query=prompts[Math.min(attempt||0,prompts.length-1)];
   var statusEl=document.getElementById('t-status');
-  if(statusEl) statusEl.textContent='✨ 第'+(attempt+1)+'轮 · 扣子正在生成完整提示词（约30-90秒）…';
+  if(statusEl) statusEl.textContent='✨ 第'+(attempt+1)+'轮 · AI大脑正在生成完整提示词（约30-90秒）…';
   syncSessionRecommendations();
   return callCoze(query,session,false,'✨ 生成工业级提示词…',{intent:'prompt'}).then(function(res){
     currentConversationId=res.conversation_id||currentConversationId;
     currentChatId=res.chat_id||currentChatId;
     var content=extractAssistantContent(res);
-    if(!content) throw new Error('扣子未返回内容，请重试');
+    if(!content) throw new Error('AI未返回内容，请重试');
     return content;
   });
 }
@@ -4128,9 +4150,20 @@ function isSopPlaceholderOutput(raw){
 }
 function extractPrompt(raw){
   if(isAnalysisRound(raw)) return '';
-  var markers=['即梦生图提示词','Midjourney提示词','SD提示词','可灵提示词','剪映提示词','【完整提示词','【提示词','生图提示词','Prompt:','prompt:','**提示词','生图参数'];
-  var _mlen=markers.length;
-  for(var i=0;i!==_mlen;i++){var idx=raw.indexOf(markers[i]);if(idx!==-1){return raw.substring(idx).trim();}}
+  var best='';
+  var markers=['完整版（推荐）','完整版(推荐)','即梦生图提示词','Midjourney提示词','【完整提示词','【提示词','生图提示词','Prompt:','prompt:'];
+  var i=0;
+  for(;i<markers.length;i++){
+    var idx=raw.indexOf(markers[i]);
+    if(idx!==-1){
+      var chunk=raw.substring(idx).trim();
+      var latin=(chunk.match(/[A-Za-z]/g)||[]).length;
+      if(latin>=80&&latin>(best.match(/[A-Za-z]/g)||[]).length) best=chunk;
+    }
+  }
+  if(best) return best;
+  var pe=extractPureEnglishPrompt(raw);
+  if(pe&&pe.length>=60) return pe;
   if(/[A-Za-z ,.\-:;]{100,}/.test(raw)) return raw;
   return '';
 }
@@ -4192,9 +4225,25 @@ function extractPureEnglishPrompt(raw){
     }
   }
   result=result.replace(/\n{3,}/g,'\n\n').trim();
-  result=sanitizeJimengPrompt(result);
+  result=sanitizeKnowledgeJimengPrompt(result);
   if(result.length>2000) result=result.slice(0,2000).trim();
   return result;
+}
+function getPromptBodyLatinLen(s){
+  var body=String(s||'').split(/,\s*no text/i)[0]||String(s||'');
+  return (body.match(/[A-Za-z]/g)||[]).length;
+}
+function isPromptBoilerplateOnly(prompt){
+  var s=String(prompt||'').trim();
+  if(!s) return true;
+  var latin=getPromptBodyLatinLen(s);
+  if(latin<100) return true;
+  if(/^生图提示词[。.\s,，]*/.test(s)&&latin<200) return true;
+  if(isPromptMostlyBoilerplate(s)) return true;
+  var boiler=(s.match(/\b(no text|no letters|no words|no typography|no watermark|generic unbranded|manual text overlay|trademarked products)\b/gi)||[]).length;
+  var words=s.split(/[\s,]+/).filter(Boolean).length;
+  if(words>0&&boiler/words>0.28) return true;
+  return false;
 }
 function parseCozeOutputPackage(raw){
   var text=String(raw||'').trim();
@@ -4258,27 +4307,20 @@ function cleanChineseShortText(raw){
   }
   return out.join('\n').trim();
 }
-function renderPromptOutputBoxes(englishText,chineseText,metaPkg,done){
+function renderPromptOutputBoxes(englishText,chineseText,done){
   var fullEl=document.getElementById('out-prompt-full');
   var shortEl=document.getElementById('out-prompt-short');
   var shortBlock=document.getElementById('main-prompt-short-block');
-  var metaEl=document.getElementById('out-prompt-meta');
+  var knowledgeTopic=isKnowledgeTopic()||!!sessionContext.fromDsNotes;
   var full=cleanEnglishPromptText(englishText||'');
+  full=knowledgeTopic?sanitizeLifecyclePrompt(full):sanitizeKnowledgeJimengPrompt(full);
+  if(isPromptBoilerplateOnly(full)) full='';
   var short=cleanChineseShortText(chineseText||'');
   cachedPrompt=full;
   cachedPromptShort=short;
   if(shortBlock){
     shortBlock.style.display=short&&short.length>8?'block':'none';
   }
-  if(metaEl&&metaPkg){
-    var metaBits=[];
-    if(metaPkg.jimengSettings) metaBits.push('⚙️ '+metaPkg.jimengSettings.replace(/\s+/g,' ').trim());
-    if(metaPkg.hashtags) metaBits.push('📣 '+metaPkg.hashtags.replace(/\s+/g,' ').trim());
-    if(metaBits.length){
-      metaEl.innerHTML='<strong>参考信息（不在复制框内）：</strong><br>'+metaBits.join('<br>');
-      metaEl.style.display='block';
-    }else{metaEl.style.display='none';metaEl.innerHTML='';}
-  }else if(metaEl){metaEl.style.display='none';}
   var pending=0;
   function tick(){pending--;if(pending<=0&&done) done();}
   pending=1;
@@ -4356,22 +4398,37 @@ function sanitizeLifecyclePrompt(prompt){
   }
   return ensurePromptAnchoredToTopic(s);
 }
-function sanitizeJimengPrompt(prompt){
+/** 知识图解/笔记配图：保留 typography zones 等版式词，仅去掉引号内具体文案与品牌 */
+function sanitizeKnowledgeJimengPrompt(prompt){
   if(!prompt) return '';
   var s=String(prompt);
-  s=s.replace(/\b(with\s+text|text\s+saying|typography|caption|subtitle|watermark|logo|signage|readable\s+text|banner\s+text|title\s+text|font|writing\s+on|labeled|label\s+text)\b/gi,' ');
-  s=s.replace(/'[^']{2,120}'/g,' ');
-  s=s.replace(/"[^"]{2,120}"/g,' ');
-  s=s.replace(/\b(showing|displaying|featuring|with)\s+[^,.]{0,100}(time|minute|min|difficulty|serves?|people|servings|cooking)\b/gi,' ');
-  s=s.replace(/\b(top|upper|bottom)\s+(area|section|part)\s+has\s+[^,.]{0,120}/gi,'clean reserved layout area without any characters, ');
+  s=s.replace(/^[\s#*【\d.]+]*(生图提示词|即梦生图|Prompt)[^\n]*\n?/gim,'');
+  s=s.replace(/\btext\s+saying\s+['"][^'"]{2,100}['"]/gi,' ');
+  s=s.replace(/'[^']{2,80}'/g,' ');
+  s=s.replace(/"[^"]{2,80}"/g,' ');
   s=stripJimengKnownBrands(s);
-  s=s.replace(/(?:,\s*no\s*){2,}/gi,', ');
-  s=s.replace(/,\s*,+/g,', ');
   s=s.replace(/\s{2,}/g,' ').trim();
-  var tail=', no text, no letters, no words, no typography, no watermark, no real-world brand names or trademarked products, no recognizable branded packaging, generic unbranded objects only, blank areas for manual text overlay only';
-  if(!/no text/i.test(s)) s=s+tail;
-  else if(!/no (real-world )?brand|trademarked products|generic unbranded/i.test(s)) s=s+', no real-world brand names or trademarked products, no recognizable branded packaging, generic unbranded objects only';
-  return ensurePromptAnchoredToTopic(s);
+  if(getPromptBodyLatinLen(s)<90){
+    var fallback=extractPureEnglishPrompt(prompt);
+    s=fallback||'';
+    s=stripJimengKnownBrands(s).replace(/\s{2,}/g,' ').trim();
+  }
+  if(getPromptBodyLatinLen(s)<90) return '';
+  if(!/cinematic\s+lighting|8k|masterpiece/i.test(s)){
+    s=s+', cinematic lighting, 8k resolution, ultra-photorealistic, highly detailed, professional composition, masterpiece, best quality --v 6.0';
+  }
+  if(!/typography\s+zones|infographic|layout|module|panel|scene/i.test(s)){
+    s='Vertical knowledge infographic layout with clear modules, Chinese typography zones for post-editing, '+s;
+  }
+  if(!/no text|no letters/i.test(s)){
+    s=s+', reserved areas for Chinese typography zones only, no readable logo or watermark text, no real-world brand names';
+  }else if(!/no (real-world )?brand|trademarked products|generic unbranded/i.test(s)){
+    s=s+', no real-world brand names or trademarked products, generic unbranded objects only';
+  }
+  return ensurePromptAnchoredToTopic(s.replace(/\s{2,}/g,' ').trim());
+}
+function sanitizeJimengPrompt(prompt){
+  return sanitizeKnowledgeJimengPrompt(prompt);
 }
 function showResult(raw,retryCount,fromConfirm){
   retryCount=retryCount||0;
@@ -4414,7 +4471,7 @@ function showResult(raw,retryCount,fromConfirm){
         return;
       }
     }
-    if(statusEl){statusEl.style.color='#ef4444';statusEl.textContent='❌ 扣子只返回了模板说明，未生成真实英文。请点「重新生成提示词」或重新启动大脑。';}
+    if(statusEl){statusEl.style.color='#ef4444';statusEl.textContent='❌ 仅返回了模板说明，未生成真实英文。请点「重新生成提示词」或重新启动大脑。';}
     document.getElementById('thinking-stage').style.display='none';
     document.getElementById('analysis-stage').style.display='block';
     return;
@@ -4431,7 +4488,7 @@ function showResult(raw,retryCount,fromConfirm){
     if(retryCount<2){
       var sessionAn=getCurrentSession();
       if(sessionAn){
-        if(statusEl) statusEl.innerHTML='🔄 本次返回仅为分析说明，正在自动向扣子索取英文生图提示词…';
+        if(statusEl) statusEl.innerHTML='🔄 本次返回仅为分析说明，正在自动索取英文生图提示词…';
         requestPromptFromCoze(sessionAn,retryCount+1).then(function(c){showResult(c,retryCount+1,fromConfirm);}).catch(function(e){
           if(statusEl){statusEl.style.color='#ef4444';statusEl.textContent='❌ '+resolveUserFacingApiError(e);}
         });
@@ -4452,10 +4509,10 @@ function showResult(raw,retryCount,fromConfirm){
   var pureEn=extractPureEnglishPrompt(extracted);
   if(cozePkg.hasPackage&&cozePkg.englishFull&&cozePkg.englishFull.length>=40) pureEn=cozePkg.englishFull;
   if(pureEn&&pureEn.length>=40) extracted=pureEn;
-  extracted=knowledgeTopic?sanitizeLifecyclePrompt(extracted):sanitizeJimengPrompt(extracted);
+  extracted=knowledgeTopic?sanitizeLifecyclePrompt(extracted):sanitizeKnowledgeJimengPrompt(extracted);
   if(cozePkg.hasPackage&&cozePkg.englishFull&&cozePkg.englishFull.length>=80){
-    var enFromPkg=extractPureEnglishPrompt(cozePkg.englishFull)||cozePkg.englishFull;
-    extracted=knowledgeTopic?sanitizeLifecyclePrompt(enFromPkg):sanitizeJimengPrompt(enFromPkg);
+    var enFromPkg=cleanEnglishPromptText(cozePkg.englishFull)||extractPureEnglishPrompt(cozePkg.englishFull)||cozePkg.englishFull;
+    extracted=knowledgeTopic?sanitizeLifecyclePrompt(enFromPkg):sanitizeKnowledgeJimengPrompt(enFromPkg);
   }
   var enChars=(String(extracted).match(/[A-Za-z]/g)||[]).length;
   var cnChars=(String(extracted).match(/[\u4e00-\u9fff]/g)||[]).length;
@@ -4501,6 +4558,16 @@ function showResult(raw,retryCount,fromConfirm){
     }
   }
   extracted=ensurePromptAnchoredToTopic(extracted);
+  if(isPromptBoilerplateOnly(extracted)&&retryCount<2){
+    var sessionBoiler=getCurrentSession();
+    if(sessionBoiler){
+      if(statusEl) statusEl.innerHTML='🔄 提示词仅有合规尾巴、缺少画面描述，正在按主题重新生成…';
+      requestPromptFromCoze(sessionBoiler,retryCount+1).then(function(c){showResult(c,retryCount+1,fromConfirm);}).catch(function(e){
+        if(statusEl){statusEl.style.color='#ef4444';statusEl.textContent='❌ '+resolveUserFacingApiError(e);}
+      });
+      return;
+    }
+  }
   if(isPromptMostlyBoilerplate(extracted)&&retryCount<2){
     var sessionTopic=getCurrentSession();
     if(sessionTopic){
@@ -4534,7 +4601,7 @@ function showResult(raw,retryCount,fromConfirm){
     document.getElementById('thinking-stage').style.display='none';
     document.getElementById('output-section').style.display='block';
     document.getElementById('copywrite-ask').style.display='block';
-    renderPromptOutputBoxes(fullForBox,shortForBox,cozePkg.hasPackage?cozePkg:null,function(){
+    renderPromptOutputBoxes(fullForBox,shortForBox,function(){
       triggerPromptGoldenWave();
     });
     document.getElementById('output-section').scrollIntoView({behavior:'smooth'});
