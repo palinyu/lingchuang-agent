@@ -280,13 +280,13 @@ body{
 }
 .case-sidebar-wrap.is-open .case-sidebar{transform:translateX(0);}
 .case-sidebar-rail{
-  display:none;flex:0 0 44px;width:44px;min-width:44px;min-height:min(72vh,520px);
-  align-self:stretch;padding:14px 0;border:none;cursor:pointer;font-family:inherit;
+  display:none;flex:0 0 44px;width:44px;min-width:44px;
+  align-self:flex-start;padding:18px 0;border:none;cursor:pointer;font-family:inherit;
   background:linear-gradient(180deg,rgba(22,23,32,0.98),rgba(12,13,18,0.98));
   border:1px solid rgba(243,175,66,0.22);border-radius:16px 0 0 16px;border-right:none;
   box-shadow:4px 0 24px rgba(0,0,0,0.35);
-  color:rgba(243,175,66,0.92);font-size:12px;font-weight:800;letter-spacing:0.12em;
-  writing-mode:vertical-rl;text-orientation:mixed;text-align:center;line-height:1.35;
+  color:rgba(243,175,66,0.92);font-size:11px;font-weight:800;letter-spacing:0.1em;
+  writing-mode:vertical-rl;text-orientation:mixed;text-align:center;line-height:1.4;
   transition:background .2s,color .2s,box-shadow .2s;
 }
 .case-sidebar-rail:hover{background:rgba(243,175,66,0.1);color:#fff;box-shadow:4px 0 28px rgba(243,175,66,0.12);}
@@ -377,10 +377,24 @@ body{
 @media(min-width:769px){
   .app-layout{display:flex;align-items:flex-start;gap:16px;padding-top:8px;}
   .case-sidebar-wrap{
-    display:flex;flex-direction:row;flex-shrink:0;align-items:stretch;position:sticky;top:12px;
-    max-height:calc(100vh - 24px);overflow:hidden;width:44px;min-width:44px;
+    display:flex;flex-direction:row;flex-shrink:0;align-items:flex-start;position:sticky;top:12px;
+    max-height:none;overflow:hidden;width:44px;min-width:44px;
     transition:width .32s ease,min-width .32s ease,box-shadow .25s ease;
     border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.25);
+  }
+  .case-sidebar-wrap:not(.is-open) .case-sidebar{
+    position:absolute;left:44px;top:0;width:300px;min-width:300px;z-index:2;
+    max-height:calc(100vh - 24px);
+    transform:translateX(100%);
+  }
+  .case-sidebar-wrap.is-open{
+    align-items:stretch;max-height:calc(100vh - 24px);overflow:hidden;
+  }
+  .case-sidebar-wrap.is-open .case-sidebar{
+    position:relative;left:auto;top:auto;flex:0 0 300px;z-index:1;
+  }
+  .case-sidebar-wrap.is-open .case-sidebar-rail{
+    align-self:stretch;max-height:none;overflow:visible;
   }
   .case-sidebar-wrap.is-open{width:344px;min-width:344px;box-shadow:0 12px 40px rgba(0,0,0,0.35);}
   .case-sidebar-wrap.is-open .case-sidebar-rail{border-radius:0;border-right:1px solid rgba(243,175,66,0.15);}
