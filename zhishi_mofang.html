@@ -1184,7 +1184,6 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
 /* 输出区 */
 #output-section{display:none;margin-bottom:32px;}
 .prompt-block{background:var(--panel);border:1px solid var(--bd);border-radius:14px;margin-bottom:16px;overflow:hidden;}
-.prompt-block.is-jimeng-rec{border-color:rgba(34,197,94,0.45);box-shadow:0 0 20px rgba(34,197,94,0.1);}
 .block-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd);background:rgba(15,15,22,0.9);}
 .block-head-left{display:flex;align-items:center;gap:8px;}
 .block-icon{width:28px;height:28px;border-radius:8px;background:var(--gold-dim);display:flex;align-items:center;justify-content:center;font-size:14px;}
@@ -1761,19 +1760,19 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
     </div>
   </div>
   <div id="output-section">
-    <div class="prompt-block" id="main-prompt-short-block" style="display:none;">
-      <div class="block-head">
-        <div class="block-head-left"><div class="block-icon">📱</div><div><div class="block-title">①精简版提示词（中文）· 即梦推荐</div><div class="block-sub">餐饮/海报请复制此框：须含主标题、价格、卖点短句，避免空标题框</div></div></div>
-        <button class="btn-copy" onclick="copyPromptBox('short')">复制</button>
-      </div>
-      <div class="block-body" id="out-prompt-short"></div>
-    </div>
     <div class="prompt-block" id="main-prompt-full-block">
       <div class="block-head">
-        <div class="block-head-left"><div class="block-icon">🔮</div><div><div class="block-title">②完整版提示词（英文）· 参考</div><div class="block-sub">长英文含留白/negative 时即梦易断层；海报类优先用上方精简版</div></div></div>
+        <div class="block-head-left"><div class="block-icon">🔮</div><div><div class="block-title">①完整版提示词（英文）</div><div class="block-sub">可复制到即梦文生图的英文正文 · 无知识点/设置/话题</div></div></div>
         <button class="btn-copy" onclick="copyPromptBox('full')">复制</button>
       </div>
       <div class="block-body prompt-style" id="out-prompt-full"></div>
+    </div>
+    <div class="prompt-block" id="main-prompt-short-block" style="display:none;">
+      <div class="block-head">
+        <div class="block-head-left"><div class="block-icon">📱</div><div><div class="block-title">②精简版提示词（中文）</div><div class="block-sub">手机端适配描述 · 仅含精简版正文</div></div></div>
+        <button class="btn-copy" onclick="copyPromptBox('short')">复制</button>
+      </div>
+      <div class="block-body" id="out-prompt-short"></div>
     </div>
     <div id="copywrite-ask">
       <div class="copywrite-ask-card">
@@ -5365,7 +5364,6 @@ function renderPromptOutputBoxes(englishText,chineseText,done){
   cachedPromptShort=short;
   if(shortBlock){
     shortBlock.style.display=short&&short.length>8?'block':'none';
-    shortBlock.classList.remove('is-jimeng-rec');
   }
   var pending=0;
   function tick(){pending--;if(pending<=0&&done) done();}
