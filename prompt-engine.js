@@ -329,6 +329,9 @@ function buildCozeMessage(p) {
       '请直接输出「完整版（推荐）」英文 Prompt（≤' +
       getJimengCharLimit() +
       '字符，知识库即梦上限），不要输出中文寒暄、不要输出菜单按钮。\n' +
+      '【严禁】输出任何方括号占位说明（如[对应品类…][完整英文提示词…][对应比例]）；必须写出可复制到即梦的真实英文正文，≥' +
+      MIN_MASTERS_PROMPT_CHARS +
+      ' 字符。\n' +
       '用户确认指令：' +
       rawQuery
     );
@@ -494,11 +497,39 @@ function purifyCopywriteText(raw, coreTopic) {
   return text.trim();
 }
 
+function isSopTemplateSkeleton(text) {
+  const s = String(text || '');
+  if (!s) return false;
+  const markers = [
+    '对应品类完整英文',
+    '对应品类中文精简',
+    '按对应品类模板',
+    '[对应比例]',
+    '完整英文提示词直出',
+    '中文精简版直出',
+    '符合字符上限要求，末尾附加',
+    '清晰易懂可直接使用',
+  ];
+  var i = 0;
+  while (i !== markers.length) {
+    if (s.indexOf(markers[i]) >= 0) return true;
+    i++;
+  }
+  if (/完整版/.test(s) && /\[[^\]]{4,}[\u4e00-\u9fff][^\]]*\]/.test(s)) {
+    if (!/[A-Za-z][A-Za-z0-9\s,.\-:;'"()\/]{100,}/.test(s)) return true;
+  }
+  return false;
+}
+
 function purifyAssistantText(raw, intent, coreTopic) {
   const i = intent || 'analyze';
   if (i === 'prompt' || i === 'custom') {
+    if (isSopTemplateSkeleton(raw)) return '';
     const en = extractEnglishPrompt(raw, getJimengCharLimit());
-    return en || stripFluffLines(raw);
+    if (en && !isSopTemplateSkeleton(en)) return en;
+    const stripped = stripFluffLines(raw);
+    if (isSopTemplateSkeleton(stripped)) return '';
+    return en || '';
   }
   if (i === 'copywrite') {
     return purifyCopywriteText(raw, coreTopic);
@@ -522,6 +553,7 @@ module.exports = {
   resolveIntent,
   validateMastersPrompt,
   buildPromptRetryBlock,
+  isSopTemplateSkeleton,
   MIN_MASTERS_PROMPT_CHARS,
   MASTERS_MANDATORY_TAIL,
 };

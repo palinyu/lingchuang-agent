@@ -439,7 +439,7 @@ function buildStyleLibSystemBlock(opts) {
 
   if (intent === 'prompt' || intent === 'custom') {
     lines.push(
-      '【生图输出死命令】只输出「完整版（推荐）」+ 一整段英文 Prompt；Masters 强制尾巴 + Quality 收尾句均不可删；先 SOP 扩写再套模板；严禁 text/letters/typography 类词（仅允许 no text/no letters/no words 作负面）。'
+      '【生图输出死命令】只输出「完整版（推荐）」+ 一整段英文 Prompt；Masters 强制尾巴 + Quality 收尾句均不可删；先 SOP 扩写再套模板；严禁输出方括号占位说明（如[对应品类…]）；必须写真实英文正文；严禁 text/letters/typography 类词（仅允许 no text/no letters/no words 作负面）。'
     );
   } else if (intent === 'copywrite') {
     lines.push(
