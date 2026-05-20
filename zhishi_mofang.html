@@ -729,6 +729,25 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
 .platform-card:hover{border-color:rgba(243,175,66,0.2);background:#1e202a;transform:translateY(-2px);}
 .platform-card.rec-p{border-color:rgba(243,175,66,0.3);background:linear-gradient(145deg,#1f2029,#131419);}
 .platform-card.rec-p::after{content:'推荐';position:absolute;top:0;right:0;background:var(--gold);color:#000;font-size:9px;font-weight:800;padding:2px 7px;border-radius:0 12px 0 7px;}
+.platform-card-lc{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;padding:14px 12px;}
+.platform-card-lc .platform-card-main{flex:1;text-align:center;min-width:0;}
+.platform-card-lc .platform-card-side{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;flex-shrink:0;}
+.p-hot-badge{font-size:10px;font-weight:900;color:#ff6b35;background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.35);padding:3px 9px;border-radius:20px;white-space:nowrap;animation:pulse-hot 1.4s ease-in-out infinite;}
+.lc-model-chip{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:58px;padding:8px 10px;border-radius:10px;background:linear-gradient(145deg,rgba(79,142,247,0.18),rgba(243,175,66,0.1));border:1px solid rgba(79,142,247,0.35);box-shadow:0 4px 14px rgba(0,0,0,0.25);}
+.lc-model-chip-name{font-size:13px;font-weight:900;color:#fff;letter-spacing:0.5px;line-height:1.1;}
+.lc-model-chip-sub{font-size:9px;font-weight:700;color:var(--gold);margin-top:3px;white-space:nowrap;}
+@keyframes pulse-hot{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.06);opacity:.92;}}
+.legal-risk-notice{margin:14px 0 16px;padding:14px 16px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.22);border-radius:12px;font-size:11px;line-height:1.75;color:var(--tx2);}
+.legal-risk-notice strong{color:#fca5a5;font-weight:800;}
+.legal-risk-notice a{color:var(--gold);text-decoration:none;}
+.legal-risk-notice a:hover{text-decoration:underline;}
+.app-site-footer{margin-top:28px;padding:28px 20px 36px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;background:linear-gradient(180deg,transparent,rgba(243,175,66,0.03));}
+.site-footer-logo{width:52px;height:52px;margin:0 auto 12px;border-radius:50%;background:var(--gold);color:#000;font-size:26px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px var(--gold-glow);}
+.site-footer-brand{font-size:16px;font-weight:900;color:#fff;margin-bottom:6px;}
+.site-footer-decl{font-size:11px;line-height:1.8;color:var(--tx3);max-width:640px;margin:0 auto;}
+.lc-promo-card{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;}
+.lc-promo-card .lc-promo-main{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;}
+.lc-promo-card .lc-promo-side{display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;}
 .p-icon{font-size:22px;margin-bottom:8px;display:block;}
 .p-name{font-size:12px;font-weight:800;color:#fff;display:block;margin-bottom:4px;}
 .p-tag{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;display:inline-block;}
@@ -1057,7 +1076,7 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
   <div id="output-section">
     <div class="prompt-block" id="main-prompt-block">
       <div class="block-head">
-        <div class="block-head-left"><div class="block-icon">🔮</div><div><div class="block-title">①提示词：工业级生图提示词</div><div class="block-sub">复制 → 打开即梦/灵创星球 → 文生图 → 粘贴生成</div></div></div>
+        <div class="block-head-left"><div class="block-icon">🔮</div><div><div class="block-title">①提示词：工业级生图提示词</div><div class="block-sub">复制 → 即梦文生图（已去除易违规描述：无画面写字、无具体品牌名；标题与商标请在醒图/PS后期处理）</div></div></div>
         <button class="btn-copy" onclick="copyBlock('out-prompt')">复制</button>
       </div>
       <div class="block-body prompt-style" id="out-prompt"></div>
@@ -1074,7 +1093,7 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
     </div>
     <div id="copywrite-section" style="display:none;">
       <div class="prompt-block">
-        <div class="block-head"><div class="block-head-left"><div class="block-icon">📕</div><div><div class="block-title">②社交平台爆款笔记</div><div class="block-sub">某书笔记 + 首评钩子</div></div></div><button class="btn-copy" onclick="copyBlock('out-xhs')">复制</button></div>
+        <div class="block-head"><div class="block-head-left"><div class="block-icon">📕</div><div><div class="block-title">②社交平台爆款笔记</div><div class="block-sub">某书笔记 + 首评钩子（发布前请阅读下方合规提示）</div></div></div><button class="btn-copy" onclick="copyBlock('out-xhs')">复制</button></div>
         <div class="block-body" id="out-xhs"></div>
       </div>
       <div class="prompt-block">
@@ -1082,10 +1101,20 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
         <div class="block-body" id="out-mp"></div>
       </div>
     </div>
+    <div id="legal-risk-notice" class="legal-risk-notice" role="note" aria-live="polite" style="display:none;"></div>
     <div class="platform-block">
       <div style="font-size:13px;font-weight:800;color:var(--tx2);border-left:3px solid var(--gold);padding-left:8px;">🚀 选择生图平台 <span style="font-size:11px;color:var(--tx3);font-weight:normal;margin-left:6px;">点击自动复制提示词并跳转</span></div>
       <div class="platform-grid">
-        <div class="platform-card rec-p" onclick="copyAndGo('https://lc.wazgz.com/')"><span class="p-icon">🌐</span><span class="p-name">灵创星球</span><span class="p-tag tag-gold">推荐·全模型</span></div>
+        <div class="platform-card rec-p platform-card-lc" onclick="copyAndGo('https://lc.wazgz.com/')">
+          <div class="platform-card-main"><span class="p-icon">🌐</span><span class="p-name">灵创星球</span><span class="p-tag tag-gold">推荐·含 Image2</span></div>
+          <div class="platform-card-side">
+            <span class="p-hot-badge">🔥 火爆</span>
+            <div class="lc-model-chip" title="灵创星球聚合站可用 Image2 生图大模型">
+              <span class="lc-model-chip-name">Image2</span>
+              <span class="lc-model-chip-sub">生图大模型</span>
+            </div>
+          </div>
+        </div>
         <div class="platform-card" onclick="copyAndGo('https://jimeng.jianying.com/')"><span class="p-icon">✨</span><span class="p-name">即梦 AI</span><span class="p-tag tag-green">免费可用</span></div>
         <div class="platform-card" onclick="copyAndGo('https://www.doubao.com/')"><span class="p-icon">🤖</span><span class="p-name">豆包</span><span class="p-tag tag-green">免费可用</span></div>
         <div class="platform-card" onclick="copyAndGo('https://tongyi.aliyun.com/wanxiang')"><span class="p-icon">🍊</span><span class="p-name">通义万相</span><span class="p-tag tag-green">免费可用</span></div>
@@ -1105,13 +1134,27 @@ body.api-lux-loading .kw-chip,body.api-lux-loading .bubble-chip{pointer-events:n
           <span style="font-size:11px;color:var(--gold);font-weight:700;white-space:nowrap;margin-left:8px;">免密提取 →</span>
         </a>
       </div>
-      <div style="background:linear-gradient(145deg,#20222e,#0e0f14);border:1px solid var(--bd-gold);border-radius:14px;padding:24px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        <div style="width:42px;height:42px;background:var(--gold);border-radius:50%;font-size:22px;color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;box-shadow:0 0 15px var(--gold-glow);margin-bottom:12px;">🌐</div>
-        <div style="font-size:15px;font-weight:900;color:#fff;margin-bottom:4px;">灵创星球</div>
-        <div style="font-size:11px;color:var(--tx3);margin-bottom:16px;">AI独立高精生图聚合平台</div>
-        <a href="https://lc.wazgz.com/" target="_blank" style="width:100%;padding:11px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;text-decoration:none;display:block;">点击进入 ➔</a>
+      <div class="lc-promo-card" style="background:linear-gradient(145deg,#20222e,#0e0f14);border:1px solid var(--bd-gold);border-radius:14px;padding:20px 16px;">
+        <div class="lc-promo-main">
+          <div style="width:42px;height:42px;background:var(--gold);border-radius:50%;font-size:22px;color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;box-shadow:0 0 15px var(--gold-glow);margin-bottom:10px;">🌐</div>
+          <div style="font-size:15px;font-weight:900;color:#fff;margin-bottom:4px;">灵创星球</div>
+          <div style="font-size:11px;color:var(--tx3);margin-bottom:14px;">AI 聚合生图 · 内置 Image2 等大模型</div>
+          <a href="https://lc.wazgz.com/" target="_blank" style="width:100%;padding:11px;background:var(--gold);color:#000;border:none;border-radius:8px;font-weight:800;font-size:13px;cursor:pointer;text-decoration:none;display:block;text-align:center;">点击进入 ➔</a>
+        </div>
+        <div class="lc-promo-side">
+          <span class="p-hot-badge">🔥 火爆</span>
+          <div class="lc-model-chip" title="灵创星球聚合站可用 Image2 生图大模型">
+            <span class="lc-model-chip-name">Image2</span>
+            <span class="lc-model-chip-sub">生图大模型</span>
+          </div>
+        </div>
       </div>
     </div>
+    <footer class="app-site-footer" id="app-site-footer">
+      <div class="site-footer-logo" aria-hidden="true">🌐</div>
+      <div class="site-footer-brand">灵创星球 · 图片提示词大师</div>
+      <p class="site-footer-decl" id="site-footer-decl"></p>
+    </footer>
   </div>
 <aside id="wechat-float" class="wechat-float" aria-label="扫码加主理人微信">
   <div class="wechat-float-qr-wrap">
@@ -1484,6 +1527,7 @@ function bootHeadlessConfig(){
 var sessionUserId=null;
 var sessionContext={coreTopic:'',style:'',technique:'',size:'',userNotes:''};
 var uploadedFileIds=[],isFileAttached=false,cachedPrompt='',selectedBubbles=[],currentConversationId=null,currentChatId=null;
+var promptReadyTopic='',copywriteGenToken=0;
 var aiRecSize='',aiRecStyle='',userCustomSize='',userCustomStyle='';
 var docTextContent='',attachedFileName='';
 var WELCOME_KW=['支持四种输入方式','发送任意内容，自动启动','我是灵创星球','专注把知识变成','直接输入主题','上传文档（PDF','上传图片（截图','告诉我你想做','自动启动生图链路','灵创星球·知识图文魔方','四种输入方式','欢迎使用'];
@@ -1992,6 +2036,71 @@ function purifyAnalysisDisplay(raw){
     }
     return true;
   }).join('\n');
+}
+function getLegalRiskNoticeHtml(){
+  return '<strong>⚠ 合规与发布风险提示</strong><br>'+
+    '1. 本平台提示词与文案由 AI 生成，仅供创作参考，不构成法律意见。<br>'+
+    '2. 近期司法案例：2025 年浙江衢州法院认定，在小红书发布含「老赖」「卷款跑路」等不实表述的笔记构成商业诋毁，判令赔偿并公开道歉（<a href="https://cs.zjol.com.cn/qlxzxd/yasf/202510/t20251016_31287793.shtml" target="_blank" rel="noopener noreferrer">案例报道</a>）；未经授权转载他人图片/笔记可能构成著作权侵权。<br>'+
+    '3. 请勿发布虚假、诽谤、侵权、违规营销内容；发布前请核实事实、取得授权，遵守小红书等社区规范及《网络安全法》《消费者权益保护法》等法律法规。<br>'+
+    '4. 您自行发布、传播所产生的一切法律责任由您本人承担。';
+}
+function getSiteFooterDeclHtml(){
+  return '灵创星球 · 图片提示词大师为 AI 创作辅助工具，不代用户发布或运营账号。生成内容须人工审核后使用；因违法、侵权、不实宣传导致的纠纷与损失，由使用者自行承担。';
+}
+function showLegalRiskNotice(){
+  var el=document.getElementById('legal-risk-notice');
+  if(!el) return;
+  el.innerHTML=getLegalRiskNoticeHtml();
+  el.style.display='block';
+}
+function initLegalNotices(){
+  var fd=document.getElementById('site-footer-decl');
+  if(fd) fd.innerHTML=getSiteFooterDeclHtml();
+}
+function clearCopywriteOutputs(){
+  var x=document.getElementById('out-xhs');if(x) x.textContent='';
+  var m=document.getElementById('out-mp');if(m) m.textContent='';
+}
+function hideCopywriteSection(){
+  var sec=document.getElementById('copywrite-section');
+  if(sec) sec.style.display='none';
+}
+function copywriteTopicMismatch(text,coreTopic){
+  var body=String(text||'');
+  var topic=String(coreTopic||'').trim();
+  if(!topic||body.length<40) return false;
+  var core=topic.replace(/(的做法|教程|方法|步骤|攻略|大全|合集)$/g,'').trim()||topic;
+  if(body.indexOf(topic)>=0||(core.length>=2&&body.indexOf(core)>=0)) return false;
+  var poetry=['古诗','诗词','背诗','小学语文必背','唐诗','宋词'];
+  var food=['红烧','排骨','菜谱','下厨','食材','烹饪','美食教程'];
+  var isFood=/红烧|排骨|菜谱|烹饪|美食|做法|食材/.test(topic);
+  var isPoetry=/古诗|诗词|诗歌|背诗|语文/.test(topic);
+  if(isFood&&poetry.some(function(k){return body.indexOf(k)>=0;})) return true;
+  if(isPoetry&&food.some(function(k){return body.indexOf(k)>=0;})) return true;
+  if(core.length>=2&&body.indexOf(core)<0){
+    var alt=['母亲节','父亲节','春节','中秋','国庆','七夕'];
+    if(alt.some(function(k){return body.indexOf(k)>=0&&topic.indexOf(k)<0;})) return true;
+  }
+  return false;
+}
+function buildCopywriteQuery(topic){
+  var t=topic||sessionContext.coreTopic||'';
+  var hint=cachedPrompt?('\n【已生成英文提示词摘要（仅供对齐画面，勿照抄）】'+cachedPrompt.substring(0,280)):'';
+  return '【主题锁定·仅写「'+t+'」】请撰写小红书爆款笔记（含标题、正文、话题标签、首评钩子）+ 公众号完整文章（以📘【公众号】开头）。'+
+    '全文必须多次自然提及「'+t+'」，严禁写古诗/节日/其他无关主题模板。'+hint;
+}
+function renderCopywriteResult(content){
+  var mpIdx=Math.max(content.indexOf('📘【公众号'),content.indexOf('【公众号'));
+  if(mpIdx>0){
+    document.getElementById('out-xhs').textContent=content.substring(0,mpIdx).trim();
+    document.getElementById('out-mp').textContent=content.substring(mpIdx).trim();
+  }else{
+    document.getElementById('out-xhs').textContent=content;
+    document.getElementById('out-mp').textContent='';
+  }
+  document.getElementById('copywrite-section').style.display='block';
+  showLegalRiskNotice();
+  document.getElementById('copywrite-section').scrollIntoView({behavior:'smooth'});
 }
 function purifyCopywriteBlocks(text){
   var raw=purifyAnalysisDisplay(text);
@@ -2559,7 +2668,7 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
   }
 }
 function isWelcome(content){if(!content)return true;var hasW=WELCOME_KW.some(function(kw){return content.indexOf(kw)>=0;});var hasR=content.indexOf('品类判定')>=0||content.indexOf('内容识别')>=0||content.indexOf('匹配手法')>=0||content.indexOf('推荐尺寸')>=0||/[A-Za-z ,.\-]{60,}/.test(content);return hasW&&!hasR;}
-function resetState(){stopGenParticleFlow();var keepStyleId=selectedVisualStyleId;currentConversationId=null;currentChatId=null;sessionUserId=null;selectedVisualStyleId=keepStyleId;sessionContext={coreTopic:'',style:keepStyleId?getSelectedVisualStyleValue():'',technique:'',size:'',userNotes:''};cachedPrompt='';aiRecSize='';aiRecStyle='';userCustomSize='';userCustomStyle='';['analysis-stage','custom-stage','thinking-stage','output-section','copywrite-ask','copywrite-section'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});var ring=document.getElementById('t-ring');if(ring){ring.style.animation='spin-ring .9s linear infinite';ring.style.borderColor='';ring.innerHTML='';}var s=document.getElementById('t-status');if(s){s.style.color='#cbd5e1';s.textContent='AI大脑联网搜索爆款参数中…\n完整提示词生成中…';}var sz=document.getElementById('t-size');if(sz)sz.textContent='--';var st=document.getElementById('t-style');if(st)st.textContent='--';}
+function resetState(){stopGenParticleFlow();var keepStyleId=selectedVisualStyleId;currentConversationId=null;currentChatId=null;sessionUserId=null;selectedVisualStyleId=keepStyleId;sessionContext={coreTopic:'',style:keepStyleId?getSelectedVisualStyleValue():'',technique:'',size:'',userNotes:''};cachedPrompt='';promptReadyTopic='';copywriteGenToken=0;aiRecSize='';aiRecStyle='';userCustomSize='';userCustomStyle='';clearCopywriteOutputs();hideCopywriteSection();var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();var legal=document.getElementById('legal-risk-notice');if(legal)legal.style.display='none';['analysis-stage','custom-stage','thinking-stage','output-section','copywrite-ask','copywrite-section'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});var ring=document.getElementById('t-ring');if(ring){ring.style.animation='spin-ring .9s linear infinite';ring.style.borderColor='';ring.innerHTML='';}var s=document.getElementById('t-status');if(s){s.style.color='#cbd5e1';s.textContent='AI大脑联网搜索爆款参数中…\n完整提示词生成中…';}var sz=document.getElementById('t-size');if(sz)sz.textContent='--';var st=document.getElementById('t-style');if(st)st.textContent='--';}
 function runEngine(){
   var btn=document.getElementById('gen-btn');
   if(btn&&btn.disabled)return;
@@ -2912,11 +3021,50 @@ function extractPureEnglishPrompt(raw){
     }
   }
   result=result.replace(/\n{3,}/g,'\n\n').trim();
-  result=result.replace(/\b(with\s+text|text\s+saying|letters?|words?|typography|caption|subtitle|watermark|logo|signage|readable\s+text|banner\s+text|title\s+text|font|writing\s+on|labeled|label\s+text)\b/gi,' ');
-  result=result.replace(/\s{2,}/g,' ').trim();
+  result=sanitizeJimengPrompt(result);
   if(result.length>2000) result=result.slice(0,2000).trim();
-  if(result&&result.indexOf('no text')<0) result=result+', no text, no letters, no words, no typography';
   return result;
+}
+function stripJimengKnownBrands(s){
+  /* 与 prompt-engine.js 中 BRAND_STRIP_RES 保持同步；浏览器端二次净化 */
+  var reps=[
+    /\b(?:mcdonald'?s|mcdonalds)\b/gi,/\bkfc\b/gi,/\bstarbucks\b/gi,/\bburger king\b/gi,/\bpizza hut\b/gi,
+    /\b(?:domino'?s\s+pizza|domino'?s)\b/gi,/\bcoca[- ]?cola\b/gi,/\bpepsi\s*cola\b/gi,/\bpepsi\b/gi,
+    /\b(?:red bull|redbull)\b/gi,/\b(?:mountain dew|mtn dew)\b/gi,/\bmonster\s+energy\b/gi,
+    /\b(?:nike|just\s+do\s+it)\b/gi,/\badidas\b/gi,/\breebok\b/gi,/\bunder armour\b/gi,/\bair jordan\b/gi,
+    /\bconverse\b/gi,/\bvans\b/gi,/\bnew balance\b/gi,/\bskechers\b/gi,
+    /\b(?:iphone|ipad|imac|ipod|iwatch)\b/gi,/\bmacbook\b/gi,/\bairpods\b/gi,/\bapple\s+watch\b/gi,
+    /\b(?:samsung|galaxy\s+z?|galaxy\s+note)\b/gi,/\b(?:google\s+pixel)\b/gi,/\b(?:huawei|xiaomi|oppo|vivo|oneplus|honor)\b/gi,
+    /\b(?:playstation|ps5|ps4|xbox|nintendo\s+switch|switch\s+oled)\b/gi,/\b(?:microsoft\s+surface|surface\s+pro)\b/gi,
+    /\b(?:tesla|model\s+[3syx]|cybertruck)\b/gi,/\b(?:bmw|mercedes[- ]?benz|mercedes|audi|porsche|ferrari|lamborghini|maserati)\b/gi,
+    /\b(?:toyota|honda\s+(?:civic|accord|cr-v)|ford\s+f-150|chevrolet|chevy)\b/gi,
+    /\b(?:ikea|h\s*&\s*m|uniqlo|zara)\b/gi,
+    /\b(?:louis vuitton|lv\s+bag|herm[eè]s|chanel|gucci|prada|versace|burberry|dior|balenciaga|fendi|givenchy|cartier|rolex|omega\s+watch|tiffany\s*&\s*co)\b/gi,
+    /\b(?:disney|marvel\s+studios|marvel\s+comics|pixar|warner\s+bros|dc\s+comics|harry\s+potter|pokemon|pok[eé]mon|hello\s+kitty|sanrio)\b/gi,
+    /\b(?:lego|legos)\b/gi,/\b(?:netflix|spotify\s+logo|uber\s+eats|doordash)\b/gi,
+    /\b(?:nestl[eé]|l'or[eé]al|loreal|maybelline|estee lauder|sk-ii|skii)\b/gi,
+    /\b(?:canon\s+eos|nikon\s+d\d|sony\s+alpha|sony\s+a7|fujifilm\s+xt|dji\s+mavic|gopro)\b/gi,
+    /\b(?:ray-ban|rayban|oakley)\b/gi,/\b(?:beats\s+by\s+dre|beats\s+headphones)\b/gi,
+    /\b(?:supreme\s+box\s+logo|supreme\s+brand)\b/gi,/\b(?:michael\s+kors|mk\s+bag|coach\s+bag|tory\s+burch)\b/gi
+  ];
+  var i=0;
+  while(i<reps.length){s=s.replace(reps[i],' ');i++;}
+  return s.replace(/\s{2,}/g,' ').trim();
+}
+function sanitizeJimengPrompt(prompt){
+  if(!prompt) return '';
+  var s=String(prompt);
+  s=s.replace(/\b(with\s+text|text\s+saying|letters?|words?|typography|caption|subtitle|watermark|logo|signage|readable\s+text|banner\s+text|title\s+text|font|writing\s+on|labeled|label\s+text)\b/gi,' ');
+  s=s.replace(/'[^']{2,120}'/g,' ');
+  s=s.replace(/"[^"]{2,120}"/g,' ');
+  s=s.replace(/\b(title|headline|subheadline|banner|label|tagline|caption|typography|lettering|calligraphy|handwriting|brush\s+script|script\s+font|readable|legible|watermark|logo|signage|subtitle|font|writing)\b/gi,' ');
+  s=s.replace(/\b(showing|displaying|featuring|with)\s+[^,.]{0,100}(time|minute|min|difficulty|serves?|people|servings|cooking)\b/gi,' ');
+  s=s.replace(/\b(top|upper|bottom)\s+(area|section|part)\s+has\s+[^,.]{0,120}/gi,'clean reserved layout area without any characters, ');
+  s=stripJimengKnownBrands(s);
+  s=s.replace(/\s{2,}/g,' ').trim();
+  if(s.indexOf('no text')<0) s=s+', no text, no letters, no words, no typography, no watermark, no real-world brand names or trademarked products, no recognizable branded packaging, generic unbranded objects only, blank areas for manual text overlay only';
+  else if(!/no (real-world )?brand|trademarked products|generic unbranded/i.test(s)) s=s+', no real-world brand names or trademarked products, no recognizable branded packaging, generic unbranded objects only';
+  return s;
 }
 function showResult(raw,retryCount,fromConfirm){
   retryCount=retryCount||0;
@@ -2967,6 +3115,7 @@ function showResult(raw,retryCount,fromConfirm){
   if(!extracted) extracted=raw;
   var pureEn=extractPureEnglishPrompt(extracted);
   if(pureEn&&pureEn.length>=40) extracted=pureEn;
+  extracted=sanitizeJimengPrompt(extracted);
   if(isSopPlaceholderOutput(extracted)){
     if(retryCount<2){
       var sessionPh2=getCurrentSession();
@@ -2980,6 +3129,11 @@ function showResult(raw,retryCount,fromConfirm){
     }
   }
   cachedPrompt=extracted;
+  promptReadyTopic=(sessionContext.coreTopic||'').trim();
+  copywriteGenToken=Date.now();
+  clearCopywriteOutputs();
+  hideCopywriteSection();
+  showLegalRiskNotice();
   var ring=document.getElementById('t-ring');
   if(ring){ring.style.animation='none';ring.style.borderColor='#f3af42';ring.innerHTML='<span style="color:#f3af42;font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;height:100%;">✓</span>';}
   var s=document.getElementById('t-status');
@@ -2996,7 +3150,7 @@ function showResult(raw,retryCount,fromConfirm){
     document.getElementById('output-section').scrollIntoView({behavior:'smooth'});
   },800);
 }
-function getCopywrite(){var session=getCurrentSession();if(!session){alert('请先生成提示词！');return;}document.getElementById('copywrite-ask').style.display='none';var loading=document.createElement('div');loading.id='copywrite-loading';loading.style.cssText='text-align:center;padding:20px;color:var(--tx2);font-size:13px;';loading.textContent='✍️ 正在为【'+(sessionContext.coreTopic||'当前主题')+'】生成配套爆款文案…';document.getElementById('output-section').appendChild(loading);syncSessionRecommendations();callCoze('X',session,false,'✍️ 爆款文案生成中…',{intent:'copywrite'}).then(function(res){currentConversationId=res.conversation_id||currentConversationId;currentChatId=res.chat_id||currentChatId;var content=extractAssistantContent(res);content=purifyCopywriteBlocks(content);var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();if(content&&!isWelcome(content)){var mpIdx=Math.max(content.indexOf('📘【公众号'),content.indexOf('【公众号'));if(mpIdx>0){document.getElementById('out-xhs').textContent=content.substring(0,mpIdx).trim();document.getElementById('out-mp').textContent=content.substring(mpIdx).trim();}else{document.getElementById('out-xhs').textContent=content;document.getElementById('out-mp').textContent='';}document.getElementById('copywrite-section').style.display='block';document.getElementById('copywrite-section').scrollIntoView({behavior:'smooth'});}else{document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败，请重试');}}).catch(function(e){var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败：'+e.message);});}
+function getCopywrite(retryCount){retryCount=retryCount||0;if(!cachedPrompt){alert('请先生成提示词！');return;}var topic=(sessionContext.coreTopic||'').trim();if(!topic){alert('缺少当前主题，请重新「启动大脑」。');return;}var inputTopic=((document.getElementById('main-textarea')||{}).value||'').trim();if(inputTopic&&inputTopic!==topic){topic=inputTopic;sessionContext.coreTopic=topic;}var genToken=copywriteGenToken;document.getElementById('copywrite-ask').style.display='none';clearCopywriteOutputs();hideCopywriteSection();var loading=document.getElementById('copywrite-loading');if(!loading){loading=document.createElement('div');loading.id='copywrite-loading';loading.style.cssText='text-align:center;padding:20px;color:var(--tx2);font-size:13px;';document.getElementById('output-section').appendChild(loading);}loading.textContent='✍️ 正在为【'+topic+'】生成配套爆款文案…'+(retryCount>0?'（第'+(retryCount+1)+'次校正）':'');syncSessionRecommendations();callCoze(buildCopywriteQuery(topic),null,false,'✍️ 爆款文案生成中…',{intent:'copywrite',forceNewSession:true}).then(function(res){if(genToken&&genToken!==copywriteGenToken)return;currentConversationId=res.conversation_id||currentConversationId;currentChatId=res.chat_id||currentChatId;var content=purifyCopywriteBlocks(extractAssistantContent(res));var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();if(!content||isWelcome(content)){if(retryCount<2)return getCopywrite(retryCount+1);document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败，请重试');return;}if(copywriteTopicMismatch(content,topic)){if(retryCount<2)return getCopywrite(retryCount+1);alert('文案主题与「'+topic+'」不一致，请重新「启动大脑」后再生成文案。');document.getElementById('copywrite-ask').style.display='block';return;}renderCopywriteResult(content);}).catch(function(e){var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();document.getElementById('copywrite-ask').style.display='block';alert('文案获取失败：'+e.message);});}
 function showToast(){var t=document.getElementById('clip-toast');if(!t)return;t.style.display='block';setTimeout(function(){t.style.display='none';},1200);}
 function copyBlock(id){var el=document.getElementById(id);if(!el||!el.textContent.trim()){alert('内容为空，请先生成！');return;}navigator.clipboard.writeText(el.textContent).then(function(){showToast();});}
 function copyAndGo(url){if(!cachedPrompt){alert('请先生成提示词！');return;}// 静默复制+直接跳转，不弹阻断弹窗
@@ -3067,6 +3221,7 @@ function bootApp(){
   try{initCardkeyModal();}catch(e){}
   try{initLuxMicroInteractions();}catch(e){}
   try{updateFreeTrialHint();}catch(e){}
+  try{initLegalNotices();}catch(e){}
 }
 function boot(){
   bootHeadlessConfig();

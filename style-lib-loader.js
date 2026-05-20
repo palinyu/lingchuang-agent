@@ -44,6 +44,10 @@ const INDUSTRIAL_NEGATIVE_PROMPTS = [
   'no letters',
   'no words',
   'no typography',
+  'trademark',
+  'branded packaging',
+  'corporate mascot',
+  'recognizable logo',
 ].join(', ');
 
 /** 极品画质 / 光影 / 镜头术语池（强制扩写时从中抽取组合） */

@@ -105,6 +105,16 @@ function buildNoTextInImageBlock() {
   );
 }
 
+/** 商标 / 具体品牌：即梦等平台易触发侵权与审核风险 */
+function buildNoBrandInPromptBlock() {
+  return (
+    '【商标与具体品牌规避·生图风险·最高优先级】\n' +
+    '英文 Prompt 中严禁出现任何可识别的真实企业/品牌全称、商标、注册商品名、连锁餐饮/快消/奢侈品/车企/数码消费电子具体品牌或型号、知名 IP/吉祥物/角色名（含中英文拼写、常见别名、谐音缩写）。\n' +
+    '一律用通称描述画面：如「运动鞋」不写具体运动品牌，「智能手机」不写具体手机厂商，「快餐套餐」不写具体连锁名，「琥珀色汽水铝罐」不写具体饮料品牌，「奢侈品手袋轮廓」不出现可识别五金与花纹。\n' +
+    '若用户主题本身含某品牌名，仍须在英文 Prompt 中改写为中性品类词，不得原样输出该品牌字符串。'
+  );
+}
+
 function resolveAspectHint(size) {
   if (size && /16:9|16×9/i.test(size)) return '--ar 16:9';
   if (size && /9:16|9×16/i.test(size)) return '--ar 9:16';
@@ -118,6 +128,8 @@ function buildMastersFormulaBlock(topic, style, size) {
   const jimengMax = getJimengCharLimit();
   return (
     buildNoTextInImageBlock() +
+    '\n\n' +
+    buildNoBrandInPromptBlock() +
     '\n\n【Masters Formula · 工业级画面大师·强制模板锁·最高死命令】\n' +
     '无论用户原意多么简略或混乱，你最终输出的英文 Prompt 必须且只能是一段连续英文，并强制符合以下工业模板（禁止拆段、禁止中文、禁止省略号敷衍）：\n\n' +
     '[扩写后的精准主体 · 经意图 SOP 脑补后的高细节主体描述] + [符合风格「' +
@@ -155,7 +167,7 @@ function buildMastersFormulaBlock(topic, style, size) {
     ' characters，硬性下限 ' +
     MIN_MASTERS_PROMPT_CHARS +
     ' characters，低于此长度视为生成失败。\n' +
-    '【纯净输出】只输出「完整版（推荐）」+ 英文 Prompt；严禁客服废话；严禁 text/letters/words/typography。'
+    '【纯净输出】只输出「完整版（推荐）」+ 英文 Prompt；严禁客服废话；严禁 text/letters/words/typography；严禁任何具体品牌名与商标产品字符串。'
   );
 }
 
@@ -227,7 +239,8 @@ function buildPromptRetryBlock(validation, topic, style) {
     ' characters，风格【' +
     style +
     '】须体现在环境与材质中；\n' +
-    '④ 只输出「完整版（推荐）」+ 英文 Prompt，不得输出解释。'
+    '④ 只输出「完整版（推荐）」+ 英文 Prompt，不得输出解释。\n' +
+    '⑤ 不得出现任何真实品牌名、商标产品名或 IP 角色名，仅用通称描述。'
   );
 }
 
@@ -332,6 +345,7 @@ function buildCozeMessage(p) {
       '【严禁】输出任何方括号占位说明（如[对应品类…][完整英文提示词…][对应比例]）；必须写出可复制到即梦的真实英文正文，≥' +
       MIN_MASTERS_PROMPT_CHARS +
       ' 字符。\n' +
+      '【严禁】英文中出现任何真实企业/品牌全称、商标、产品型号、IP 角色名；一律用通称。\n' +
       '用户确认指令：' +
       rawQuery
     );
@@ -380,6 +394,7 @@ function buildCozeMessage(p) {
       '请直接输出完整即梦/MJ 英文 Prompt（完整版推荐，≤' +
       getJimengCharLimit() +
       '字符）。\n' +
+      '【严禁】英文中出现任何具体品牌名、商标或型号字符串。\n' +
       '用户操作：' +
       rawQuery
     );
@@ -463,13 +478,96 @@ function extractEnglishPrompt(raw, maxLen) {
 const TEXT_INDUCING_RE =
   /\b(with\s+text|text\s+saying|letters?|words?|typography|caption|subtitle|watermark|logo|signage|readable\s+text|banner\s+text|title\s+text|font|writing\s+on|labeled|label\s+text)\b/gi;
 
+/** 常见商标/品牌英文写法（与 zhishi_mofang stripJimengKnownBrands 保持同步） */
+const BRAND_STRIP_RES = [
+  /\b(?:mcdonald'?s|mcdonalds)\b/gi,
+  /\bkfc\b/gi,
+  /\bstarbucks\b/gi,
+  /\bburger king\b/gi,
+  /\bpizza hut\b/gi,
+  /\b(?:domino'?s\s+pizza|domino'?s)\b/gi,
+  /\bcoca[- ]?cola\b/gi,
+  /\bpepsi\s*cola\b/gi,
+  /\bpepsi\b/gi,
+  /\b(?:red bull|redbull)\b/gi,
+  /\b(?:mountain dew|mtn dew)\b/gi,
+  /\bmonster\s+energy\b/gi,
+  /\b(?:nike|just\s+do\s+it)\b/gi,
+  /\badidas\b/gi,
+  /\breebok\b/gi,
+  /\bunder armour\b/gi,
+  /\bair jordan\b/gi,
+  /\bconverse\b/gi,
+  /\bvans\b/gi,
+  /\bnew balance\b/gi,
+  /\bskechers\b/gi,
+  /\b(?:iphone|ipad|imac|ipod|iwatch)\b/gi,
+  /\bmacbook\b/gi,
+  /\bairpods\b/gi,
+  /\bapple\s+watch\b/gi,
+  /\b(?:samsung|galaxy\s+z?|galaxy\s+note)\b/gi,
+  /\b(?:google\s+pixel)\b/gi,
+  /\b(?:huawei|xiaomi|oppo|vivo|oneplus|honor)\b/gi,
+  /\b(?:playstation|ps5|ps4|xbox|nintendo\s+switch|switch\s+oled)\b/gi,
+  /\b(?:microsoft\s+surface|surface\s+pro)\b/gi,
+  /\b(?:tesla|model\s+[3syx]|cybertruck)\b/gi,
+  /\b(?:bmw|mercedes[- ]?benz|mercedes|audi|porsche|ferrari|lamborghini|maserati)\b/gi,
+  /\b(?:toyota|honda\s+(?:civic|accord|cr-v)|ford\s+f-150|chevrolet|chevy)\b/gi,
+  /\b(?:ikea|h\s*&\s*m|uniqlo|zara)\b/gi,
+  /\b(?:louis vuitton|lv\s+bag|herm[eè]s|chanel|gucci|prada|versace|burberry|dior|balenciaga|fendi|givenchy|cartier|rolex|omega\s+watch|tiffany\s*&\s*co)\b/gi,
+  /\b(?:disney|marvel\s+studios|marvel\s+comics|pixar|warner\s+bros|dc\s+comics|harry\s+potter|pokemon|pok[eé]mon|hello\s+kitty|sanrio)\b/gi,
+  /\b(?:lego|legos)\b/gi,
+  /\b(?:netflix|spotify\s+logo|uber\s+eats|doordash)\b/gi,
+  /\b(?:nestl[eé]|l'or[eé]al|loreal|maybelline|estee lauder|sk-ii|skii)\b/gi,
+  /\b(?:canon\s+eos|nikon\s+d\d|sony\s+alpha|sony\s+a7|fujifilm\s+xt|dji\s+mavic|gopro)\b/gi,
+  /\b(?:ray-ban|rayban|oakley)\b/gi,
+  /\b(?:beats\s+by\s+dre|beats\s+headphones)\b/gi,
+  /\b(?:supreme\s+box\s+logo|supreme\s+brand)\b/gi,
+  /\b(?:michael\s+kors|mk\s+bag|coach\s+bag|tory\s+burch)\b/gi,
+];
+
+const IMAGE_RISK_TAIL_EN =
+  ', no text, no letters, no words, no typography, no watermark, no real-world brand names or trademarked products, no recognizable branded packaging or mascots, generic unbranded objects only, blank areas for manual text overlay only';
+
+function stripKnownBrandNames(s) {
+  let o = String(s || '');
+  let i = 0;
+  while (i !== BRAND_STRIP_RES.length) {
+    o = o.replace(BRAND_STRIP_RES[i], ' ');
+    i++;
+  }
+  return o.replace(/\s{2,}/g, ' ').trim();
+}
+
+/** 即梦/国内文生图：含“要出字”的描述易触发「不符合平台规则」 */
 function sanitizeNoTextPrompt(prompt) {
   if (!prompt) return '';
   let s = String(prompt);
   s = s.replace(TEXT_INDUCING_RE, ' ');
+  s = s.replace(/'[^']{2,120}'/g, ' ');
+  s = s.replace(/"[^"]{2,120}"/g, ' ');
+  s = s.replace(
+    /\b(title|headline|subheadline|banner|label|tagline|caption|typography|lettering|calligraphy|handwriting|brush\s+script|script\s+font|readable|legible|watermark|logo|signage|subtitle|font|writing)\b/gi,
+    ' '
+  );
+  s = s.replace(
+    /\b(showing|displaying|featuring|with)\s+[^,.]{0,100}(time|minute|min|difficulty|serves?|people|servings|cooking)\b/gi,
+    ' '
+  );
+  s = s.replace(
+    /\b(top|upper|bottom)\s+(area|section|part)\s+has\s+[^,.]{0,120}/gi,
+    'clean reserved layout area without any characters, '
+  );
+  s = s.replace(/\b(empty|blank)\s+space\s+for\s+[^,.]{0,80}/gi, 'clean negative space, ');
+  s = stripKnownBrandNames(s);
   s = s.replace(/\s{2,}/g, ' ').trim();
   if (s.indexOf('no text') === -1) {
-    s = s + ', no text, no letters, no words, no typography';
+    s = (s + IMAGE_RISK_TAIL_EN).replace(/\s{2,}/g, ' ').trim();
+  } else if (!/no (real-world )?brand|trademarked products|generic unbranded/i.test(s)) {
+    s =
+      (s + ', no real-world brand names or trademarked products, no recognizable branded packaging, generic unbranded objects only')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
   }
   return s;
 }
@@ -481,6 +579,26 @@ function purifyAnalysisText(raw, coreTopic) {
     text = text.replace(/母亲节[^\n]*/g, '');
   }
   return text.trim();
+}
+
+function copywriteTopicMismatch(text, coreTopic) {
+  const body = String(text || '');
+  const topic = safeStr(coreTopic, '').trim();
+  if (!topic || body.length < 40) return false;
+  const core = topic.replace(/(的做法|教程|方法|步骤|攻略|大全|合集)$/g, '').trim() || topic;
+  if (body.indexOf(topic) >= 0 || (core.length >= 2 && body.indexOf(core) >= 0)) return false;
+
+  const poetry = ['古诗', '诗词', '背诗', '小学语文必背', '唐诗', '宋词'];
+  const food = ['红烧', '排骨', '菜谱', '下厨', '食材', '烹饪', '美食教程'];
+  const isFood = /红烧|排骨|菜谱|烹饪|美食|做法|食材/.test(topic);
+  const isPoetry = /古诗|诗词|诗歌|背诗|语文/.test(topic);
+  if (isFood && poetry.some((k) => body.indexOf(k) >= 0)) return true;
+  if (isPoetry && food.some((k) => body.indexOf(k) >= 0)) return true;
+  if (core.length >= 2 && body.indexOf(core) < 0) {
+    const alt = ['母亲节', '父亲节', '春节', '中秋', '国庆', '七夕'];
+    if (alt.some((k) => body.indexOf(k) >= 0 && topic.indexOf(k) < 0)) return true;
+  }
+  return false;
 }
 
 function purifyCopywriteText(raw, coreTopic) {
@@ -554,6 +672,9 @@ module.exports = {
   validateMastersPrompt,
   buildPromptRetryBlock,
   isSopTemplateSkeleton,
+  sanitizeNoTextPrompt,
+  stripKnownBrandNames,
+  copywriteTopicMismatch,
   MIN_MASTERS_PROMPT_CHARS,
   MASTERS_MANDATORY_TAIL,
 };

@@ -1,9 +1,16 @@
+/** Vercel API · 与 prompt-engine 同步（文案主题校验 copywriteTopicMismatch 等）— 保存即更新部署时间戳 */
 import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
-const { buildCozeMessage, purifyAssistantText, resolveIntent, isSopTemplateSkeleton } = require(
+const {
+  buildCozeMessage,
+  purifyAssistantText,
+  resolveIntent,
+  isSopTemplateSkeleton,
+  copywriteTopicMismatch,
+} = require(
   path.join(process.cwd(), 'prompt-engine.js')
 );
 
@@ -230,6 +237,13 @@ export default async function handler(req, res) {
 
     const purified = purifyAssistantText(assistantText, intent, coreTopic);
     const finalText = purified || assistantText;
+    if (intent === 'copywrite' && coreTopic && copywriteTopicMismatch(finalText, coreTopic)) {
+      return res.status(502).json({
+        code: -1,
+        msg: '文案主题与当前输入不一致，请重新启动大脑后再生成文案',
+        topic_mismatch: true,
+      });
+    }
     if ((intent === 'prompt' || intent === 'custom') && isSopTemplateSkeleton(finalText)) {
       return res.status(502).json({
         code: -1,
