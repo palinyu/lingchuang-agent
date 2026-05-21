@@ -1795,8 +1795,8 @@ else{
     <div id="img-preview-area">
       <button class="btn-rm-preview" onclick="removeFile()">✕</button>
       <div id="preview-images-row">
-        <div class="preview-slot" id="preview-slot-0" style="display:none;"><span class="slot-label">图B 产品</span><span class="slot-status" id="preview-status-0"></span><button type="button" class="btn-rm-slot" onclick="removeImageSlot(0)">✕</button><img id="preview-img-0" src="" alt="图B"></div>
-        <div class="preview-slot" id="preview-slot-1" style="display:none;"><span class="slot-label">图A 风格</span><span class="slot-status" id="preview-status-1"></span><button type="button" class="btn-rm-slot" onclick="removeImageSlot(1)">✕</button><img id="preview-img-1" src="" alt="图A"></div>
+        <div class="preview-slot" id="preview-slot-0" style="display:none;"><span class="slot-label">图A 产品</span><span class="slot-status" id="preview-status-0"></span><button type="button" class="btn-rm-slot" onclick="removeImageSlot(0)">✕</button><img id="preview-img-0" src="" alt="图A"></div>
+        <div class="preview-slot" id="preview-slot-1" style="display:none;"><span class="slot-label">图B 版式</span><span class="slot-status" id="preview-status-1"></span><button type="button" class="btn-rm-slot" onclick="removeImageSlot(1)">✕</button><img id="preview-img-1" src="" alt="图B"></div>
       </div>
       <img id="preview-img" src="" style="display:none;">
       <div id="preview-doc" style="display:none;" class="doc-preview">
@@ -1813,7 +1813,7 @@ else{
         <div class="input-toolbar">
           <div class="input-toolbar-hints">
             <span class="input-hint-line">📝 例：红烧肉的做法 / 苏州旅游全貌图 / 光合作用做成图</span>
-            <span class="input-hint-line">🖼️ 电商双图：第1张=产品(图B)，第2张=风格(图A)，可说换背景/出海报</span>
+            <span class="input-hint-line">🖼️ 电商双图：第1张=产品(图A)，第2张=版式(图B)，可说换背景/出海报</span>
             <span class="input-hint-line input-hint-dim">📄 txt / docx / pdf 自动提取文字发给 AI</span>
           </div>
           <div class="input-toolbar-upload">
@@ -3389,7 +3389,7 @@ function buildPicPromptFromDs(){
     var brief=pack.trim()?pack.trim().slice(0,900):'';
   var refNote='';
   if(dsRefFileId||dsRefSlot){
-    refNote='\n【已附产品参考图·图B产品】必须以附件实物为画面主体，保留包装/品类/颜色/材质，禁止换成无关商品或纯示意款。';
+    refNote='\n【已附产品参考图·图A产品】必须以附件实物为画面主体，保留包装/品类/颜色/材质，禁止换成无关商品或纯示意款。';
   }
   return (
     '【知识图文笔记配图·用户已写好笔记框架】\n'+
@@ -3894,7 +3894,7 @@ function processDocumentFile(file){
     var r4=new FileReader();
     r4.onload=function(e){var ab=e.target.result;
       if(typeof pdfjsLib!=='undefined'){parsePDF(ab,file,pds);}
-      else{var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';s.onload=function(){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';parsePDF(ab,file,pds);};document.head.appendChild(s);}};
+      else{var s=document.createElement('script');s.crossOrigin='anonymous';s.src='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js';s.onload=function(){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';parsePDF(ab,file,pds);};s.onerror=function(){docTextContent='[PDF文件已上传·本地解析不可用，已转交扣子识读附件]';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 已上传，AI将识读附件';finishDocParseWait();};document.head.appendChild(s);}};
     r4.onerror=function(){docTextContent='[解析失败：'+file.name+']';finishDocParseWait();};
     r4.readAsArrayBuffer(file);
   }else{scheduleDocCozeUpload();docTextContent='[解析失败：'+file.name+']';if(pds)pds.textContent=(file.size/1024).toFixed(1)+' KB · 已上传，AI将识别内容';finishDocParseWait();}
@@ -3942,7 +3942,11 @@ function pdfPageToText(content){
 }
 function parsePDF(ab,file,pds){
   var pdfMeta={numPages:0,parsedPages:0};
-  pdfjsLib.getDocument({data:ab}).promise.then(function(pdf){
+  var pdfOpts={data:ab,disableFontFace:true,useSystemFonts:true};
+  if(typeof pdfjsLib!=='undefined'&&pdfjsLib.GlobalWorkerOptions){
+    try{pdfjsLib.GlobalWorkerOptions.workerSrc=pdfjsLib.GlobalWorkerOptions.workerSrc||'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';}catch(e){}
+  }
+  pdfjsLib.getDocument(pdfOpts).promise.then(function(pdf){
     pdfMeta.numPages=pdf.numPages||0;
     pdfMeta.parsedPages=Math.min(pdfMeta.numPages,LC_PDF_MAX_PAGES);
     var pages=[];var _p=1;
@@ -3970,16 +3974,16 @@ function parsePDF(ab,file,pds){
     }
     finishDocParseWait();
   }).catch(function(){
-    docTextContent='[解析失败：'+(file&&file.name?file.name:'PDF')+']';
+    docTextContent='[PDF文件已上传·本地解析失败，已转交扣子识读附件]';
     var pdsEl=pds||document.getElementById('preview-doc-size');
-    if(pdsEl) pdsEl.textContent='PDF解析失败 · 已转交AI识别附件';
+    if(pdsEl) pdsEl.textContent='PDF本地解析失败 · 已上传扣子，可点「启动大脑」';
     finishDocParseWait();
   });
 }
 
 function showEcomHint(isDual){var hint=document.getElementById('ecom-hint');if(!hint){hint=document.createElement('div');hint.id='ecom-hint';hint.style.cssText='margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;';document.getElementById('input-stage').appendChild(hint);}
-var items=isDual?[['第1张传菜品实拍，第2张传海报版式参考；按图B菜品做海报，禁止换菜','⚠️ 先实拍后版式'],['图B是我的菜品实拍，图A是版式参考，按A版式给B做海报','🖼️ 双图融合'],['图B产品换到图A版式，背景浅米色，同一道菜','🎨 换背景+融合']]:[['按上传实拍做促销海报，标题价格与图里菜品一致，左下二维码','📢 电商海报'],['按上传实拍做详情页，禁止换成别的产品','🛍️ 详情页'],['识别图里是什么菜/产品，再写海报文案','📝 识图+海报']];
-var html='<span style="font-size:11px;color:var(--tx3);">'+(isDual?'双图：第1张=产品实拍，第2张=版式参考（勿把AI错图当产品）；':'已上传实拍：系统将以图中【同一商品】美化出海报，勿只传AI生成错图；')+'</span>';
+var items=isDual?[['第1张传菜品实拍(图A)，第2张传海报版式(图B)；按图A菜品做海报，禁止换菜','⚠️ 先实拍后版式'],['图A是我的菜品实拍，图B是版式参考，按B版式给A做海报','🖼️ 双图融合'],['图A产品换到图B版式，背景浅米色，同一道菜','🎨 换背景+融合']]:[['按上传实拍做促销海报，标题价格与图里菜品一致，左下二维码','📢 电商海报'],['按上传实拍做详情页，禁止换成别的产品','🛍️ 详情页'],['识别图里是什么菜/产品，再写海报文案','📝 识图+海报']];
+var html='<span style="font-size:11px;color:var(--tx3);">'+(isDual?'双图：第1张=图A产品实拍，第2张=图B版式参考（勿把AI错图当产品）；':'已上传实拍：系统将以图中【同一商品】美化出海报，勿只传AI生成错图；')+'</span>';
 items.forEach(function(it){html+='<span onclick="fillEcom(\''+it[0].replace(/'/g,"\\'")+'\')" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">'+it[1]+'</span>';});
 hint.innerHTML=html;hint.style.display='flex';}
 function fillEcom(text){var ta=document.getElementById('main-textarea');if(ta)ta.value=text;var hint=document.getElementById('ecom-hint');if(hint)hint.style.display='none';}
@@ -4030,14 +4034,22 @@ var LC_STRUCTURE_TEMPLATES={
   life_science:'【品类专属结构模板·生活科普·手法十五】\n① 标题：主题+分类标签\n② 六格图鉴2×3\n③ 核心原理流程或对比图\n④ 趣味冷知识气泡',
   constellation:'【品类专属结构模板·星座情感·手法十六/十七】\n① 顶部：星座名+日期+元素\n② 性格特征3条\n③ 优势与短板双栏\n④ 情感/配对建议\n⑤ 金句+话题标签',
   ecom_image:'【第七章·电商单图海报·手法二十二B】\n① 食欲主视觉居中（须与上传实拍一致）\n② 主标题+价格促销条+卖点图标\n③ 左下/底部预留二维码留白\n④ 背景按平台流行风格（抖音9:16/小红书3:4/美团横图16:9）',
-  ecom_dual:'【第七章·电商双图融合模式】\n图A风格框架+图B产品主体，把B穿上A的外衣',
+  ecom_dual:'【第七章·电商双图融合模式】\n图A产品主体+图B版式框架，把A穿上B的外衣',
   default:'【通用·手法三结构化知识模块法】\n① 标题区：主题大字+副标题+适用人群\n② 核心内容：≥3个信息模块\n③ 视觉插图：1主+2辅\n④ 装饰层：背景纹理+边框+角标\n⑤ 底部：来源/标签/系列标识'
 };
+function isExplicitTravelOrKnowledgeIntent(blob){
+  var lower=String(blob||'').toLowerCase();
+  if(/海报|详情|电商|产品|菜品|牛蛙|火锅|美蛙|美食|餐饮|主图|带货|推广|二维码|128|元\/份|元\/斤|识图/.test(lower)) return false;
+  return /旅游|旅行|攻略|指南|路线图|citywalk|探店地图|景点|地图路线|知识图解|科普|教育|古诗|诗词|电路|光合作用|做法步骤|菜谱教程|单元|课时|上册|下册/.test(lower);
+}
 function classifyTopicCategory(blob){
   var lower=String(blob||'').toLowerCase();
   var i,j,leg,cat,hit,bestScore=0,best=null,matchedKey='',first;
   if(uploadedImageCount>=2){
     return {categoryId:'ecom',categoryName:'电商双图融合类',templateKey:'ecom_dual',technique:'第七章·电商双图融合',profile:'ecom_dual',matchedKey:'双图上传'};
+  }
+  if(uploadedImageCount>=1&&!isExplicitTravelOrKnowledgeIntent(blob)){
+    return {categoryId:'ecom',categoryName:'电商海报·上传图',templateKey:'ecom_image',technique:'第七章·电商单图海报',profile:'ecom_image',matchedKey:'上传图片'};
   }
   for(i=0;i<LC_MD_LEGACY_OVERRIDES.length;i++){
     leg=LC_MD_LEGACY_OVERRIDES[i];
@@ -4166,6 +4178,12 @@ function getDocumentContent(){
   if(/^\[(已上传|PDF文件|解析失败)/.test(t)) return '';
   return t;
 }
+function hasDocumentForAnalyze(){
+  if(getDocumentContent()) return true;
+  if(docUploadFileId) return true;
+  if(docTextContent&&/^\[(PDF文件已上传|解析失败)/.test(String(docTextContent))) return true;
+  return false;
+}
 function getClassifyBlob(topic){
   var doc=getDocumentContent();
   var t=String(topic||'').trim();
@@ -4224,10 +4242,14 @@ function buildUserQuery(topic){
   if(isFileAttached&&!doc&&!topic) fileNotice+='\n【请识别上传的图片或文件内容】';
   var classifyBlob=getClassifyBlob(topic)+bubbleStr;
   var cat=classifyTopicCategory(classifyBlob);
-  sessionContext.categoryId=cat.categoryId;
-  sessionContext.categoryName=cat.categoryName;
-  sessionContext.templateKey=cat.templateKey;
-  sessionContext.promptProfile=cat.profile||sessionContext.promptProfile||'standard';
+  if(!(sessionContext.routeLocked&&sessionContext.promptProfile)){
+    sessionContext.categoryId=cat.categoryId;
+    sessionContext.categoryName=cat.categoryName;
+    sessionContext.templateKey=cat.templateKey;
+    sessionContext.promptProfile=cat.profile||sessionContext.promptProfile||'standard';
+  }else{
+    cat={categoryId:sessionContext.categoryId||cat.categoryId,categoryName:sessionContext.categoryName||cat.categoryName,templateKey:sessionContext.templateKey||cat.templateKey,technique:sessionContext.technique||cat.technique,profile:sessionContext.promptProfile,matchedKey:'已锁定'};
+  }
   if(cat.technique&&!isLifecycleTopic(topic||'')) sessionContext.technique=cat.technique;
   var tpl=getLcStructureTemplate(cat.templateKey);
   var catBlock='\n【品类判定】'+cat.categoryName+
@@ -5104,6 +5126,13 @@ function selectCheckoutCard(cardEl){
   }
   updateCheckoutUnlockCta();
 }
+function blurCardkeyModalFocus(){
+  try{
+    var ae=document.activeElement;
+    var m=document.getElementById('cardkey-modal');
+    if(ae&&m&&m.contains(ae)) ae.blur();
+  }catch(e){}
+}
 function setCheckoutModalView(mode){
   var plans=document.getElementById('checkout-plans-view');
   var pay=document.getElementById('checkout-pay-view');
@@ -5111,6 +5140,7 @@ function setCheckoutModalView(mode){
   var free=document.getElementById('checkout-freecode-view');
   if(!plans) return;
   mode=mode||'plans';
+  if(mode!=='password') blurCardkeyModalFocus();
   plans.classList.toggle('is-hidden',mode!=='plans');
   if(pay){
     pay.classList.toggle('is-visible',mode==='pay');
@@ -5194,6 +5224,7 @@ function showCardkeyModal(exhausted){
 function closeCardkeyModal(){
   var m=document.getElementById('cardkey-modal');
   if(!m)return;
+  blurCardkeyModalFocus();
   m.classList.remove('is-open');
   m.setAttribute('aria-hidden','true');
   setCheckoutModalView('plans');
@@ -5300,6 +5331,10 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
   body.size=ctx.size;
   body.intent=ctx.intent;
   body.user_notes=ctx.user_notes;
+  if(sessionContext.routeLocked&&sessionContext.promptProfile){
+    body.prompt_profile=sessionContext.promptProfile;
+    body.lc_prompt_profile=sessionContext.promptProfile;
+  }
   var docFull=getDocumentContent();
   if(docFull){
     body.documentContent=docFull;
@@ -5385,10 +5420,15 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
 }
 function applyCozeMeta(meta){
   if(!meta) return;
-  if(meta.prompt_profile) sessionContext.promptProfile=meta.prompt_profile;
+  if(meta.prompt_profile){
+    sessionContext.promptProfile=meta.prompt_profile;
+    sessionContext.routeLocked=true;
+  }
   if(meta.route_human_label) sessionContext.routeHumanLabel=meta.route_human_label;
   if(meta.recommended_technique) sessionContext.technique=meta.recommended_technique;
   if(meta.random_style_name) sessionContext.randomStyleName=meta.random_style_name;
+  if(meta.md_category_id) sessionContext.categoryId=meta.md_category_id;
+  if(meta.md_category_name) sessionContext.categoryName=meta.md_category_name;
 }
 function isKnowledgeProfile(p){
   return p==='lifecycle'||p==='english_edu'||p==='textbook'||p==='poetry'||p==='recipe'||p==='fitness'||p==='knowledge_infographic'||p==='food_therapy'||p==='finance'||p==='city'||p==='constellation'||p==='tcm'||p==='skincare'||p==='workplace'||p==='fashion'||p==='pet'||p==='batch_series'||p==='season_relief'||p==='ecom'||p==='ecom_image'||p==='ecom_dual'||p==='interior'||p==='template_clone'||p==='cover';
@@ -5400,7 +5440,7 @@ function isKnowledgeTopic(){
   return /知识图解|英语|单元|课时|上册|下册|古诗|诗词|做法|菜谱|科普|原理|图解/.test(t);
 }
 function isWelcome(content){if(!content)return true;var hasW=WELCOME_KW.some(function(kw){return content.indexOf(kw)>=0;});var hasR=content.indexOf('品类判定')>=0||content.indexOf('内容识别')>=0||content.indexOf('匹配手法')>=0||content.indexOf('推荐尺寸')>=0||/[A-Za-z ,.\-]{60,}/.test(content);return hasW&&!hasR;}
-function resetState(){stopGenParticleFlow();var keepStyleId=selectedVisualStyleId;currentConversationId=null;currentChatId=null;sessionUserId=null;selectedVisualStyleId=keepStyleId;sessionContext={coreTopic:'',style:keepStyleId?getSelectedVisualStyleValue():'',technique:'',size:'',userNotes:'',fromDsNotes:false,promptProfile:'standard',routeHumanLabel:'',randomStyleName:''};cachedPrompt='';cachedPromptShort='';promptReadyTopic='';copywriteGenToken=0;aiRecSize='';aiRecStyle='';userCustomSize='';userCustomStyle='';clearCopywriteOutputs();hideCopywriteSection();var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();var legal=document.getElementById('legal-risk-notice');if(legal)legal.style.display='none';['analysis-stage','custom-stage','thinking-stage','output-section','copywrite-ask','copywrite-section'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});var ring=document.getElementById('t-ring');if(ring){ring.style.animation='spin-ring .9s linear infinite';ring.style.borderColor='';ring.innerHTML='';}var s=document.getElementById('t-status');if(s){s.style.color='#cbd5e1';s.textContent='AI大脑联网搜索爆款参数中…\n完整提示词生成中…';}var sz=document.getElementById('t-size');if(sz)sz.textContent='--';var st=document.getElementById('t-style');if(st)st.textContent='--';setThinkingStageActive(false);}
+function resetState(){stopGenParticleFlow();var keepStyleId=selectedVisualStyleId;currentConversationId=null;currentChatId=null;sessionUserId=null;selectedVisualStyleId=keepStyleId;sessionContext={coreTopic:'',style:keepStyleId?getSelectedVisualStyleValue():'',technique:'',size:'',userNotes:'',fromDsNotes:false,promptProfile:'standard',routeHumanLabel:'',randomStyleName:'',routeLocked:false};cachedPrompt='';cachedPromptShort='';promptReadyTopic='';copywriteGenToken=0;aiRecSize='';aiRecStyle='';userCustomSize='';userCustomStyle='';clearCopywriteOutputs();hideCopywriteSection();var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();var legal=document.getElementById('legal-risk-notice');if(legal)legal.style.display='none';['analysis-stage','custom-stage','thinking-stage','output-section','copywrite-ask','copywrite-section'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});var ring=document.getElementById('t-ring');if(ring){ring.style.animation='spin-ring .9s linear infinite';ring.style.borderColor='';ring.innerHTML='';}var s=document.getElementById('t-status');if(s){s.style.color='#cbd5e1';s.textContent='AI大脑联网搜索爆款参数中…\n完整提示词生成中…';}var sz=document.getElementById('t-size');if(sz)sz.textContent='--';var st=document.getElementById('t-style');if(st)st.textContent='--';setThinkingStageActive(false);}
 function runEngine(){
   var btn=document.getElementById('gen-btn');
   if(btn&&btn.disabled)return;
@@ -5416,8 +5456,8 @@ function runEngine(){
     _lcEngineAbortCtrl=null;
     return;
   }
-  if(attachedFileName&&!getDocumentContent()&&docTextContent&&/^\[/.test(String(docTextContent))){
-    alert('文档尚未解析完成或解析失败，请换 txt/docx 重传，或稍候再点「启动大脑」');
+  if(attachedFileName&&!hasDocumentForAnalyze()&&docTextContent&&/^\[/.test(String(docTextContent))){
+    alert('文档尚未解析完成，请稍候再点「启动大脑」；若长时间无响应可换 txt/docx 重传');
     unlockGenBtn();
     _lcEngineAbortCtrl=null;
     return;
@@ -5457,18 +5497,18 @@ function runEngine(){
   var waitMs=uploadedImageCount>=2?25000:12000;
   var docWaitMs=getDocumentContent()?18000:12000;
   waitForFileReady(Math.max(waitMs,docWaitMs)).then(function(){
-    if(attachedFileName&&!getDocumentContent()){
+    if(attachedFileName&&!hasDocumentForAnalyze()){
       unlockGenBtn();
       _lcFreeTrialRunActive=false;
       _lcEngineAbortCtrl=null;
-      alert('未读取到文档正文，无法按文档分析。请确认文件为 txt/docx/pdf 且非空，或压缩后重试。');
+      alert('未读取到文档正文且附件未上传成功。请确认文件为 txt/docx/pdf 且非空，或压缩后重试。');
       document.getElementById('quantum-stage').style.display='none';
       return Promise.reject(new Error('document empty'));
     }
     if(uploadedImageCount>=2){
       var miss=[];
-      if(!uploadedImageFileIds[0]) miss.push('图B产品');
-      if(!uploadedImageFileIds[1]) miss.push('图A风格');
+      if(!uploadedImageFileIds[0]) miss.push('图A产品');
+      if(!uploadedImageFileIds[1]) miss.push('图B版式');
       if(miss.length){
         unlockGenBtn();
         _lcFreeTrialRunActive=false;
@@ -5844,13 +5884,19 @@ function showAnalysisCard(raw){
   grid.innerHTML='';
   var docSnap=getDocumentContent();
   var localCat=null;
-  if(docSnap){
+  if(docSnap&&!sessionContext.routeLocked){
     localCat=classifyTopicCategory(getClassifyBlob(sessionContext.coreTopic||''));
     sessionContext.categoryId=localCat.categoryId;
     sessionContext.categoryName=localCat.categoryName;
     sessionContext.templateKey=localCat.templateKey;
     sessionContext.promptProfile=localCat.profile||sessionContext.promptProfile||'standard';
     if(localCat.technique) sessionContext.technique=localCat.technique;
+  }else if(uploadedImageCount>=1&&!sessionContext.routeLocked){
+    localCat=classifyTopicCategory(getClassifyBlob(sessionContext.coreTopic||''));
+    sessionContext.categoryId=localCat.categoryId;
+    sessionContext.categoryName=localCat.categoryName;
+    sessionContext.templateKey=localCat.templateKey;
+    sessionContext.promptProfile=localCat.profile||sessionContext.promptProfile||'ecom_image';
   }
 
   var visionRec=parseVisionRecognition(raw);

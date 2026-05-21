@@ -338,6 +338,23 @@ function detectSpecialOverrides(blob, opts) {
       return r.profile === 'ecom_detail_exploded';
     });
   }
+  const imageCount = Math.max(0, parseInt(o.imageCount, 10) || 0);
+  if (hasFile && imageCount >= 1 && !/旅游|旅行|攻略|指南|路线图|景点地图|知识图解|科普|教育|古诗|电路|光合作用/.test(blob)) {
+    const ecomImg = ROUTE_RULES.find(function (r) {
+      return r.profile === 'ecom_image';
+    });
+    if (ecomImg) {
+      const isFood = /餐饮|美食|火锅|蛙|菜品|招牌|烧烤|茶饮|咖啡|烘焙|炭烤|锅|鸡腿|牛蛙|美蛙/.test(blob);
+      return Object.assign({}, ecomImg, {
+        technique: isFood
+          ? '手法二十二B·餐饮电商海报法'
+          : ecomImg.technique,
+        humanLabel: isFood
+          ? '餐饮电商海报·上传图'
+          : '电商·单图海报（含上传图）',
+      });
+    }
+  }
   if (
     hasFile &&
     /海报|详情|诱人|食欲|餐饮|美食|火锅|牛蛙|美蛙|蛙|菜品|产品|主图|推广|二维码|带货|128|元\/份|元\/斤/.test(
@@ -439,6 +456,22 @@ function extractTechniqueLine(raw, techniqueName) {
  *   techniqueSnippet: string
  * }}
  */
+function mergeLockedRouteProfile(route, lockedProfile) {
+  const prof = safeStr(lockedProfile, '');
+  if (!prof) return route;
+  const found = ROUTE_RULES.find(function (r) {
+    return r.profile === prof;
+  });
+  if (!found) return route;
+  const r = route || {};
+  return Object.assign({}, r, {
+    profile: found.profile,
+    technique: r.technique || found.technique,
+    humanLabel: r.humanLabel || found.humanLabel,
+    mdTemplateKey: found.profile,
+  });
+}
+
 function routePlainLanguageTopic(topic, rawQuery, rootDir, options) {
   const t = safeStr(topic, '');
   const q = safeStr(rawQuery, t);
@@ -506,7 +539,7 @@ function routePlainLanguageTopic(topic, rawQuery, rootDir, options) {
     !!(season || /3d|3D|浮雕/.test(blob))
   );
 
-  return {
+  const out = {
     profile: best.profile,
     technique: best.technique,
     humanLabel: best.humanLabel,
@@ -524,6 +557,7 @@ function routePlainLanguageTopic(topic, rawQuery, rootDir, options) {
     userType: getUserTypeForCategory(md.categoryId),
     networkFallbackBlock: getNetworkFallbackBlock(),
   };
+  return mergeLockedRouteProfile(out, opts.lockedProfile);
 }
 
 function isKnowledgeProfile(profile) {
@@ -580,6 +614,7 @@ function getStylePoolForProfile(profile) {
 
 module.exports = {
   routePlainLanguageTopic,
+  mergeLockedRouteProfile,
   isEcomProfile,
   isKnowledgeProfile,
   usesFullCozePackage,

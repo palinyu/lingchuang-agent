@@ -171,11 +171,11 @@ function buildReferenceImageFidelityBlock(rawQuery, imageCount) {
     '单张上传图 = 产品/菜品实拍参考：任务是在此商品基础上【美化、排版、加文案】做海报/详情，不是换成别的商品重画。';
   if (dual) {
     roleHint =
-      '双图分工（默认附件顺序：第1张=图B产品实拍，第2张=图A版式/风格参考）。\n' +
-      '- 若第1张已是带大段排版文字的海报成品、第2张才是菜品/产品实拍：则【以实拍那张为图B主体】，海报那张仅借版式当图A，严禁把海报里的错误商品当主体。\n' +
+      '双图分工（默认附件顺序：第1张=图A产品实拍，第2张=图B版式/风格参考）。\n' +
+      '- 若第1张已是带大段排版文字的海报成品、第2张才是菜品/产品实拍：则【以实拍那张为图A主体】，海报那张仅借版式当图B，严禁把海报里的错误商品当主体。\n' +
       '- 若用户写明「图一/图二」「生成图/参考图」：以用户说明为准，但【参考图/实拍】永远是产品主体来源，【生成图/海报】只借版式不借主体。\n' +
-      '- 图B：必须与实拍同一道菜/同一产品（如红烧狮子头就写狮子头，禁止写成鸡胸肉丸、牛蛙等其它菜）。\n' +
-      '- 图A：只提取配色、模块布局、字体层级，禁止复制图A里的商品种类替换图B。';
+      '- 图A：必须与实拍同一道菜/同一产品（如红烧狮子头就写狮子头，禁止写成鸡胸肉丸、牛蛙等其它菜）。\n' +
+      '- 图B：只提取配色、模块布局、字体层级，禁止复制图B里的商品种类替换图A。';
   }
   if (/图一|图1|第一张/.test(q) && /参考|实拍|产品/.test(q)) {
     roleHint += '\n用户已标明图一：按用户说明锁定产品主体图。';
@@ -236,7 +236,7 @@ function buildCategoryFirstWorkflowBlock(route) {
   );
 }
 
-/** 电商双图：图A 风格/背景 + 图B 产品主体 → 融合海报 */
+/** 电商双图：图A 产品主体 + 图B 版式/背景 → 融合海报 */
 function buildEcomDualAnalyzeMessage(p, route, techniqueEffective, style) {
   const rawQuery = safeStr(p.rawQuery, '');
   const userNotes = safeStr(p.userNotes, '');
@@ -244,10 +244,10 @@ function buildEcomDualAnalyzeMessage(p, route, techniqueEffective, style) {
   return [
     '【STEP1·电商双图融合·对齐扣子 SOP】',
     buildReferenceImageFidelityBlock(rawQuery, 2),
-    '\n用户已上传 2 张图片（默认：第1张=图B产品实拍，第2张=图A版式参考；若第1张是成品海报、第2张是实拍，则以实拍为图B）。\n',
+    '\n用户已上传 2 张图片（默认：第1张=图A产品实拍，第2张=图B版式参考；若第1张是成品海报、第2张是实拍，则以实拍为图A）。\n',
     '① 先判断哪张是【产品实拍】、哪张是【海报/版式参考】，在内容识别里写清，禁止把 AI 生成错图里的商品当主体。\n',
-    '② 图A（版式参考）：只提取版式、配色、排版、氛围，禁止提取并替换主体商品。\n',
-    '③ 图B（产品主体）：必须与实拍同一道菜/产品（名称写进内容识别）。\n',
+    '② 图A（产品主体）：必须与实拍同一道菜/产品（名称写进内容识别）。\n',
+    '③ 图B（版式参考）：只提取版式、配色、排版、氛围，禁止提取并替换主体商品。\n',
     '④ 结合用户大白话（换背景、出海报、详情页）写融合方案。\n',
     buildCozeAnalyzeFewShot(),
     '\n【输出格式】\n' +
@@ -484,7 +484,7 @@ function buildEcomDualPromptBlock(topic, style, size, route, rawQuery) {
   return (
     buildReferenceImageFidelityBlock(rawQuery || topic, 2) +
     '\n\n【电商双图融合·STEP2·已确认】\n' +
-    '必须以「图A」的版式/配色/氛围为底，将「图B」产品主体自然融入；图B必须与实拍同一商品，禁止用图A里的商品替换图B；用户关于背景色、海报尺寸、平台的文字必须落实。\n' +
+    '必须以「图B」的版式/配色/氛围为底，将「图A」产品主体自然融入；图A必须与实拍同一商品，禁止用图B里的商品替换图A；用户关于背景色、海报尺寸、平台的文字必须落实。\n' +
     '主题【' +
     topic +
     '】；风格【' +
@@ -493,7 +493,7 @@ function buildEcomDualPromptBlock(topic, style, size, route, rawQuery) {
     (size || 'AI推荐尺寸') +
     '】。\n' +
     '英文 Prompt 须描述：layout from style reference image A, product hero from image B, background color as user requested, reserved clean zone for QR code if poster.\n' +
-    '末尾中文提示：即梦图生图【必传图B产品实拍】作主体参考，强度 65–75；图A仅风格/版式参考（强度约40–50），严禁用图A商品覆盖图B。\n' +
+    '末尾中文提示：即梦图生图【必传图A产品实拍】作主体参考，强度 65–75；图B仅风格/版式参考（强度约40–50），严禁用图B商品覆盖图A。\n' +
     buildStep2OutputBlock(topic, style, size, route, rawQuery)
   );
 }
@@ -576,7 +576,7 @@ function buildCozeLiteDualAnalyzeMessage(p, route) {
   const r = route || {};
   return [
     '【STEP1·双图·极速·全文≤1500字】',
-    '第1张=产品实拍图B，第2张=版式图A（若顺序反了以实拍为准）。',
+    '第1张=产品实拍图A，第2张=版式图B（若顺序反了以实拍为准）。',
     '产品识别三行（各≤50字）+ 方案1/2/3（各≤4行）+ 字段1~6（各一行）。禁止长文。',
     buildCozeBriefAnalyzeFormatBlock(r, rawQuery),
     '预猜：' + safeStr(r.humanLabel, '电商双图'),

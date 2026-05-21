@@ -115,6 +115,12 @@ function buildFileAttachmentNotice(body) {
       '分析须以文档前部核心为准，内容要点编号 1~6 不得只写「联想记忆点」及之后章节。'
     );
   }
+  const fileName = String((body && body.file_name) || '').trim();
+  if (fileName && /\.pdf$/i.test(fileName)) {
+    return (
+      '【PDF附件·须识读文件】未提供本地正文摘录，请直接阅读挂载的 PDF 附件全文后再分析，禁止编造；扫描版须 OCR 识读。'
+    );
+  }
   return (
     '【已挂载上传文件】共 ' +
     ids.length +
@@ -385,11 +391,18 @@ async function handler(req, res) {
       userNotesEff = cap(userNotesEff, 520);
       coreTopicEff = cap(coreTopicEff, 120);
     }
+    const lockedProfile = String(
+      body.prompt_profile || body.lc_prompt_profile || ''
+    ).trim();
     const route = routePlainLanguageTopic(
       coreTopicEff,
       rawQueryEff || userNotesEff || '',
       ROOT,
-      { hasFile: hasUpload, imageCount: lcImageCount }
+      {
+        hasFile: hasUpload,
+        imageCount: lcImageCount,
+        lockedProfile: lockedProfile,
+      }
     );
 
     let assembledMessage = buildCozeMessage({
