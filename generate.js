@@ -382,7 +382,7 @@ module.exports = async function handler(req, res) {
           route.profile === 'ecom_detail_exploded')
       ) {
         assembledMessage +=
-          '\n\n【电商·上传参考图·出图死命令】必须按 STEP2 标准包输出；完整版英文写与上传图一致的画面/版式/光影（可写 Chinese typography zones）；精简版须写全简体中文卖点与价格；即梦设置必须写明图生图与参考图强度 50–60。';
+          '\n\n【电商·上传参考图·出图死命令】在参考图【同一商品】基础上美化+配文案出海报，禁止换品类发挥想象；完整版英文主体须与STEP1内容识别一致；精简版中文标题/卖点对应实拍商品；即梦图生图主体参考强度65–75。';
       } else {
         assembledMessage +=
           '\n\n【工业级出图·最终死命令】必须按 STEP2 标准包输出，完整版英文不得低于质检标准。';

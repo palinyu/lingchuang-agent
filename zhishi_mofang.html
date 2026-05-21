@@ -3953,8 +3953,8 @@ function parsePDF(ab,file,pds){
 }
 
 function showEcomHint(isDual){var hint=document.getElementById('ecom-hint');if(!hint){hint=document.createElement('div');hint.id='ecom-hint';hint.style.cssText='margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;';document.getElementById('input-stage').appendChild(hint);}
-var items=isDual?[['图B产品换到图A版式，背景改成浅米色，出一张电商海报','🖼️ 双图融合海报'],['把图B产品放到图A的构图里，换纯色背景','🎨 换背景+融合'],['参考图A风格给图B产品做详情页主图','🛍️ 详情主图']]:[['帮我做这个产品的促销海报，左下留二维码','📢 电商海报'],['帮我做这个产品的详情页首屏','🛍️ 详情页'],['做产品爆炸拆解卖点详情图，竖版','🔧 拆解详情'],['识别这张图，写清主体和价格，做海报','📝 识图+海报']];
-var html='<span style="font-size:11px;color:var(--tx3);">'+(isDual?'已上传2张：图B产品+图A风格，可点快捷话术：':'已上传参考图（电商），请点快捷话术或自填价格/卖点：')+'</span>';
+var items=isDual?[['第1张传菜品实拍，第2张传海报版式参考；按图B菜品做海报，禁止换菜','⚠️ 先实拍后版式'],['图B是我的菜品实拍，图A是版式参考，按A版式给B做海报','🖼️ 双图融合'],['图B产品换到图A版式，背景浅米色，同一道菜','🎨 换背景+融合']]:[['按上传实拍做促销海报，标题价格与图里菜品一致，左下二维码','📢 电商海报'],['按上传实拍做详情页，禁止换成别的产品','🛍️ 详情页'],['识别图里是什么菜/产品，再写海报文案','📝 识图+海报']];
+var html='<span style="font-size:11px;color:var(--tx3);">'+(isDual?'双图：第1张=产品实拍，第2张=版式参考（勿把AI错图当产品）；':'已上传实拍：系统将以图中【同一商品】美化出海报，勿只传AI生成错图；')+'</span>';
 items.forEach(function(it){html+='<span onclick="fillEcom(\''+it[0].replace(/'/g,"\\'")+'\')" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">'+it[1]+'</span>';});
 hint.innerHTML=html;hint.style.display='flex';}
 function fillEcom(text){var ta=document.getElementById('main-textarea');if(ta)ta.value=text;var hint=document.getElementById('ecom-hint');if(hint)hint.style.display='none';}

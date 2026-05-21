@@ -106,11 +106,52 @@ function buildVisionFirstAnalyzeBlock() {
   );
 }
 
+/** 电商上传参考图：禁止换品、禁止只学形态发挥想象 */
+function buildReferenceImageFidelityBlock(rawQuery, imageCount) {
+  const q = safeStr(rawQuery, '');
+  const dual = imageCount >= 2;
+  let roleHint =
+    '单张上传图 = 产品/菜品实拍参考：任务是在此商品基础上【美化、排版、加文案】做海报/详情，不是换成别的商品重画。';
+  if (dual) {
+    roleHint =
+      '双图分工（默认附件顺序：第1张=图B产品实拍，第2张=图A版式/风格参考）。\n' +
+      '- 若第1张已是带大段排版文字的海报成品、第2张才是菜品/产品实拍：则【以实拍那张为图B主体】，海报那张仅借版式当图A，严禁把海报里的错误商品当主体。\n' +
+      '- 若用户写明「图一/图二」「生成图/参考图」：以用户说明为准，但【参考图/实拍】永远是产品主体来源，【生成图/海报】只借版式不借主体。\n' +
+      '- 图B：必须与实拍同一道菜/同一产品（如红烧狮子头就写狮子头，禁止写成鸡胸肉丸、牛蛙等其它菜）。\n' +
+      '- 图A：只提取配色、模块布局、字体层级，禁止复制图A里的商品种类替换图B。';
+  }
+  if (/图一|图1|第一张/.test(q) && /参考|实拍|产品/.test(q)) {
+    roleHint += '\n用户已标明图一：按用户说明锁定产品主体图。';
+  }
+  if (/图二|图2|第二张/.test(q) && /参考|实拍|产品/.test(q)) {
+    roleHint += '\n用户已标明图二：按用户说明锁定产品主体图。';
+  }
+  return (
+    '\n\n【参考图忠实度·死刑线·电商专用】\n' +
+    roleHint +
+    '\n' +
+    '① 主体锁定：STEP1「内容识别」写明的菜名/产品名 = 全程唯一主体；用户输入框若写了别的品名（如鸡胸肉丸），仍以【上传实拍】为准，仅采纳价格/促销/平台话。\n' +
+    '② 任务定义：在参考图基础上做海报设计优化（光影、背景、版式、卖点文案区），不是文生图凭空创作、不是只学「球形/圆形」形态换一道菜。\n' +
+    '③ 禁止：脱离参考图换品类；禁止用联网或常识替换画面主体；禁止英文 Prompt 描述与识别结果不一致的食物/产品。\n' +
+    '④ 即梦出图：必须图生图并上传【产品实拍】作主体参考，强度建议 65–75（还原优先）；版式可参考第二张或用户指定的风格图。\n' +
+    '⑤ 精简版中文文案：标题/卖点须对应识别出的真实商品（如「红烧狮子头」「酱汁狮子头」），不得写参考图里没有的品类。'
+  );
+}
+
+function isEcomUploadContext(hasFile, route, topic, rawQuery, imageCount) {
+  if (!hasFile) return false;
+  if (imageCount >= 2) return true;
+  const r = route || {};
+  return isEcomProfile(r.profile) || isEcomIntentBlob(topic, rawQuery);
+}
+
 /** 扣子直聊同级范例：多品类示范「先认品类、再配风格」，非只认牛蛙 */
 function buildCozeAnalyzeFewShot() {
   return (
     '【扣子智能体·全品类识别范例·学流程不抄答案】\n' +
-    '范例A·餐饮图+「做海报128元/份」→ 内容识别写清【画面里是什么菜】；品类判定：餐饮海报；风格从餐饮池选（如国潮美食风）。\n' +
+    '范例A·餐饮实拍（红烧狮子头+酱汁）+「做海报」→ 内容识别必须写【狮子头/红烧狮子头】，禁止写成其它菜品；品类：餐饮电商海报。\n' +
+    '反例（禁止）：上传狮子头实拍，却因用户或联想写成「鸡胸肉丸」「低卡健身丸」——主体必须以图为准。\n' +
+    '范例A2·餐饮图+「做海报128元/份」→ 内容识别写清【画面里是什么菜】；品类判定：餐饮海报；风格从餐饮池选（如国潮美食风）。\n' +
     '范例B·护肤品图+「做小红书种草」→ 内容识别写【瓶身/质地/场景】；品类判定：护肤美妆种草图；风格从美妆池选（如清新棚拍/成分图解）。\n' +
     '范例C·城市风光图+「旅游攻略」→ 内容识别写【地标/季节/氛围】；品类判定：旅行攻略图；风格从城市池选（如手绘地图/浮雕城市）。\n' +
     '范例A 完整骨架（餐饮，仅示意格式）：\n' +
@@ -145,10 +186,12 @@ function buildEcomDualAnalyzeMessage(p, route, techniqueEffective, style) {
   const r = route || {};
   return [
     '【STEP1·电商双图融合·对齐扣子 SOP】',
-    '用户已上传 2 张图片（附件顺序：第1张=图B产品主体，第2张=图A风格/版式参考，若与用户说明相反则以用户文字为准）。\n',
-    '① 先看图A（风格参考）：版式、配色、排版、氛围、背景色调。\n',
-    '② 再看图B（产品主体）：产品形态、材质、主色、卖点。\n',
-    '③ 结合用户大白话（如换背景色、出海报、详情页）写融合方案。\n',
+    buildReferenceImageFidelityBlock(rawQuery, 2),
+    '\n用户已上传 2 张图片（默认：第1张=图B产品实拍，第2张=图A版式参考；若第1张是成品海报、第2张是实拍，则以实拍为图B）。\n',
+    '① 先判断哪张是【产品实拍】、哪张是【海报/版式参考】，在内容识别里写清，禁止把 AI 生成错图里的商品当主体。\n',
+    '② 图A（版式参考）：只提取版式、配色、排版、氛围，禁止提取并替换主体商品。\n',
+    '③ 图B（产品主体）：必须与实拍同一道菜/产品（名称写进内容识别）。\n',
+    '④ 结合用户大白话（换背景、出海报、详情页）写融合方案。\n',
     buildCozeAnalyzeFewShot(),
     '\n【输出格式】\n' +
       '✅ 内容识别：（图A风格要点 + 图B产品要点 + 用户诉求如换背景/海报）\n' +
@@ -219,7 +262,7 @@ function buildReferenceImagePromptBlock(topic, style, size, route, rawQuery) {
   return (
     '\n\n【上传参考图·STEP2专线·最高优先级】\n' +
     '（本条仅在有上传图时生效，覆盖通用知识卡/菜谱分步/Masters 英文模板要求。）\n' +
-    '① 事实来源：STEP1「✅ 内容识别」画面主体 + 用户原话（价格/平台/用途）。\n' +
+    '① 事实来源：STEP1「✅ 内容识别」画面主体 + 用户原话（价格/平台/用途）。用户话与画面冲突时【以图为准】。\n' +
     '② 本次版式意图：' +
     (visualIntent === 'exploded_detail'
       ? '立体拆解卖点详情'
@@ -237,7 +280,7 @@ function buildReferenceImagePromptBlock(topic, style, size, route, rawQuery) {
     (size || sizeHint) +
     '】。\n\n' +
     '【完整版（推荐）·画面英文描述】\n' +
-    '- 一段连贯英文（约 60–120 词，≤900 字符）：subject/composition/lighting/texture 与上传图一致；写明版式模块与 reserved clean zones for Chinese headline, price tag, promo badges, QR code corner。\n' +
+    '- 一段连贯英文（约 60–120 词，≤900 字符）：必须用 STEP1 识别的同一 subject（菜名/产品名英文描述），composition/lighting/texture 与上传实拍一致；写明海报版式模块与 reserved clean zones for Chinese headline, price tag, promo badges, QR code corner。禁止 describing a different food/product than the reference photo。\n' +
     '- 允许 typography zones / bilingual label areas 描述中文标注区；禁止 no text、blank banner、empty title strip 等规避上屏文案的堆砌。\n' +
     '- 禁止 --ar、--v、--sref、Midjourney 参数行；平台参数只写在「即梦设置」中文条目中。\n' +
     buildNoBrandInPromptBlock() +
@@ -248,7 +291,7 @@ function buildReferenceImagePromptBlock(topic, style, size, route, rawQuery) {
     '【即梦设置·必写·不可省略】\n' +
     '模式：图生图（img2img）\n' +
     '参考图：使用用户上传的产品/菜品实拍（即梦「参考图/主体参考」）\n' +
-    '参考强度：50–60（主体色泽与摆盘还原；版式与文案区可适度创作）\n' +
+    '参考强度：65–75（同一商品还原优先，禁止换菜；仅版式/背景/文案区可适度创作）\n' +
     '比例：' +
     sizeHint +
     '\n' +
@@ -368,16 +411,17 @@ function buildReferenceImagePromptRetryBlock(validation, topic, style, route, ra
     '】；风格【' +
     (r.randomStyleName || style) +
     '】。\n' +
-    '必须重新输出完整 STEP2 包：📊结构化要点 → 完整版英文（与上传图主体一致）→ 精简版【全部中文卖点与价格】→ 即梦设置【图生图+参考强度50-60】。\n' +
+    '必须重新输出完整 STEP2 包：📊结构化要点 → 完整版英文（与上传图同一主体一致）→ 精简版【全部中文卖点与价格】→ 即梦设置【图生图+参考强度65-75】。\n' +
     buildReferenceImagePromptBlock(topic, style, 'AI推荐尺寸', r, rawQuery || topic)
   );
 }
 
-function buildEcomDualPromptBlock(topic, style, size, route) {
+function buildEcomDualPromptBlock(topic, style, size, route, rawQuery) {
   const r = route || {};
   return (
+    buildReferenceImageFidelityBlock(rawQuery || topic, 2) +
     '\n\n【电商双图融合·STEP2·已确认】\n' +
-    '必须以「图A」的版式/配色/氛围为底，将「图B」产品主体自然融入；用户关于背景色、海报尺寸、平台的文字必须落实。\n' +
+    '必须以「图A」的版式/配色/氛围为底，将「图B」产品主体自然融入；图B必须与实拍同一商品，禁止用图A里的商品替换图B；用户关于背景色、海报尺寸、平台的文字必须落实。\n' +
     '主题【' +
     topic +
     '】；风格【' +
@@ -386,7 +430,7 @@ function buildEcomDualPromptBlock(topic, style, size, route) {
     (size || 'AI推荐尺寸') +
     '】。\n' +
     '英文 Prompt 须描述：layout from style reference image A, product hero from image B, background color as user requested, reserved clean zone for QR code if poster.\n' +
-    '末尾中文提示：请在即梦图生图模式上传图B产品图作参考图，强度建议 50–60；若需还原图A版式可同时上传图A作风格参考。\n' +
+    '末尾中文提示：即梦图生图【必传图B产品实拍】作主体参考，强度 65–75；图A仅风格/版式参考（强度约40–50），严禁用图A商品覆盖图B。\n' +
     buildStep2OutputBlock(topic, style, size, route)
   );
 }
@@ -403,6 +447,7 @@ function buildCozeMirrorAnalyzeMessage(p, route, techniqueEffective, style) {
   return [
     '【STEP1·上传图分析·对齐扣子智能体直聊】',
     buildVisionFirstAnalyzeBlock(),
+    buildReferenceImageFidelityBlock(rawQuery, imageCount),
     buildCategoryFirstWorkflowBlock(r),
     buildCozeAnalyzeFewShot(),
     '\n【系统预匹配·写入时须服从你判定的品类】',
@@ -1137,7 +1182,7 @@ function buildStrictMdCozeMessage(p) {
       return (
         head +
         '\n\n' +
-        buildEcomDualPromptBlock(topic, styleName, size, route) +
+        buildEcomDualPromptBlock(topic, styleName, size, route, rawQuery) +
         '\n【用户原话·必须贯彻】\n' +
         rawQuery
       );
@@ -1153,6 +1198,8 @@ function buildStrictMdCozeMessage(p) {
         styleName +
         '\n\n' +
         buildVisionFirstAnalyzeBlock() +
+        '\n' +
+        buildReferenceImageFidelityBlock(rawQuery, imageCount) +
         '\n' +
         styleLibBlock;
       return (
@@ -1269,13 +1316,21 @@ function buildCozeMessage(p) {
     (route.needWebSearch ? '（将联网检索当下爆款版式补充）' : '（风格库已命中）') +
     '\n';
 
+  const imageCountEarly = (p && p.imageCount) || 0;
+  const ecomUpload =
+    hasFile && isEcomUploadContext(hasFile, route, topic, rawQuery, imageCountEarly);
+
   const headParts = [
     buildHumanFirstBlock(topic, userNotes || rawQuery),
-    buildIntentEnhancementSOP(topic, rawQuery),
     routeBrief,
     styleLibBlock,
     buildWebSearchFallbackBlock(route),
   ];
+  if (ecomUpload) {
+    headParts.push(buildReferenceImageFidelityBlock(rawQuery, imageCountEarly));
+  } else {
+    headParts.push(buildIntentEnhancementSOP(topic, rawQuery));
+  }
   if (!(hasFile && intent === 'analyze')) {
     headParts.push(buildSearchBlock(topic));
   } else {
@@ -1285,9 +1340,9 @@ function buildCozeMessage(p) {
   }
   if (hasFile && intent === 'analyze') {
     headParts.push(
-      '【主题锁·看图后生效】核心主题须由「上传图识别结果 + 用户原话」共同决定，不得仅用泛化短语替代画面主体。'
+      '【主题锁·看图后生效】核心主题 = 上传图识别出的商品/菜品名称，不得用输入框里其它品名替换；价格/促销话可用用户原文。'
     );
-  } else {
+  } else if (!ecomUpload) {
     headParts.push(buildSubjectLock(topic, style, techniqueEffective));
   }
   headParts.push(buildNoFluffBlock(topic));
@@ -1333,7 +1388,7 @@ function buildCozeMessage(p) {
       '排版/手法修饰：【' +
       techniqueEffective +
       '】\n\n' +
-      buildDeepAnalysisBlock(topic) +
+      (ecomUpload ? '' : buildDeepAnalysisBlock(topic)) +
       buildAnalyzeOutputFormatBlock(hasFile, route) +
       '\n\n' +
       (userNotes ? '【用户补充材料】\n' + userNotes + '\n\n' : '') +
@@ -1347,7 +1402,7 @@ function buildCozeMessage(p) {
     if (imageCount >= 2 || route.profile === 'ecom_dual') {
       return (
         head +
-        buildEcomDualPromptBlock(topic, style, size, route) +
+        buildEcomDualPromptBlock(topic, style, size, route, rawQuery) +
         '\n【用户原话·必须贯彻】\n' +
         rawQuery
       );
@@ -1371,6 +1426,8 @@ function buildCozeMessage(p) {
         head +
         '\n\n' +
         buildVisionFirstAnalyzeBlock() +
+        '\n' +
+        buildReferenceImageFidelityBlock(rawQuery, imageCount) +
         '\n' +
         buildReferenceImagePromptBlock(topic, style, size, route, rawQuery) +
         buildStep2OutputBlock(topic, style, size, route) +
