@@ -10,6 +10,14 @@
 (function(){
   var K='lingchuang_intro_done';
   try{if(localStorage.getItem(K)==='1')return;}catch(e){}
+  var mob=false;
+  try{
+    if(window.matchMedia){
+      mob=window.matchMedia('(max-width:768px)').matches||
+        (window.matchMedia('(hover:none) and (pointer:coarse)').matches&&window.innerWidth<=1024);
+    }
+  }catch(e2){}
+  if(mob) return;
   document.documentElement.classList.add('lc-await-intro');
 })();
 </script>
@@ -1288,10 +1296,22 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
     background-color:#000000!important;
   }
   #cockpit-ambient{display:none!important;}
-  #lc-drawer-backdrop,.case-apply-backdrop,[class*="overlay"],[class*="mask"]{
+  #lc-drawer-backdrop,.case-apply-backdrop{
     background-color:rgba(0,0,0,0.25)!important;
     backdrop-filter:blur(8px)!important;
     -webkit-backdrop-filter:blur(8px)!important;
+  }
+  #lc-intro-overlay.is-visible,#lc-terms-overlay.is-visible{
+    display:flex!important;visibility:visible!important;pointer-events:auto!important;
+    z-index:200000!important;
+  }
+  #lc-terms-overlay.is-visible{z-index:199000!important;}
+  #lc-terms-overlay.is-visible .lc-terms-panel{
+    opacity:1!important;transform:none!important;pointer-events:auto!important;
+  }
+  .lc-intro-skip{
+    color:rgba(255,255,255,0.85)!important;min-height:44px;padding:10px 14px!important;
+    -webkit-tap-highlight-color:transparent;
   }
   .content-card{
     background-color:#303035!important;
@@ -1346,34 +1366,6 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
 </style>
 </head>
 <body>
-<div id="lc-intro-overlay" aria-hidden="true">
-  <canvas id="lc-intro-canvas" aria-hidden="true"></canvas>
-  <div class="lc-intro-stack">
-    <div class="lc-intro-brand" id="lc-intro-brand">灵创星球</div>
-    <div class="lc-intro-sub" id="lc-intro-sub"><span id="lc-intro-sub-txt"></span><span class="lc-cursor" id="lc-intro-cursor" style="display:none;"></span></div>
-    <div class="lc-intro-tags" aria-hidden="true">
-      <div class="lc-intro-tag">✦ 全品类覆盖</div>
-      <div class="lc-intro-tag">✦ 全平台适用</div>
-    </div>
-    <div class="lc-intro-slogan" id="lc-intro-slogan">
-      <span class="lc-intro-slogan-a">心有所想</span><span class="lc-intro-slogan-b">一键出图</span>
-    </div>
-  </div>
-  <button type="button" class="lc-intro-skip lux-tap" id="lc-intro-skip">跳过 →</button>
-</div>
-<div id="lc-terms-overlay" aria-hidden="true">
-  <div class="lc-terms-panel" role="dialog" aria-labelledby="lc-terms-title" aria-modal="true">
-    <div class="lc-terms-title" id="lc-terms-title">⚡ 使用须知</div>
-    <div class="lc-terms-scroll" id="lc-terms-scroll">
-      <p><strong>📋 关于本工具</strong><br>「灵创星球·图片提示词大师」是一款AI辅助内容创作工具。本工具生成的所有内容均为创作框架，供用户参考和修改使用，不构成任何商业宣传、广告代写或推广服务。</p>
-      <p><strong>✍️ 关于内容发布</strong><br>· 生成内容仅为框架，请结合您的真实体验修改后发布<br>· 若用于商业推广，发布时须依法标注「广告」或「品牌合作」<br>· 禁止发布虚假、夸大、误导消费者的内容<br>· 禁止将AI生成内容冒充真实个人体验直接发布<br>· 发布内容须符合所在平台的社区规范和相关法律法规</p>
-      <p><strong>⚖️ 关于法律责任</strong><br>用户对最终发布的内容承担全部法律责任。因用户使用本工具生成内容并发布所产生的任何法律纠纷、平台处罚、经济损失等，均与本工具及运营方无关。本工具不存储用户输入内容，不对外传播用户数据。</p>
-      <p style="padding-bottom:24px;">请下滑阅读全文后，方可勾选同意。</p>
-    </div>
-    <label class="lc-terms-row"><input type="checkbox" id="lc-terms-check" disabled> 我已阅读并同意以上使用须知</label>
-    <button type="button" class="lc-terms-btn lux-tap" id="lc-terms-btn" disabled>同意并开始使用</button>
-  </div>
-</div>
 <div id="lc-drawer-backdrop" aria-hidden="true"></div>
 <p id="lc-mobile-legal-bar" class="lc-mobile-legal-bar" role="note">本工具为AI辅助创作框架，生成内容仅供参考；发布须遵守法律法规与平台规则，用户对最终发布内容自行负责。</p>
 <div id="lux-bg-layer" aria-hidden="true">
@@ -1407,6 +1399,241 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
     </div>
   </aside>
 </div>
+<style>
+#intro-root{width:100%;height:100vh;background:#09090d;overflow:hidden;position:relative;font-family:system-ui,sans-serif;}
+#intro-canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+#intro-layer{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;text-align:center;padding:2rem;pointer-events:none;}
+#lc-brand{font-size:clamp(28px,6vw,56px);font-weight:900;color:#f3af42;letter-spacing:clamp(4px,1.5vw,12px);margin-bottom:10px;opacity:0;transform:scale(1.4);transition:all 0.6s cubic-bezier(0.16,1,0.3,1);text-shadow:0 0 40px rgba(243,175,66,0.8),0 0 80px rgba(243,175,66,0.4);}
+#lc-sub{font-size:clamp(11px,1.8vw,15px);color:#94a3b8;letter-spacing:clamp(2px,0.8vw,4px);margin-bottom:clamp(16px,3vw,28px);opacity:0;transition:all 0.6s ease 0.3s;}
+#lc-tags{display:flex;gap:clamp(6px,1.5vw,12px);margin-bottom:clamp(24px,4vw,44px);opacity:0;transition:all 0.5s ease 0.5s;flex-wrap:wrap;justify-content:center;}
+.lc-tag{background:rgba(243,175,66,0.12);border:1px solid rgba(243,175,66,0.4);border-radius:20px;padding:clamp(4px,0.8vw,6px) clamp(10px,2vw,16px);font-size:clamp(10px,1.4vw,12px);color:#f3af42;letter-spacing:1px;}
+#lc-slogan{font-size:clamp(16px,3vw,28px);font-weight:900;letter-spacing:clamp(1px,0.5vw,3px);margin-bottom:clamp(20px,3.5vw,40px);opacity:0;transition:all 0.5s ease 0.65s;}
+#lc-btn-wrap{opacity:0;transition:all 0.5s ease 0.85s;pointer-events:auto;}
+#lc-enter-btn{background:linear-gradient(135deg,#b87b14,#f3af42,#fff8e7);border:none;border-radius:40px;padding:clamp(10px,1.8vw,15px) clamp(28px,5vw,52px);font-size:clamp(12px,1.8vw,15px);font-weight:900;color:#09090d;letter-spacing:clamp(2px,0.8vw,5px);cursor:pointer;box-shadow:0 0 30px rgba(243,175,66,0.5),0 0 60px rgba(243,175,66,0.2);}
+#lc-skip{position:absolute;bottom:16px;right:16px;font-size:11px;color:#334155;cursor:pointer;opacity:0;transition:opacity 0.5s ease 1.2s;pointer-events:auto;}
+
+#lc-agreement{display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.88);z-index:20;align-items:center;justify-content:center;padding:clamp(0.8rem,3vw,1.5rem);}
+.ag-box{background:#0d0d1a;border:1px solid rgba(243,175,66,0.3);border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;}
+.ag-head{padding:clamp(12px,2vw,18px) clamp(14px,2.5vw,20px);border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:10px;}
+.ag-icon{width:26px;height:26px;background:rgba(243,175,66,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.ag-title{font-size:clamp(13px,2vw,15px);font-weight:700;color:#f3af42;}
+.ag-body{padding:clamp(12px,2vw,18px) clamp(14px,2.5vw,20px);overflow-y:auto;flex:1;font-size:clamp(11px,1.6vw,12px);line-height:1.9;color:#94a3b8;}
+.ag-section{margin-bottom:12px;}
+.ag-section-title{font-size:11px;color:#f3af42;font-weight:600;margin-bottom:5px;}
+.ag-foot{padding:clamp(10px,2vw,14px) clamp(14px,2.5vw,20px);border-top:1px solid rgba(255,255,255,0.05);}
+.ag-label{display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:12px;}
+.ag-label input{width:15px;height:15px;accent-color:#f3af42;flex-shrink:0;}
+.ag-label span{font-size:clamp(11px,1.6vw,12px);color:#94a3b8;}
+#lc-agree-btn{width:100%;padding:clamp(9px,1.5vw,12px);border-radius:8px;border:none;font-size:clamp(12px,1.8vw,13px);font-weight:700;letter-spacing:2px;cursor:not-allowed;background:#1a1a2a;color:#475569;transition:all 0.3s;}
+</style>
+
+<div id="intro-root">
+<canvas id="intro-canvas"></canvas>
+
+<div id="intro-layer">
+  <div id="lc-brand">灵创星球</div>
+  <div id="lc-sub">您身边的图片提示词专家</div>
+  <div id="lc-tags">
+    <div class="lc-tag">全品类覆盖</div>
+    <div class="lc-tag">全平台适用</div>
+  </div>
+  <div id="lc-slogan"><span style="color:#f1f5f9;">心有所想，</span><span style="color:#f3af42;">一键出图</span></div>
+  <div id="lc-btn-wrap">
+    <button id="lc-enter-btn" onclick="lcShowAgreement()">开 启 创 作</button>
+  </div>
+  <div id="lc-skip" onclick="lcShowAgreement()">跳过 →</div>
+</div>
+
+<div id="lc-agreement">
+  <div class="ag-box">
+    <div class="ag-head">
+      <div class="ag-icon">⚡</div>
+      <div class="ag-title">使用须知</div>
+    </div>
+    <div class="ag-body">
+      <div class="ag-section">
+        <div class="ag-section-title">📋 关于本工具</div>
+        「灵创星球·图片提示词大师」是一款AI辅助内容创作工具。本工具生成的所有内容均为创作框架，供用户参考和修改使用，不构成任何商业宣传、广告代写或推广服务。
+      </div>
+      <div class="ag-section">
+        <div class="ag-section-title">✍️ 关于内容发布</div>
+        · 生成内容仅为框架，请结合真实体验修改后发布<br>
+        · 若用于商业推广，须依法标注「广告」或「品牌合作」<br>
+        · 禁止发布虚假、夸大、误导消费者的内容<br>
+        · 禁止将AI生成内容冒充真实个人体验直接发布<br>
+        · 须符合所在平台社区规范和相关法律法规
+      </div>
+      <div class="ag-section">
+        <div class="ag-section-title">⚖️ 关于法律责任</div>
+        用户对最终发布的内容承担全部法律责任。因用户使用本工具生成内容并发布所产生的任何法律纠纷、平台处罚、经济损失等，均与本工具及运营方无关。本工具不存储用户输入内容，不对外传播用户数据。
+      </div>
+    </div>
+    <div class="ag-foot">
+      <label class="ag-label">
+        <input type="checkbox" id="lc-agree-check" onchange="lcToggleBtn()">
+        <span>我已阅读并同意以上使用须知</span>
+      </label>
+      <button id="lc-agree-btn" disabled onclick="lcEnterMain()">同意并开始使用</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+(function(){
+var canvas=document.getElementById('intro-canvas');
+var ctx=canvas.getContext('2d');
+var root=document.getElementById('intro-root');
+var W,H,pts=[],bolts=[],meteors=[],scanX=0,scanAlpha=0.3,scanDir=1,exploded=false,explodeT=0,frame=0,boltTimer=0,meteorTimer=0,animId;
+
+function resize(){
+  W=window.innerWidth;H=window.innerHeight;
+  canvas.width=W;canvas.height=H;
+  root.style.height=H+'px';
+}
+
+function initPts(){
+  pts=[];
+  var gap=W<480?28:22;
+  var cols=Math.floor(W/gap),rows=Math.floor(H/gap);
+  for(var i=0;i<cols;i++)for(var j=0;j<rows;j++){
+    pts.push({x:(i/cols)*W+gap/2,y:(j/rows)*H+gap/2,ox:(i/cols)*W+gap/2,oy:(j/rows)*H+gap/2,
+      ph:Math.random()*6.28,sp:Math.random()*0.03+0.008,sz:Math.random()*1.4+0.3,
+      col:Math.random()>0.75?'#f3af42':Math.random()>0.5?'#1e3a8a':'#134e4a',
+      al:Math.random()*0.5+0.1});
+  }
+  meteors=[];bolts=[];
+}
+
+function spawnBolt(){
+  var cx=W/2,cy=H/2;
+  bolts.push({x:cx+(Math.random()-0.5)*W*0.6,y:0,tx:cx+(Math.random()-0.5)*80,ty:cy+40,
+    segs:[],life:1,decay:0.06+Math.random()*0.04,width:Math.random()*2+0.5});
+}
+function buildBolt(b){
+  b.segs=[];
+  var sx=b.x,sy=b.y,ex=b.tx,ey=b.ty,steps=8;
+  for(var i=0;i<=steps;i++){
+    var t=i/steps,px=sx+(ex-sx)*t+(Math.random()-0.5)*60*(1-t),py=sy+(ey-sy)*t;
+    b.segs.push({x:px,y:py});
+  }
+}
+function spawnMeteor(){
+  meteors.push({x:Math.random()*W*1.5-W*0.25,y:-20,
+    vx:-(2+Math.random()*3),vy:4+Math.random()*4,
+    len:60+Math.random()*80,al:0.8+Math.random()*0.2,life:1});
+}
+
+function draw(){
+  ctx.fillStyle='rgba(9,9,13,0.25)';ctx.fillRect(0,0,W,H);
+  var cx=W/2,cy=H/2;
+
+  if(meteorTimer<=0){spawnMeteor();meteorTimer=8+Math.floor(Math.random()*12);}
+  meteorTimer--;
+  for(var m=meteors.length-1;m>=0;m--){
+    var mt=meteors[m];mt.x+=mt.vx;mt.y+=mt.vy;mt.life-=0.02;
+    if(mt.life<=0||mt.y>H+20){meteors.splice(m,1);continue;}
+    var mg=ctx.createLinearGradient(mt.x,mt.y,mt.x-mt.vx/mt.vy*mt.len,mt.y-mt.len);
+    mg.addColorStop(0,'rgba(243,175,66,'+mt.al*mt.life+')');
+    mg.addColorStop(0.3,'rgba(255,255,255,'+(mt.al*mt.life*0.6)+')');
+    mg.addColorStop(1,'rgba(243,175,66,0)');
+    ctx.strokeStyle=mg;ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(mt.x,mt.y);ctx.lineTo(mt.x-mt.vx/mt.vy*mt.len,mt.y-mt.len);ctx.stroke();
+  }
+
+  if(boltTimer<=0&&frame>30){spawnBolt();boltTimer=25+Math.floor(Math.random()*35);}
+  boltTimer--;
+  for(var b=bolts.length-1;b>=0;b--){
+    var bl=bolts[b];
+    if(bl.segs.length===0)buildBolt(bl);
+    else if(frame%3===0)buildBolt(bl);
+    ctx.strokeStyle='rgba(180,220,255,'+bl.life*0.9+')';ctx.lineWidth=bl.width*bl.life;
+    ctx.shadowColor='rgba(150,200,255,0.8)';ctx.shadowBlur=8*bl.life;
+    ctx.beginPath();
+    for(var s=0;s<bl.segs.length;s++){if(s===0)ctx.moveTo(bl.segs[s].x,bl.segs[s].y);else ctx.lineTo(bl.segs[s].x,bl.segs[s].y);}
+    ctx.stroke();ctx.shadowBlur=0;
+    bl.life-=bl.decay;if(bl.life<=0)bolts.splice(b,1);
+  }
+
+  scanAlpha+=0.015*scanDir;
+  if(scanAlpha>0.7)scanDir=-1;if(scanAlpha<0.05)scanDir=1;
+  scanX+=(W/120);if(scanX>W)scanX=0;
+  var sg=ctx.createLinearGradient(scanX-80,0,scanX+80,0);
+  sg.addColorStop(0,'rgba(243,175,66,0)');
+  sg.addColorStop(0.5,'rgba(243,175,66,'+scanAlpha+')');
+  sg.addColorStop(1,'rgba(243,175,66,0)');
+  ctx.fillStyle=sg;ctx.fillRect(0,0,W,H);
+
+  var beamCount=W<480?2:4;
+  for(var bi=0;bi<beamCount;bi++){
+    var bx=cx-W*0.3+bi*(W*0.6/(beamCount-1||1)),bph=frame*0.015+bi*1.5;
+    var bg=ctx.createLinearGradient(bx+Math.sin(bph)*20,H,bx,cy-60);
+    bg.addColorStop(0,'rgba(243,175,66,0.18)');bg.addColorStop(0.5,'rgba(180,100,20,0.08)');bg.addColorStop(1,'rgba(243,175,66,0)');
+    ctx.beginPath();ctx.moveTo(bx-40+Math.sin(bph)*15,H);ctx.lineTo(bx+40,H);ctx.lineTo(bx+5,cy-60);ctx.lineTo(bx-5,cy-60);ctx.closePath();
+    ctx.fillStyle=bg;ctx.fill();
+  }
+
+  if(exploded){
+    explodeT++;var er=explodeT*8;
+    var eg=ctx.createRadialGradient(cx,cy,0,cx,cy,er);
+    eg.addColorStop(0,'rgba(243,175,66,'+(0.3*Math.max(0,1-explodeT/20))+')');
+    eg.addColorStop(1,'rgba(243,175,66,0)');
+    ctx.beginPath();ctx.arc(cx,cy,er,0,Math.PI*2);ctx.fillStyle=eg;ctx.fill();
+    if(explodeT>20)exploded=false;
+  }
+
+  for(var i=0;i<pts.length;i++){
+    var p=pts[i];p.ph+=p.sp;
+    var dx=Math.sin(p.ph)*4,dy=Math.cos(p.ph*0.8)*3;
+    var dist=Math.sqrt((p.ox-cx)*(p.ox-cx)+(p.oy-cy)*(p.oy-cy));
+    var pull=Math.max(0,1-dist/(H*0.55));
+    p.x=p.ox+dx+(cx-p.ox)*pull*0.06;p.y=p.oy+dy+(cy-p.oy)*pull*0.06;
+    ctx.globalAlpha=p.al*(0.5+Math.sin(p.ph)*0.5)*(0.6+pull*0.8);
+    ctx.fillStyle=pull>0.3?'#f3af42':p.col;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.sz+pull*2.5,0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+
+  var rg=ctx.createRadialGradient(cx,cy+80,0,cx,cy+80,H*0.4);
+  rg.addColorStop(0,'rgba(243,175,66,0.06)');rg.addColorStop(1,'rgba(243,175,66,0)');
+  ctx.beginPath();ctx.arc(cx,cy+80,H*0.4,0,Math.PI*2);ctx.fillStyle=rg;ctx.fill();
+
+  frame++;if(frame%90===0){exploded=true;explodeT=0;}
+  animId=requestAnimationFrame(draw);
+}
+
+function start(){
+  resize();initPts();draw();
+  setTimeout(function(){var b=document.getElementById('lc-brand');b.style.opacity='1';b.style.transform='scale(1)';},200);
+  setTimeout(function(){document.getElementById('lc-sub').style.opacity='1';},600);
+  setTimeout(function(){document.getElementById('lc-tags').style.opacity='1';},900);
+  setTimeout(function(){document.getElementById('lc-slogan').style.opacity='1';},1100);
+  setTimeout(function(){document.getElementById('lc-btn-wrap').style.opacity='1';document.getElementById('lc-skip').style.opacity='1';},1350);
+}
+
+window.addEventListener('resize',function(){resize();initPts();});
+
+window.lcShowAgreement=function(){
+  cancelAnimationFrame(animId);
+  document.getElementById('intro-layer').style.display='none';
+  document.getElementById('lc-agreement').style.display='flex';
+};
+window.lcToggleBtn=function(){
+  var chk=document.getElementById('lc-agree-check').checked;
+  var btn=document.getElementById('lc-agree-btn');
+  btn.disabled=!chk;
+  btn.style.cursor=chk?'pointer':'not-allowed';
+  btn.style.background=chk?'linear-gradient(135deg,#b87b14,#f3af42)':'#1a1a2a';
+  btn.style.color=chk?'#09090d':'#475569';
+};
+window.lcEnterMain=function(){
+  localStorage.setItem('lc_agreed','1');
+  document.getElementById('intro-root').style.display='none';
+};
+
+start();
+})();
+</script>
 <div id="img-zoom" class="" aria-hidden="true" role="dialog" aria-label="图片预览">
   <div class="img-zoom-back" onclick="closeImgZoom()" aria-hidden="true"></div>
   <div class="img-zoom-inner" onclick="closeImgZoom()" title="点击关闭预览">
@@ -5870,194 +6097,6 @@ function bootApp(){
   try{updateFreeTrialHint();}catch(e){}
   try{initLegalNotices();}catch(e){}
 }
-var LC_LS_INTRO_DONE='lingchuang_intro_done';
-var _lcTermsWired=false;
-var _lcIntroTimer=null;
-var _lcIntroRaf=null;
-function stopLcIntroTunnel(){
-  if(_lcIntroRaf){cancelAnimationFrame(_lcIntroRaf);_lcIntroRaf=null;}
-  var cv=document.getElementById('lc-intro-canvas');
-  if(cv&&cv._lcResize){
-    window.removeEventListener('resize',cv._lcResize);
-    cv._lcResize=null;
-  }
-}
-function startLcIntroTunnel(){
-  stopLcIntroTunnel();
-  var cv=document.getElementById('lc-intro-canvas');
-  var ov=document.getElementById('lc-intro-overlay');
-  if(!cv||!ov) return;
-  var ctx=cv.getContext('2d');
-  if(!ctx) return;
-  var beams=[];
-  var nb=96,i=0;
-  while(i<nb){
-    beams.push({
-      a:Math.random()*6.283185307179586,
-      phase:Math.random(),
-      spd:0.005+Math.random()*0.022,
-      len:0.42+Math.random()*0.58,
-      w:0.55+Math.random()*1.65,
-      warm:Math.random()<0.55
-    });
-    i++;
-  }
-  function resize(){
-    var r=Math.min(2,window.devicePixelRatio||1);
-    var w=Math.max(320,Math.floor(window.innerWidth||800));
-    var h=Math.max(320,Math.floor(window.innerHeight||600));
-    cv.width=Math.floor(w*r);
-    cv.height=Math.floor(h*r);
-    cv.style.width=w+'px';
-    cv.style.height=h+'px';
-    ctx.setTransform(r,0,0,r,0,0);
-  }
-  function frame(){
-    if(!ov.classList.contains('is-visible')){stopLcIntroTunnel();return;}
-    var w=Math.max(320,window.innerWidth||800),h=Math.max(320,window.innerHeight||600);
-    ctx.fillStyle='rgba(3,3,9,0.38)';
-    ctx.fillRect(0,0,w,h);
-    var cx=w*0.5,cy=h*0.42;
-    var R=Math.min(w,h)*0.54;
-    var t=performance.now()*0.0012;
-    beams.forEach(function(b){
-      b.phase+=b.spd;
-      if(b.phase>1)b.phase-=1;
-      var pulse=b.phase;
-      var ease=pulse*pulse*(3-2*pulse);
-      var wobble=Math.sin(t*2.2+b.a*3)*10;
-      var x0=cx+Math.cos(b.a+t*0.12)*wobble*0.08;
-      var y0=cy+Math.sin(b.a+t*0.12)*wobble*0.08;
-      var x1=x0+Math.cos(b.a)*(10+ease*26);
-      var y1=y0+Math.sin(b.a)*(10+ease*26);
-      var reach=R*b.len*(0.5+0.5*ease);
-      var x2=x0+Math.cos(b.a)*(reach+24);
-      var y2=y0+Math.sin(b.a)*(reach+24);
-      var g=ctx.createLinearGradient(x1,y1,x2,y2);
-      if(b.warm){
-        g.addColorStop(0,'rgba(255,252,240,0.98)');
-        g.addColorStop(0.1,'rgba(243,175,66,0.82)');
-        g.addColorStop(0.28,'rgba(251,191,36,0.38)');
-        g.addColorStop(1,'rgba(243,175,66,0)');
-      }else{
-        g.addColorStop(0,'rgba(255,255,255,0.92)');
-        g.addColorStop(0.1,'rgba(186,230,253,0.55)');
-        g.addColorStop(0.32,'rgba(243,175,66,0.28)');
-        g.addColorStop(1,'rgba(99,102,241,0)');
-      }
-      ctx.strokeStyle=g;
-      ctx.lineWidth=b.w*(1.05-ease*0.4);
-      ctx.lineCap='round';
-      ctx.beginPath();
-      ctx.moveTo(x1,y1);
-      ctx.lineTo(x2,y2);
-      ctx.stroke();
-    });
-    _lcIntroRaf=requestAnimationFrame(frame);
-  }
-  var onR=function(){resize();};
-  cv._lcResize=onR;
-  window.addEventListener('resize',onR);
-  resize();
-  _lcIntroRaf=requestAnimationFrame(frame);
-}
-function wireLcTermsOnce(){
-  if(_lcTermsWired) return;
-  _lcTermsWired=true;
-  var scrollEl=document.getElementById('lc-terms-scroll');
-  var chk=document.getElementById('lc-terms-check');
-  var btn=document.getElementById('lc-terms-btn');
-  if(!scrollEl||!chk||!btn) return;
-  function syncChk(){
-    var st=scrollEl.scrollTop+scrollEl.clientHeight>=scrollEl.scrollHeight-6;
-    chk.disabled=!st;
-    if(!st){btn.disabled=true;btn.classList.remove('is-ready');chk.checked=false;}
-  }
-  scrollEl.addEventListener('scroll',syncChk);
-  chk.addEventListener('change',function(){
-    btn.disabled=!chk.checked;
-    if(chk.checked) btn.classList.add('is-ready'); else btn.classList.remove('is-ready');
-  });
-  btn.addEventListener('click',function(){if(btn.disabled)return;
-    var to=document.getElementById('lc-terms-overlay');
-    try{if(document.activeElement&&to&&to.contains(document.activeElement)) document.activeElement.blur();}catch(e){}
-    try{localStorage.setItem(LC_LS_INTRO_DONE,'1');}catch(e2){}
-    clearLcAwaitIntro();
-    document.body.style.overflow='';
-    if(to){to.classList.remove('is-visible');to.setAttribute('aria-hidden','true');}
-  });
-  syncChk();
-}
-function clearLcAwaitIntro(){
-  try{document.documentElement.classList.remove('lc-await-intro');}catch(e){}
-}
-function showLcTermsPanel(){
-  var to=document.getElementById('lc-terms-overlay');
-  if(to){
-    to.classList.add('is-visible');
-    to.setAttribute('aria-hidden','false');
-    wireLcTermsOnce();
-    return;
-  }
-  try{localStorage.setItem(LC_LS_INTRO_DONE,'1');}catch(e){}
-  clearLcAwaitIntro();
-  document.body.style.overflow='';
-}
-function hideIntroShowTerms(){
-  stopLcIntroTunnel();
-  if(_lcIntroTimer){clearTimeout(_lcIntroTimer);_lcIntroTimer=null;}
-  var io=document.getElementById('lc-intro-overlay');
-  if(io){
-    io.classList.remove('is-visible');
-    io.classList.add('is-leaving');
-    io.setAttribute('aria-hidden','true');
-    setTimeout(function(){
-      io.classList.add('is-dismissed');
-      io.classList.remove('is-leaving');
-      showLcTermsPanel();
-    },520);
-    return;
-  }
-  showLcTermsPanel();
-}
-function initLcV4Boot(){
-  try{
-    if(localStorage.getItem(LC_LS_INTRO_DONE)==='1'){
-      clearLcAwaitIntro();
-      return;
-    }
-    var io=document.getElementById('lc-intro-overlay');
-    if(!io) return;
-    document.documentElement.classList.add('lc-await-intro');
-    io.classList.add('is-visible');
-    io.setAttribute('aria-hidden','false');
-    try{startLcIntroTunnel();}catch(e2){}
-    var sub=document.getElementById('lc-intro-sub-txt');
-    var cur=document.getElementById('lc-intro-cursor');
-    var full='您身边的图片提示词专家';
-    if(sub) sub.textContent='';
-    if(cur) cur.style.display='inline-block';
-    var i=0;
-    function tickType(){
-      if(!sub) return;
-      if(i<=full.length){sub.textContent=full.slice(0,i);i++;setTimeout(tickType,i<3?70:48);}
-    }
-    setTimeout(tickType,620);
-    var sk=document.getElementById('lc-intro-skip');
-    if(sk){
-      sk.onclick=function(){hideIntroShowTerms();};
-      sk.onkeydown=function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();hideIntroShowTerms();}};
-    }
-    io.addEventListener('click',function(ev){
-      var t=ev.target;
-      if(t===io||(t&&t.id==='lc-intro-canvas')) hideIntroShowTerms();
-    });
-    _lcIntroTimer=setTimeout(hideIntroShowTerms,5200);
-  }catch(e){
-    clearLcAwaitIntro();
-    try{localStorage.setItem(LC_LS_INTRO_DONE,'1');}catch(e2){}
-  }
-}
 function setupLcMobileChrome(){
   if(!window._imgZoomEscBound){
     window._imgZoomEscBound=1;
@@ -6092,7 +6131,6 @@ function setupLcMobileChrome(){
   syncLcMobileBackdrop();
 }
 function boot(){
-  initLcV4Boot();
   bootHeadlessConfig();
   bootApp();
 }
