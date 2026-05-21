@@ -2738,7 +2738,7 @@ function bootHeadlessConfig(){
   }
 }
 var sessionUserId=null;
-var sessionContext={coreTopic:'',style:'',technique:'',size:'',userNotes:'',fromDsNotes:false,promptProfile:'standard',routeHumanLabel:'',randomStyleName:'',posterPlans:[],selectedPlanIndex:0,selectedPlanSummary:''};
+var sessionContext={coreTopic:'',style:'',technique:'',size:'',userNotes:'',fromDsNotes:false,promptProfile:'standard',routeHumanLabel:'',randomStyleName:'',posterPlans:[],selectedPlanIndex:0,selectedPlanSummary:'',lastAnalyzeRaw:''};
 var uploadedFileIds=[],uploadedImageSlots=[null,null],uploadedImageFileIds=[null,null],docUploadFileId=null,uploadedImageCount=0,isFileAttached=false,cachedPrompt='',cachedPromptShort='',selectedBubbles=[],currentConversationId=null,currentChatId=null;
 var docParsePromise=Promise.resolve(),docParseResolve=null,pendingUploadPromises=[];
 var promptReadyTopic='',copywriteGenToken=0;
@@ -4238,21 +4238,34 @@ function buildUserQuery(topic){
   var headTopic=topic||(attachedFileName?attachedFileName.replace(/\.[^.]+$/,''):'')||(doc?'请按上传文档出图':'请识别上传文件内容');
   return headTopic+bubbleStr+fileNotice+catBlock;
 }
+function stripPriceFromTopicInput(text){
+  return String(text||'').replace(/\d{1,5}\s*元\/份?/g,' ').replace(/[¥￥]\s*\d{1,5}/g,' ').replace(/\d{1,5}\s*元/g,' ').replace(/\s+/g,' ').trim();
+}
 function extractCoreTopicFromInput(topic){
-  var t=String(topic||'').trim();
+  var t=stripPriceFromTopicInput(String(topic||'').trim());
   if(!t) return '';
   var dsEl=document.getElementById('ds-topic');
   var ds=dsEl?String(dsEl.value||'').trim():'';
-  if(ds&&(t===ds||t.indexOf(ds)>=0)) return ds;
-  var m=t.match(/主题[：:]\s*([^\n，。；;]{1,48})/);
-  if(m&&m[1]) return m[1].trim();
-  if(/爆款文案|配套出图|知识图文笔记配图/.test(t)&&ds) return ds;
+  if(ds&&(String(topic||'').indexOf(ds)>=0)) return stripPriceFromTopicInput(ds)||ds;
+  var m=String(topic||'').match(/主题[：:]\s*([^\n，。；;]{1,48})/);
+  if(m&&m[1]) return stripPriceFromTopicInput(m[1].trim())||m[1].trim();
+  if(/爆款文案|配套出图|知识图文笔记配图/.test(topic)&&ds) return stripPriceFromTopicInput(ds)||ds;
   if(t.length>56){
     var line=t.split(/\n/).map(function(x){return x.trim();}).filter(Boolean)[0]||'';
     if(line.length>=2&&line.length<=48) return line;
     return t.slice(0,48);
   }
   return t;
+}
+function buildPromptUserContext(topic){
+  var t=stripPriceFromTopicInput(topic)||String(topic||'').trim()||'当前主题';
+  var m=String(topic||'').match(/(\d{1,5})\s*元/)||String(sessionContext.userNotes||'').match(/(\d{1,5})\s*元/);
+  var lines=['【主题·必须贯穿】'+t];
+  if(m&&m[1]) lines.push('【价格·仅角标小字】'+m[1]+'元，禁止用价格当主标题或全文核心');
+  if(sessionContext.selectedPlanSummary) lines.push('【已选方案】'+sessionContext.selectedPlanSummary);
+  var rec=parseVisionRecognition(sessionContext.lastAnalyzeRaw||'');
+  if(rec&&rec.length>8) lines.push('【识图精要】'+rec.substring(0,280));
+  return lines.join('\n');
 }
 function lockSessionFromInput(topic,opts){
   opts=opts||{};
@@ -4329,10 +4342,12 @@ function hideCopywriteSection(){
 }
 function copywriteTopicMismatch(text,coreTopic){
   var body=String(text||'');
-  var topic=String(coreTopic||'').trim();
+  var topic=stripPriceFromTopicInput(String(coreTopic||'').trim());
   if(!topic||body.length<40) return false;
   var core=topic.replace(/(的做法|教程|方法|步骤|攻略|大全|合集)$/g,'').trim()||topic;
   if(body.indexOf(topic)>=0||(core.length>=2&&body.indexOf(core)>=0)) return false;
+  var pm=String(coreTopic||'').match(/(\d{1,5})\s*元/);
+  if(pm&&pm[1]&&(body.match(new RegExp(pm[1],'g'))||[]).length>=3&&body.indexOf(core.slice(0,Math.min(4,core.length)))<0) return true;
   var poetry=['古诗','诗词','背诗','小学语文必背','唐诗','宋词'];
   var food=['红烧','排骨','菜谱','下厨','食材','烹饪','美食教程'];
   var isFood=/红烧|排骨|菜谱|烹饪|美食|做法|食材/.test(topic);
@@ -4346,10 +4361,13 @@ function copywriteTopicMismatch(text,coreTopic){
   return false;
 }
 function buildCopywriteQuery(topic){
-  var t=topic||sessionContext.coreTopic||'';
+  var t=stripPriceFromTopicInput(topic||sessionContext.coreTopic||'')||(topic||sessionContext.coreTopic||'');
+  var priceM=String(topic||sessionContext.userNotes||'').match(/(\d{1,5})\s*元/);
   var hint=cachedPromptShort?('\n【画面精简说明】'+String(cachedPromptShort).substring(0,320)):'';
   return '【主题锁定·仅写「'+t+'」】请撰写小红书爆款笔记（含标题、正文、话题标签、首评钩子）+ 公众号完整文章（以📘【公众号】开头）。'+
-    '全文必须多次自然提及「'+t+'」，严禁写古诗/节日/其他无关主题模板。'+hint;
+    '全文必须围绕「'+t+'」展开，标题与正文主语是主题本身，不是价格数字。'+
+    (priceM&&priceM[1]?'\n若需写价格，「'+priceM[1]+'元」仅可在正文提一次作促销信息，禁止当标题核心。':'')+
+    '\n严禁写古诗/节日/其他无关主题模板。'+hint;
 }
 function isCopywritePromptLeak(text){
   var s=String(text||'');
@@ -5820,6 +5838,7 @@ function parseContentList(raw){
 }
 function showAnalysisCard(raw){
   raw=purifyAnalysisDisplay(raw);
+  sessionContext.lastAnalyzeRaw=raw||'';
   var grid=document.getElementById('analysis-grid');
   if(!grid) return;
   grid.innerHTML='';
@@ -6034,12 +6053,6 @@ function showAnalysisCard(raw){
   var picked=getSelectedVisualStyleValue();
   if(picked){aiRecStyle=picked;sessionContext.style=picked;}
   else if(styleVal){aiRecStyle=styleVal;sessionContext.style=styleVal;}
-  if(reasonVal&&sessionContext.userNotes){
-    sessionContext.userNotes+='\n【AI推荐理由】'+reasonVal.substring(0,120);
-  }
-  if(sessionContext.selectedPlanSummary){
-    sessionContext.userNotes=(sessionContext.userNotes||'')+'\n【已选方案】'+sessionContext.selectedPlanSummary;
-  }
   updateStyleDisplays();
   document.getElementById('analysis-stage').style.display='block';
   document.getElementById('analysis-stage').scrollIntoView({behavior:'smooth'});
@@ -6052,8 +6065,8 @@ function isLifecycleTopic(t){
   return false;
 }
 function requestPromptFromCoze(session,attempt){
-  var topic=(sessionContext.coreTopic||'').trim()||'当前主题';
-  var userOrig=(sessionContext.userNotes||topic).trim();
+  var topic=stripPriceFromTopicInput(sessionContext.coreTopic||'')||(sessionContext.coreTopic||'').trim()||'当前主题';
+  var userOrig=buildPromptUserContext(topic);
   var label=sessionContext.routeHumanLabel||'知识图解';
   var tech=sessionContext.technique||'爆款知识图解手法';
   var knowledge=isKnowledgeTopic();

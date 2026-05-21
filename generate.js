@@ -593,7 +593,8 @@ async function handler(req, res) {
         assistantText,
         coreTopic,
         route,
-        cozeFileIds.length > 0
+        cozeFileIds.length > 0,
+        rawQueryForValidate
       );
       if (lastValidation.valid) break;
 

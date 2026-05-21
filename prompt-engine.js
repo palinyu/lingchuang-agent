@@ -65,27 +65,84 @@ function buildSearchBlock(topic) {
   );
 }
 
-function buildSubjectLock(topic, style, technique) {
+function extractAuxiliaryPrice(text) {
+  const m = String(text || '').match(
+    /(?:^|[\s，,、])(\d{1,5})\s*元(?:\/份)?|[¥￥]\s*(\d{1,5})/
+  );
+  if (!m) return '';
+  return String(m[1] || m[2] || '').trim();
+}
+
+function stripPriceFromTopicText(text) {
+  return String(text || '')
+    .replace(/\d{1,5}\s*元\/份?/g, ' ')
+    .replace(/[¥￥]\s*\d{1,5}/g, ' ')
+    .replace(/\d{1,5}\s*元/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** 防止模型把「108元」等价格当成全图/全篇主题 */
+function buildTopicPrimaryLockBlock(topic, rawQuery, route) {
+  const topicClean = stripPriceFromTopicText(safeStr(topic, '')) || safeStr(topic, '用户主题');
+  const raw = safeStr(rawQuery, '');
+  const price = extractAuxiliaryPrice(raw) || extractAuxiliaryPrice(topic);
+  const r = route || {};
+  const prof = r.profile || '';
+  const blob = topicClean + ' ' + raw;
+  const isTravel =
+    /旅行|旅游|攻略|指南|地图|景点|Citywalk|地标|民宿|西双版纳|云南|自驾/.test(blob) ||
+    prof === 'city' ||
+    prof === 'citywalk';
+  const isEcom = isEcomProfile(prof) || isEcomIntentBlob(topicClean, raw);
+  const lines = [
+    '【主题锁·最高优先级·价格仅为辅助信息】',
+    '画面、英文 Prompt、精简版中文、小红书/公众号文案的**主线**必须是【' +
+      topicClean +
+      '】（场景/路线/知识/产品主体），不得围绕某个数字做联想创作。',
+  ];
+  if (price) {
+    lines.push(
+      '用户提到的「' +
+        price +
+        '元」只允许出现在**小字价格条/角标**，禁止作为全图主标题、主视觉中心或文章标题核心；禁止编造与「' +
+        price +
+        '」相关的虚假景点/路线/卖点。'
+    );
+  }
+  if (isTravel) {
+    lines.push(
+      '旅游攻略类：主标题须为「目的地+旅行指南/攻略」；手绘地图、景点、路线为视觉主体；价格若有则角落展示。'
+    );
+  } else if (!isEcom) {
+    lines.push(
+      '知识/科普/教育类：先写清「' +
+        topicClean +
+        '」的知识模块或场景结构，价格（如有）仅作补充一行。'
+    );
+  }
+  lines.push(
+    '精简版主标题必须包含「' +
+      topicClean +
+      '」的核心语义（≥4个汉字的相关词），不得仅写「' +
+      (price ? price + '元' : '特价') +
+      '」类空洞句。'
+  );
+  return lines.join('\n');
+}
+
+function buildSubjectLock(topic, style, technique, rawQuery, route) {
   return (
-    '【绝对主语锁·最高优先级】你必须围绕核心主题【' +
-    topic +
+    buildTopicPrimaryLockBlock(topic, rawQuery, route) +
+    '\n\n【绝对主语锁】你必须围绕核心主题【' +
+    stripPriceFromTopicText(topic) +
     '】进行创作！风格【' +
     style +
     '】和手法【' +
     technique +
-    '】只是修饰词！例如主题是「' +
-    topic +
-    '」、风格是「' +
-    style +
-    '」，你必须生成「以【' +
-    topic +
-    '】为画面主体/叙事中心，并融入' +
-    style +
-    '视觉风格与' +
-    technique +
-    '排版手法」的内容，绝对不允许只画风格空镜（如仅新中式房间）而丢掉【' +
-    topic +
-    '】！'
+    '】只是修饰词！必须以【' +
+    stripPriceFromTopicText(topic) +
+    '】为画面主体/叙事中心，禁止只画风格空镜而丢掉主题，禁止用价格数字替代主题。'
   );
 }
 
@@ -337,17 +394,23 @@ function buildEcomPosterQualityBlock(topic, style, size, route, rawQuery) {
     (size || 'AI推荐尺寸') +
     '】。\n' +
     '完整版英文：描述版式模块、主体、场景、光影，保留 Chinese typography zones for headline and price；禁止 no text 堆砌；禁止 --v --ar。\n' +
-    '精简版中文：写全主标题、价格、卖点短句。\n' +
+    '精简版中文：主标题=主题【' +
+    stripPriceFromTopicText(topic) +
+    '】相关（如菜名/产品名）；价格仅角标小字，禁止用价格当主标题。\n' +
     buildNoBrandInPromptBlock()
   );
 }
 
 function isEcomIntentBlob(topic, rawQuery) {
   const blob = [topic, rawQuery].join(' ');
-  if (/古诗|诗词|旅游|星座|电路|光合作用|菜谱教程|做法步骤|怎么做|步骤图/.test(blob)) {
+  if (
+    /古诗|诗词|旅游|旅行|攻略|指南|地图|景点|Citywalk|城市|地标|民宿|西双版纳|星座|电路|光合作用|菜谱教程|做法步骤|怎么做|步骤图|知识图解|科普|教育|学科/.test(
+      blob
+    )
+  ) {
     return false;
   }
-  return /电商|主图|详情页|详情图|促销海报|带货|产品图|推广海报|海报|卖点拆解|爆炸图|立体拆解|淘宝|小红书商品|种草图|二维码/.test(
+  return /电商|主图|详情页|详情图|促销海报|带货|产品图|推广海报|卖点拆解|爆炸图|立体拆解|淘宝|小红书商品|种草图|二维码/.test(
     blob
   );
 }
@@ -431,7 +494,7 @@ function buildEcomDualPromptBlock(topic, style, size, route, rawQuery) {
     '】。\n' +
     '英文 Prompt 须描述：layout from style reference image A, product hero from image B, background color as user requested, reserved clean zone for QR code if poster.\n' +
     '末尾中文提示：即梦图生图【必传图B产品实拍】作主体参考，强度 65–75；图A仅风格/版式参考（强度约40–50），严禁用图A商品覆盖图B。\n' +
-    buildStep2OutputBlock(topic, style, size, route)
+    buildStep2OutputBlock(topic, style, size, route, rawQuery)
   );
 }
 
@@ -992,17 +1055,64 @@ function isPosterStyleRoute(route) {
   const p = route && route.profile;
   if (isEcomProfile(p)) return true;
   const t = String((route && route.topic) || '');
-  return /海报|菜谱|美食|餐饮|牛蛙|火锅|促销|电商|产品图|主图|详情页|种草|探店|食谱|招牌|菜品/.test(t);
+  if (/旅行|旅游|攻略|指南|地图|景点|Citywalk|知识|科普|教育|古诗|星座|城市|地标/.test(t)) {
+    return false;
+  }
+  return /菜谱|美食|餐饮|牛蛙|火锅|促销|电商|产品图|主图|详情页|种草|探店|食谱|招牌|菜品/.test(
+    t
+  );
 }
 
-function buildStep2OutputBlock(topic, style, size, route) {
+function validateTopicNotPriceDominated(text, topic, rawQuery) {
+  const blob = String(text || '');
+  const topicClean = stripPriceFromTopicText(safeStr(topic, ''));
+  if (!topicClean || topicClean.length < 2) return { valid: true, reason: '' };
+  const price = extractAuxiliaryPrice(rawQuery || topic);
+  if (!price) return { valid: true, reason: '' };
+  const priceHits = (blob.match(new RegExp(price, 'g')) || []).length;
+  const topicSnippet = topicClean.replace(/(的做法|攻略|指南|教程)$/g, '').trim();
+  const topicHit =
+    topicSnippet.length >= 2 &&
+    (blob.indexOf(topicSnippet) >= 0 ||
+      blob.indexOf(topicSnippet.slice(0, Math.min(6, topicSnippet.length))) >= 0 ||
+      /travel|guide|map|infographic|itinerary|landmark|route/i.test(blob));
+  if (priceHits >= 4 && !topicHit) {
+    return {
+      valid: false,
+      reason:
+        '输出围绕价格「' +
+        price +
+        '」而非主题「' +
+        topicClean +
+        '」，请重写：主标题与画面主体必须体现主题',
+    };
+  }
+  const cnShort = blob.match(/精简版[\s\S]{0,800}/i);
+  if (cnShort && cnShort[0]) {
+    const head = cnShort[0].slice(0, 120);
+    if (
+      new RegExp('^[^\\n]{0,40}' + price + '\\s*元').test(head) &&
+      head.indexOf(topicSnippet.slice(0, 4)) < 0
+    ) {
+      return {
+        valid: false,
+        reason: '精简版主标题不能以价格「' + price + '元」为核心，须体现主题',
+      };
+    }
+  }
+  return { valid: true, reason: '' };
+}
+
+function buildStep2OutputBlock(topic, style, size, route, rawQuery) {
   const r = route || {};
   const limit = getJimengCharLimit();
   const styleHint = r.randomStyleName || style || 'AI智能推荐风格';
+  const topicClean = stripPriceFromTopicText(topic) || topic;
   return (
+    buildTopicPrimaryLockBlock(topicClean, rawQuery || topic, r) +
     '\n\n【扣子 v1.3 · STEP2 出图包·强制格式·禁止省略任何板块】\n' +
     '用户已确认方案（等价于回复数字 1）。核心主题【' +
-    topic +
+    topicClean +
     '】；本次风格【' +
     styleHint +
     '】；推荐尺寸【' +
@@ -1022,9 +1132,11 @@ function buildStep2OutputBlock(topic, style, size, route) {
         limit +
         ' 字符，≥350 字符，含版式模块/主体/场景/Chinese typography zones 等，禁止方括号占位）\n') +
     '📱 精简版（手机端适配）\n' +
-    (isPosterStyleRoute(r)
-      ? '（【即梦优先复制】中文须写明全部可见文案：主标题、价格、卖点四字，如炭烤牛蛙/128元/现杀现烤，禁止空标题框）\n'
-      : '（中文精简描述，保留核心画面与版式）\n') +
+    (isEcomProfile(r.profile) || isEcomIntentBlob(topicClean, rawQuery || '')
+      ? '（【即梦优先复制】中文：主标题=主题主体名（如炭烤牛蛙/狮子头），价格仅角标小字如128元/份，禁止用价格当主标题）\n'
+      : '（中文精简：主标题必须体现【' +
+        topicClean +
+        '】主题语义；价格若有仅作角标，禁止围绕数字联想）\n') +
     '⚙️ 即梦设置：比例 / 模式 / 参考度 / 角色模型\n' +
     '📣【抖音话题标签】\n' +
     '（3-5 个 # 标签）\n' +
@@ -1122,10 +1234,16 @@ function validateKnowledgePrompt(prompt) {
   return { valid: true, reason: '' };
 }
 
-function validatePromptForTopic(prompt, topic, route, hasFile) {
+function validatePromptForTopic(prompt, topic, route, hasFile, rawQuery) {
   const r =
     route ||
     routePlainLanguageTopic(topic, '', require('path').join(__dirname));
+  const priceDom = validateTopicNotPriceDominated(
+    prompt,
+    topic,
+    rawQuery || topic
+  );
+  if (!priceDom.valid) return priceDom;
   const pkg = parseCozeOutputPackage(prompt);
   if (hasFile && (isEcomProfile(r.profile) || isEcomIntentBlob(topic, ''))) {
     return validateReferenceImagePrompt(prompt, r);
@@ -1183,22 +1301,30 @@ function buildPromptRetryBlockForTopic(validation, topic, style, route, hasFile,
   const r =
     route ||
     routePlainLanguageTopic(topic, '', require('path').join(__dirname));
+  const head =
+    buildTopicPrimaryLockBlock(topic, rawQuery || topic, r) +
+    '\n\n【质量熔断重试】' +
+    (validation && validation.reason ? validation.reason : '未达标') +
+    '\n';
   if (hasFile && (isEcomProfile(r.profile) || isEcomIntentBlob(topic, rawQuery || ''))) {
-    return buildReferenceImagePromptRetryBlock(
-      validation,
-      topic,
-      style,
-      r,
-      rawQuery || topic
+    return (
+      head +
+      buildReferenceImagePromptRetryBlock(
+        validation,
+        topic,
+        style,
+        r,
+        rawQuery || topic
+      )
     );
   }
   if (r.profile === 'lifecycle' || detectLifecycleTopic(topic, '')) {
-    return buildLifecyclePromptRetryBlock(validation, topic, style);
+    return head + buildLifecyclePromptRetryBlock(validation, topic, style);
   }
   if (isKnowledgeProfile(r.profile)) {
-    return buildKnowledgePromptRetryBlock(validation, topic, style, r);
+    return head + buildKnowledgePromptRetryBlock(validation, topic, style, r);
   }
-  return buildPromptRetryBlock(validation, topic, style);
+  return head + buildPromptRetryBlock(validation, topic, style);
 }
 
 function buildDeepAnalysisBlock(topic) {
@@ -1354,7 +1480,7 @@ function buildStrictMdCozeMessage(p) {
       return (
         refHead +
         buildReferenceImagePromptBlock(topic, styleName, size, route, rawQuery) +
-        buildStep2OutputBlock(topic, styleName, size, route) +
+        buildStep2OutputBlock(topic, styleName, size, route, rawQuery) +
         '\n\n【第十三章·即梦字符】精简版中文卖点须完整；完整版英文画面段建议 80–900 字符。\n' +
         '【用户确认·已批准方案】\n【用户原话】\n' +
         rawQuery
@@ -1365,7 +1491,7 @@ function buildStrictMdCozeMessage(p) {
         head +
         '\n\n' +
         buildEcomPosterQualityBlock(topic, styleName, size, route, rawQuery) +
-        buildStep2OutputBlock(topic, styleName, size, route) +
+        buildStep2OutputBlock(topic, styleName, size, route, rawQuery) +
         '\n【用户确认·已批准方案】\n【用户原话】\n' +
         rawQuery
       );
@@ -1373,7 +1499,7 @@ function buildStrictMdCozeMessage(p) {
     return (
       head +
       '\n\n' +
-      buildStep2OutputBlock(topic, styleName, size, route) +
+      buildStep2OutputBlock(topic, styleName, size, route, rawQuery) +
       '\n\n【第十三章·即梦字符】精简版英文不得超过 ' +
       JIMENG_CHAR_LIMIT +
       ' 字符；必须保留收尾语：' +
@@ -1503,7 +1629,9 @@ function buildCozeMessage(p) {
       '【主题锁·看图后生效】核心主题 = 上传图识别出的商品/菜品名称，不得用输入框里其它品名替换；价格/促销话可用用户原文。'
     );
   } else if (!ecomUpload) {
-    headParts.push(buildSubjectLock(topic, style, techniqueEffective));
+    headParts.push(
+      buildSubjectLock(topic, style, techniqueEffective, rawQuery, route)
+    );
   }
   headParts.push(buildNoFluffBlock(topic));
   let head = headParts.join('\n\n');
@@ -1590,7 +1718,7 @@ function buildCozeMessage(p) {
         buildReferenceImageFidelityBlock(rawQuery, imageCount) +
         '\n' +
         buildReferenceImagePromptBlock(topic, style, size, route, rawQuery) +
-        buildStep2OutputBlock(topic, style, size, route) +
+        buildStep2OutputBlock(topic, style, size, route, rawQuery) +
         '【严禁】方括号占位；英文禁止真实品牌/商标/IP 名。\n' +
         lifecycleConfirm
       );
@@ -1600,7 +1728,7 @@ function buildCozeMessage(p) {
         head +
         '\n\n' +
         buildEcomPosterQualityBlock(topic, style, size, route, rawQuery) +
-        buildStep2OutputBlock(topic, style, size, route) +
+        buildStep2OutputBlock(topic, style, size, route, rawQuery) +
         '【严禁】方括号占位；英文禁止真实品牌/商标/IP 名。\n' +
         lifecycleConfirm
       );
@@ -1614,7 +1742,7 @@ function buildCozeMessage(p) {
       '\n\n' +
       buildPromptQualityBlock(topic, style, size, route, rawQuery) +
       (useStep2
-        ? buildStep2OutputBlock(topic, style, size, route)
+        ? buildStep2OutputBlock(topic, style, size, route, rawQuery)
         : '\n\n【任务：生成工业级生图提示词】\n请直接输出「完整版（推荐）」英文 Prompt（≤' +
           getJimengCharLimit() +
           '字符），≥' +
@@ -1928,8 +2056,17 @@ function copywriteTopicMismatch(text, coreTopic) {
   const body = String(text || '');
   const topic = safeStr(coreTopic, '').trim();
   if (!topic || body.length < 40) return false;
-  const core = topic.replace(/(的做法|教程|方法|步骤|攻略|大全|合集)$/g, '').trim() || topic;
-  if (body.indexOf(topic) >= 0 || (core.length >= 2 && body.indexOf(core) >= 0)) return false;
+  const topicClean = stripPriceFromTopicText(topic) || topic;
+  const core = topicClean.replace(/(的做法|教程|方法|步骤|攻略|大全|合集)$/g, '').trim() || topicClean;
+  if (body.indexOf(topicClean) >= 0 || (core.length >= 2 && body.indexOf(core) >= 0)) {
+    return false;
+  }
+  const price = extractAuxiliaryPrice(topic);
+  if (price && (body.match(new RegExp(price, 'g')) || []).length >= 3) {
+    if (core.length >= 2 && body.indexOf(core.slice(0, Math.min(4, core.length))) < 0) {
+      return true;
+    }
+  }
 
   const poetry = ['古诗', '诗词', '背诗', '小学语文必背', '唐诗', '宋词'];
   const food = ['红烧', '排骨', '菜谱', '下厨', '食材', '烹饪', '美食教程'];
