@@ -28,11 +28,14 @@ const MAX_UPLOAD_B64_LEN = Math.floor(3.2 * 1024 * 1024);
 
 function maxCozeAttempts(intent, fileCount) {
   if (intent === 'analyze') {
-    if (fileCount >= 2) return 0;
-    if (fileCount >= 1) return 1;
+    /** 上传图时扣子看图很慢，禁止自动重试，降低 Vercel/网关 504 */
+    if (fileCount >= 1) return 0;
     return MAX_ANALYZE_RETRIES;
   }
-  if (PROMPT_QUALITY_INTENTS.indexOf(intent) !== -1) return MAX_MASTERS_PROMPT_RETRIES;
+  if (PROMPT_QUALITY_INTENTS.indexOf(intent) !== -1) {
+    if (fileCount >= 1) return 1;
+    return MAX_MASTERS_PROMPT_RETRIES;
+  }
   return 0;
 }
 initStyleLib(ROOT);
@@ -647,10 +650,13 @@ module.exports = async function handler(req, res) {
   } catch (error) {
     console.error('❌ 【大后方网络/代码彻底崩溃】:', error);
     const isTimeout = error.name === 'AbortError' || /aborted/i.test(error.message || '');
+    const hasImg = Array.isArray(req.body && req.body.file_ids) && req.body.file_ids.length > 0;
     const msg = isTimeout
-      ? '【扣子智能体响应超时】出图提示词生成较慢，已延长至 120 秒仍无结果，请稍后重试或检查网络'
+      ? hasImg
+        ? '【扣子看图超时】上传图分析/出词较慢，请稍后重试：建议只传1张产品实拍、压缩到1MB内；若反复504需 Vercel Pro 或换自建 Node 服务'
+        : '【扣子智能体响应超时】请稍后重试或检查网络'
       : `【链路本地崩溃诊断】: ${error.message}。如果提示 fetch failed，说明是网络/梯子阻断了本地与 Coze.cn 的连接！`;
-    return res.status(500).json({ code: -1, msg, error: msg });
+    return res.status(500).json({ code: -1, msg, error: msg, timeout: isTimeout });
   }
   } catch (fatal) {
     console.error('【api/generate 致命错误】', fatal);

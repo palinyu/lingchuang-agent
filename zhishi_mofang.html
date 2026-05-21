@@ -4495,9 +4495,9 @@ function parseApiResponse(r){
       var errMsg=(data&&(data.msg||data.error))||'';
       if(r.status===413) errMsg=errMsg||'文件超过大小限制：图片≤2MB，文档≤4MB，请压缩后重试';
       else if((r.status===504||r.status===502)&&!errMsg){
-        if(uploadedImageCount>=2) errMsg='云端分析超时（双图更慢），请换更小图片或稍后重试';
-        else if(sessionContext.fromDsNotes) errMsg='笔记配套出图超时，云端仍在排队；请稍后重试（无需上传参考图）';
-        else errMsg='云端分析超时，请稍后重试';
+        if(uploadedImageCount>=1) errMsg='云端超时(504)：上传图时扣子看图较慢。请①只传1张产品实拍并压缩≤1MB ②稍后再试 ③若仍504：Vercel需Pro套餐(maxDuration300s)或改用自建Node(server.js)';
+        else if(sessionContext.fromDsNotes) errMsg='笔记配套出图超时，请稍后重试';
+        else errMsg='云端超时(504)，请稍后重试';
       }
       else if(r.status===500&&!errMsg){
         if(/FUNCTION_INVOCATION_FAILED|Serverless Function.*crashed/i.test(text||'')){
@@ -5281,11 +5281,13 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
     if(ctx.intent==='prompt'&&(opts.skipAttachments||sessionContext.fromDsNotes)){
       fetchMs=150000;
     }else if(ctx.intent==='analyze'&&uploadedImageCount>=2){
-      fetchMs=240000;
-    }else if(ctx.intent==='analyze'&&hasDoc){
-      fetchMs=130000;
+      fetchMs=280000;
+    }else if(ctx.intent==='analyze'&&(uploadedImageCount>=1||hasDoc)){
+      fetchMs=280000;
     }else if(ctx.intent==='analyze'){
-      fetchMs=100000;
+      fetchMs=120000;
+    }else if(ctx.intent==='prompt'&&uploadedImageCount>=1){
+      fetchMs=280000;
     }else{
       fetchMs=90000;
     }
