@@ -1062,6 +1062,8 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
 }
 body.api-lux-loading .btn-engine-cancel{display:block;}
 .btn-engine-cancel:hover{background:rgba(239,68,68,0.22);}
+.btn-thinking-cancel{display:none;margin-top:14px;width:100%;max-width:280px;}
+#thinking-stage .btn-thinking-cancel{display:inline-block;}
 .ith-step.ith-drop-flash{animation:ith-drop-step .42s cubic-bezier(.22,1,.36,1) both;}
 .ith-log.ith-log-drop{animation:ith-drop-in .38s cubic-bezier(.22,1,.36,1) both;}
 .gen-wait-hint{display:none;font-size:11px;color:rgba(226,192,125,0.72);text-align:center;line-height:1.5;margin:0 0 6px;letter-spacing:0.2px;}
@@ -1508,12 +1510,16 @@ if(!root) return;
 var animId;
 
 function lcDismissIntro(){
+  try{
+    var ae=document.activeElement;
+    if(ae&&root.contains(ae)) ae.blur();
+  }catch(e){}
   root.classList.add('is-dismissed');
   root.style.display='none';
   root.style.visibility='hidden';
   root.style.pointerEvents='none';
   root.setAttribute('aria-hidden','true');
-  try{document.documentElement.classList.remove('lc-await-intro');}catch(e){}
+  try{document.documentElement.classList.remove('lc-await-intro');}catch(e2){}
   document.body.style.overflow='';
 }
 
@@ -1793,7 +1799,7 @@ else{
           </div>
         </div>
       </div>
-      <div id="input-thinking-panel" class="input-thinking-panel" aria-hidden="true">
+      <div id="input-thinking-panel" class="input-thinking-panel">
         <div class="ith-guess" id="input-thinking-guess"></div>
         <div class="ith-steps" id="input-thinking-steps">
           <div class="ith-step is-active" data-ith="0">① 联网检索爆款参考</div>
@@ -2013,6 +2019,7 @@ else{
         <div class="t-value" id="t-style">--</div>
         <div class="atom-ring" id="t-ring"></div>
         <p class="t-status" id="t-status">AI大脑联网搜索爆款参数中…<br>完整提示词生成中…</p>
+        <button type="button" class="btn-engine-cancel lux-tap btn-thinking-cancel" id="btn-thinking-cancel" onclick="cancelActiveEngineRun()">✕ 取消生成（不扣次数）</button>
       </div>
       </div>
     </div>
@@ -2377,10 +2384,16 @@ function lcFetchJson(url,options,timeoutMs){
 }
 function cancelActiveEngineRun(){
   _lcUserCancelledRun=true;
+  var fc=document.getElementById('btn-engine-cancel');
+  var tc=document.getElementById('btn-thinking-cancel');
+  if(fc&&document.activeElement===fc) fc.blur();
+  if(tc&&document.activeElement===tc) tc.blur();
   if(_lcEngineAbortCtrl){
     try{_lcEngineAbortCtrl.abort();}catch(e){}
     _lcEngineAbortCtrl=null;
   }
+  var ts=document.getElementById('thinking-stage');
+  if(ts) ts.style.display='none';
   if(_lcTrialDeductedThisRun&&_lcFreeTrialRunActive){
     setFreeTrialsRemaining(getFreeTrialsRemaining()+1);
     _lcTrialDeductedThisRun=false;
@@ -2407,7 +2420,12 @@ function isNetworkFailure(err){
   return msg.indexOf('failed to fetch')>=0||msg.indexOf('networkerror')>=0||msg.indexOf('load failed')>=0||msg.indexOf('network request failed')>=0||msg.indexOf('err_internet_disconnected')>=0||(err.name==='TypeError'&&msg.indexOf('fetch')>=0)||err.name==='AbortError'||msg.indexOf('aborted')>=0;
 }
 function resolveUserFacingApiError(err){
-  if(err&&err.name==='AbortError') return '分析耗时较长已超时，双图识别更慢，请稍后重试或先只用一张图';
+  if(err&&err.name==='AbortError'){
+    if(_lcUserCancelledRun) return '已取消';
+    if(sessionContext.fromDsNotes) return '笔记配套出图超时，请稍后重试';
+    if(uploadedImageCount>=2) return '分析耗时较长已超时，双图识别更慢，请稍后重试或先只用一张图';
+    return '分析耗时较长已超时，请稍后重试';
+  }
   if(isNetworkFailure(err)) return LC_NETWORK_TIP;
   var msg=err&&err.message?String(err.message):'';
   msg=msg.replace(/扣子智能体|扣子服务|扣子官方|扣子/g,'AI大脑');
@@ -3340,7 +3358,7 @@ function buildPicPromptFromDs(){
   var cat=(document.getElementById('ds-category')||{}).value||'';
   var titleEl=document.getElementById('ds-ta-title');
   var title=titleEl?String(titleEl.value||'').trim():'';
-  var brief=pack.trim()?pack.trim().slice(0,1200):'';
+    var brief=pack.trim()?pack.trim().slice(0,900):'';
   var refNote='';
   if(dsRefFileId||dsRefSlot){
     refNote='\n【已附产品参考图·图B产品】必须以附件实物为画面主体，保留包装/品类/颜色/材质，禁止换成无关商品或纯示意款。';
@@ -4059,7 +4077,6 @@ function setInputThinkingStep(idx){
 function startInputThinkingPanel(topic){
   var panel=document.getElementById('input-thinking-panel');
   if(!panel) return;
-  panel.setAttribute('aria-hidden','false');
   var guess=document.getElementById('input-thinking-guess');
   if(guess) guess.textContent='预判品类：'+guessCategoryLabel(topic);
   var logEl=document.getElementById('input-thinking-log');
@@ -4087,9 +4104,10 @@ function startInputThinkingPanel(topic){
 }
 function stopInputThinkingPanel(){
   if(_ithStepTimer){clearInterval(_ithStepTimer);_ithStepTimer=null;}
+  var cancelBtn=document.getElementById('btn-engine-cancel');
+  if(cancelBtn&&document.activeElement===cancelBtn) cancelBtn.blur();
   var panel=document.getElementById('input-thinking-panel');
   if(panel){
-    panel.setAttribute('aria-hidden','true');
     panel.classList.remove('is-live');
   }
   var logEl=document.getElementById('input-thinking-log');
@@ -4097,10 +4115,10 @@ function stopInputThinkingPanel(){
   var guess=document.getElementById('input-thinking-guess');
   if(guess) guess.textContent='';
 }
-function setApiLoading(on,statusText){
+function setApiLoading(on,statusText,thinkingOnly){
   if(on){_apiLoadingCount++;}else{_apiLoadingCount=Math.max(0,_apiLoadingCount-1);}
   document.body.classList.toggle('api-lux-loading',_apiLoadingCount>0);
-  if(_apiLoadingCount>0&&on){
+  if(_apiLoadingCount>0&&on&&!thinkingOnly){
     var topic=(document.getElementById('main-textarea')||{}).value||'';
     startInputThinkingPanel(topic);
   }
@@ -4475,7 +4493,11 @@ function parseApiResponse(r){
     if(!r.ok){
       var errMsg=(data&&(data.msg||data.error))||'';
       if(r.status===413) errMsg=errMsg||'文件超过大小限制：图片≤2MB，文档≤4MB，请压缩后重试';
-      else if((r.status===504||r.status===502)&&!errMsg) errMsg='云端分析超时（双图更慢），请换更小图片或稍后重试';
+      else if((r.status===504||r.status===502)&&!errMsg){
+        if(uploadedImageCount>=2) errMsg='云端分析超时（双图更慢），请换更小图片或稍后重试';
+        else if(sessionContext.fromDsNotes) errMsg='笔记配套出图超时，云端仍在排队；请稍后重试（无需上传参考图）';
+        else errMsg='云端分析超时，请稍后重试';
+      }
       else if(r.status===500&&!errMsg){
         if(/FUNCTION_INVOCATION_FAILED|Serverless Function.*crashed/i.test(text||'')){
           errMsg='爆款文案接口未部署成功：请把最新 api/deepseek-copy.js 上传到 GitHub 并 Redeploy，并配置 DEEPSEEK_API_KEY';
@@ -5245,12 +5267,27 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
       if(convId.chat_id) body.chat_id=convId.chat_id;
     }
   }
-  if(withFiles&&uploadedFileIds.length>0) body.file_ids=uploadedFileIds;
-  if(uploadedImageCount>0) body.lc_image_count=uploadedImageCount;
-  setApiLoading(true,loadingLabel||'⚡ AI大脑运算中…');
+  if(!opts.skipAttachments){
+    if(withFiles&&uploadedFileIds.length>0) body.file_ids=uploadedFileIds;
+    if(uploadedImageCount>0) body.lc_image_count=uploadedImageCount;
+  }else{
+    body.lc_image_count=0;
+  }
+  setApiLoading(true,loadingLabel||'⚡ AI大脑运算中…',!!opts.thinkingOnly);
   try{
     var hasDoc=!!getDocumentContent();
-    var fetchMs=(ctx.intent==='analyze'&&uploadedImageCount>=2)?240000:(ctx.intent==='analyze'&&hasDoc?130000:(ctx.intent==='analyze'?100000:90000));
+    var fetchMs;
+    if(ctx.intent==='prompt'&&(opts.skipAttachments||sessionContext.fromDsNotes)){
+      fetchMs=150000;
+    }else if(ctx.intent==='analyze'&&uploadedImageCount>=2){
+      fetchMs=240000;
+    }else if(ctx.intent==='analyze'&&hasDoc){
+      fetchMs=130000;
+    }else if(ctx.intent==='analyze'){
+      fetchMs=100000;
+    }else{
+      fetchMs=90000;
+    }
     return lcFetchJson(API_BASE+'/api/generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -5494,18 +5531,7 @@ function runEngineFromDsNotes(){
   }
   try{ts.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){}
   lockGenBtn();
-  waitForFileReady(uploadedImageCount>=2?25000:8000).then(function(){
-    if(uploadedImageCount>=2){
-      var miss=[];
-      if(!uploadedImageFileIds[0]) miss.push('图B产品');
-      if(!uploadedImageFileIds[1]) miss.push('图A风格');
-      if(miss.length){
-        unlockGenBtn();
-        _lcFreeTrialRunActive=false;
-        alert(miss.join('、')+' 未上传成功，请换更小图片后重试');
-        return Promise.reject(new Error('dual image upload incomplete'));
-      }
-    }
+  Promise.resolve().then(function(){
     return requestPromptFromCoze(null,0);
   }).then(function(content){
     showResult(content,0,true);
@@ -5793,10 +5819,12 @@ function requestPromptFromCoze(session,attempt){
     var statusDs=document.getElementById('t-status');
     if(statusDs) statusDs.textContent='✨ 第'+(attempt+1)+'轮 · 按笔记要点生成配图提示词…';
     syncSessionRecommendations();
-    return callCoze(queryDs,session,false,'✨ 生成工业级提示词…',{
+    return callCoze(queryDs,session,false,'✨ 按笔记文案生成配图提示词…',{
       intent:'prompt',
       forceNewSession:!(session&&session.conversation_id),
-      preserveSessionNotes:true
+      preserveSessionNotes:true,
+      skipAttachments:true,
+      thinkingOnly:true
     }).then(function(res){
       currentConversationId=res.conversation_id||currentConversationId;
       currentChatId=res.chat_id||currentChatId;
