@@ -168,6 +168,154 @@ function buildEcomDualAnalyzeMessage(p, route, techniqueEffective, style) {
     .join('\n\n');
 }
 
+/** 仅上传参考图（单图）STEP2：从用户话判定海报 / 详情 / 拆解 */
+function detectUploadVisualIntent(topic, rawQuery) {
+  const blob = [topic, rawQuery].join(' ').toLowerCase();
+  if (/爆炸|拆解图|分解图|卖点拆解|结构图|立体拆解|立体展示|部件标注|剖面标注|exploded|cutaway/i.test(blob)) {
+    return 'exploded_detail';
+  }
+  if (/详情页|详情图|详情长图|详情主图|宝贝详情|商品详情|详情首屏|长图详情/i.test(blob)) {
+    return 'detail_page';
+  }
+  return 'poster';
+}
+
+function isUploadFoodPosterRoute(route, topic, rawQuery) {
+  const r = route || {};
+  const blob = [topic, rawQuery].join(' ');
+  if (r.profile === 'recipe' || r.profile === 'ecom' || r.profile === 'ecom_image') return true;
+  return /餐饮|美食|菜|锅|蛙|烧烤|火锅|牛蛙|茶饮|咖啡|烘焙|甜品|招牌菜|菜品/.test(blob);
+}
+
+/**
+ * 上传参考图 · 单图 STEP2 专线（不替代双图 ecom_dual，不影响无图逻辑）
+ */
+function buildReferenceImagePromptBlock(topic, style, size, route, rawQuery) {
+  const r = route || {};
+  const styleHint = r.randomStyleName || style || 'AI智能推荐风格';
+  const visualIntent = detectUploadVisualIntent(topic, rawQuery);
+  const foodPoster = isUploadFoodPosterRoute(r, topic, rawQuery);
+  const sizeHint = size && /16:9|16×9/i.test(size) ? '16:9 横版' : '9:16 竖版（海报/详情优先）';
+
+  let layoutGuide =
+    '电商促销海报：与上传图一致的产品/菜品为主体，黄金分割构图，主标题区+价格促销条+卖点图标，背景符合【' +
+    styleHint +
+    '】，左下角预留二维码留白区。';
+  if (visualIntent === 'detail_page') {
+    layoutGuide = foodPoster
+      ? '餐饮/商品详情首屏长图：顶部食欲主视觉（须与上传图一致）+ 中部3–4个卖点模块（图标+短文案区）+ 规格/份量条 + 底部信任背书，竖版高信息密度。'
+      : '电商详情首屏：产品 hero 占屏约45%，右侧或下方卖点矩阵（材质/功能/场景），规格参数条，竖版种草/淘宝详情风格。';
+  } else if (visualIntent === 'exploded_detail') {
+    layoutGuide =
+      '产品爆炸拆解详情图：中心完整产品，关键部件悬浮分离并引线标注，标注区预留中文卖点/材质，科技或美食剖面均可，竖版 9:16。';
+  } else if (foodPoster) {
+    layoutGuide =
+      '餐饮促销海报：上传菜品为唯一主体（色泽摆盘须还原），国潮/节庆/食欲版式，主标题+价格（如128元/份）+ 卖点四字，左下二维码留白，禁止换成与图无关的食物。';
+  }
+
+  return (
+    '\n\n【上传参考图·STEP2专线·最高优先级】\n' +
+    '（本条仅在有上传图时生效，覆盖通用知识卡/菜谱分步/Masters 英文模板要求。）\n' +
+    '① 事实来源：STEP1「✅ 内容识别」画面主体 + 用户原话（价格/平台/用途）。\n' +
+    '② 本次版式意图：' +
+    (visualIntent === 'exploded_detail'
+      ? '立体拆解卖点详情'
+      : visualIntent === 'detail_page'
+        ? '商品/菜品详情页'
+        : '促销海报') +
+    ' → ' +
+    layoutGuide +
+    '\n' +
+    '③ 系统已匹配手法【' +
+    (r.technique || '电商海报法') +
+    '】风格【' +
+    styleHint +
+    '】尺寸【' +
+    (size || sizeHint) +
+    '】。\n\n' +
+    '【完整版（推荐）·画面英文描述】\n' +
+    '- 一段连贯英文（约 60–120 词，≤900 字符）：subject/composition/lighting/texture 与上传图一致；写明版式模块与 reserved clean zones for Chinese headline, price tag, promo badges, QR code corner。\n' +
+    '- 允许 typography zones / bilingual label areas 描述中文标注区；禁止 no text、blank banner、empty title strip 等规避上屏文案的堆砌。\n' +
+    '- 禁止 --ar、--v、--sref、Midjourney 参数行；平台参数只写在「即梦设置」中文条目中。\n' +
+    buildNoBrandInPromptBlock() +
+    '\n\n' +
+    '【精简版（手机端）·即梦/豆包/通义·优先复制本条中文】\n' +
+    '- 必须写全要上屏的简体中文：主标题、副标题、价格数字、核心卖点（如炭烤牛蛙/现杀现烤/128元/份）、角标；禁止「标题待填」或空框。\n' +
+    '- 可补充：背景色、氛围、二维码位置说明。\n\n' +
+    '【即梦设置·必写·不可省略】\n' +
+    '模式：图生图（img2img）\n' +
+    '参考图：使用用户上传的产品/菜品实拍（即梦「参考图/主体参考」）\n' +
+    '参考强度：50–60（主体色泽与摆盘还原；版式与文案区可适度创作）\n' +
+    '比例：' +
+    sizeHint +
+    '\n' +
+    '其他平台备注：豆包/通义选图生图并上传同一张参考图；Midjourney 可用 --cref 参考主体（参数写在本栏，勿写入完整版英文段）。\n'
+  );
+}
+
+function shouldUseReferenceImagePrompt(p, route) {
+  const hasFile = !!(p && (p.hasFile || (p.fileIds && p.fileIds.length)));
+  if (!hasFile) return false;
+  if (safeStr(p && p.intent, 'analyze') !== 'prompt') return false;
+  const imageCount = Math.max(0, parseInt(p && p.imageCount, 10) || 0);
+  const r = route || {};
+  if (imageCount >= 2 || r.profile === 'ecom_dual') return false;
+  return true;
+}
+
+function validateReferenceImagePrompt(prompt, route) {
+  const pkg = parseCozeOutputPackage(prompt);
+  if (!pkg.hasPackage) {
+    return { valid: false, reason: '未识别到 STEP2 标准包（完整版/精简版）' };
+  }
+  const en = safeStr(pkg.englishFull);
+  const cn = safeStr(pkg.chineseShort);
+  if (en.length < 80) {
+    return {
+      valid: false,
+      reason: '完整版英文过短（当前 ' + en.length + '，上传图海报建议 ≥80 字符）',
+    };
+  }
+  if (/^[\u4e00-\u9fff\s，。！？、；：]+$/.test(en)) {
+    return { valid: false, reason: '完整版须含英文画面描述' };
+  }
+  if (cn.length < 12 || !/[\u4e00-\u9fff]{4,}/.test(cn)) {
+    return {
+      valid: false,
+      reason: '精简版须含可上屏简体中文文案（主标题/价格/卖点）',
+    };
+  }
+  if (
+    !/composition|layout|poster|product|photorealistic|food|hero|module|panel|typography|reserved|lighting|texture|infographic|exploded|cutaway/i.test(
+      en
+    ) &&
+    en.length < 160
+  ) {
+    return {
+      valid: false,
+      reason: '英文段缺少版式/主体/光影结构描述',
+    };
+  }
+  return { valid: true, reason: '' };
+}
+
+function buildReferenceImagePromptRetryBlock(validation, topic, style, route, rawQuery) {
+  const r = route || {};
+  return (
+    '\n\n【系统质量熔断 · 上传参考图海报/详情 · 强制重生成】\n' +
+    '上次未通过：' +
+    (validation && validation.reason ? validation.reason : '未达标') +
+    '。\n' +
+    '主题【' +
+    topic +
+    '】；风格【' +
+    (r.randomStyleName || style) +
+    '】。\n' +
+    '必须重新输出完整 STEP2 包：📊结构化要点 → 完整版英文（与上传图主体一致）→ 精简版【全部中文卖点与价格】→ 即梦设置【图生图+参考强度50-60】。\n' +
+    buildReferenceImagePromptBlock(topic, style, 'AI推荐尺寸', r, rawQuery || topic)
+  );
+}
+
 function buildEcomDualPromptBlock(topic, style, size, route) {
   const r = route || {};
   return (
@@ -602,6 +750,13 @@ function buildKnowledgeInfographicBlock(topic, style, size, route) {
   );
 }
 
+function isPosterStyleRoute(route) {
+  const p = route && route.profile;
+  if (p === 'ecom' || p === 'ecom_image' || p === 'ecom_dual' || p === 'recipe') return true;
+  const t = String((route && route.topic) || '');
+  return /海报|菜谱|美食|餐饮|牛蛙|火锅|促销|电商|产品图|主图|详情页|种草|探店|食谱|招牌|菜品/.test(t);
+}
+
 function buildStep2OutputBlock(topic, style, size, route) {
   const r = route || {};
   const limit = getJimengCharLimit();
@@ -621,11 +776,17 @@ function buildStep2OutputBlock(topic, style, size, route) {
     '📊【知识点结构化】（分模块列出，中文）\n' +
     '🎨【即梦生图提示词】\n' +
     '📋 完整版（推荐）\n' +
-    '（此处必须是可复制到即梦的英文正文，≤' +
-    limit +
-    ' 字符，≥350 字符，含版式模块/主体/场景/Chinese typography zones 等，禁止方括号占位）\n' +
+    (isPosterStyleRoute(r)
+      ? '（英文辅助说明，≤' +
+        Math.min(limit, 900) +
+        ' 字符，≤120 英文词，一句连贯画面；禁止 negative prompt、禁止 --ar/--v、禁止 no text/blank overlay/empty banner/reserved typography zones）\n'
+      : '（此处必须是可复制到即梦的英文正文，≤' +
+        limit +
+        ' 字符，≥350 字符，含版式模块/主体/场景/Chinese typography zones 等，禁止方括号占位）\n') +
     '📱 精简版（手机端适配）\n' +
-    '（中文精简描述，保留核心画面与版式）\n' +
+    (isPosterStyleRoute(r)
+      ? '（【即梦优先复制】中文须写明全部可见文案：主标题、价格、卖点四字，如炭烤牛蛙/128元/现杀现烤，禁止空标题框）\n'
+      : '（中文精简描述，保留核心画面与版式）\n') +
     '⚙️ 即梦设置：比例 / 模式 / 参考度 / 角色模型\n' +
     '📣【抖音话题标签】\n' +
     '（3-5 个 # 标签）\n' +
@@ -714,11 +875,14 @@ function validateKnowledgePrompt(prompt) {
   return { valid: true, reason: '' };
 }
 
-function validatePromptForTopic(prompt, topic, route) {
+function validatePromptForTopic(prompt, topic, route, hasFile) {
   const r =
     route ||
     routePlainLanguageTopic(topic, '', require('path').join(__dirname));
   const pkg = parseCozeOutputPackage(prompt);
+  if (hasFile) {
+    return validateReferenceImagePrompt(prompt, r);
+  }
   if (pkg.hasPackage) {
     return validateCozePackage(pkg, r);
   }
@@ -768,10 +932,19 @@ function buildLifecyclePromptRetryBlock(validation, topic, style) {
   );
 }
 
-function buildPromptRetryBlockForTopic(validation, topic, style, route) {
+function buildPromptRetryBlockForTopic(validation, topic, style, route, hasFile, rawQuery) {
   const r =
     route ||
     routePlainLanguageTopic(topic, '', require('path').join(__dirname));
+  if (hasFile) {
+    return buildReferenceImagePromptRetryBlock(
+      validation,
+      topic,
+      style,
+      r,
+      rawQuery || topic
+    );
+  }
   if (r.profile === 'lifecycle' || detectLifecycleTopic(topic, '')) {
     return buildLifecyclePromptRetryBlock(validation, topic, style);
   }
@@ -900,6 +1073,28 @@ function buildStrictMdCozeMessage(p) {
         '\n\n' +
         buildEcomDualPromptBlock(topic, styleName, size, route) +
         '\n【用户原话·必须贯彻】\n' +
+        rawQuery
+      );
+    }
+    if (shouldUseReferenceImagePrompt(p, route)) {
+      const refHead =
+        '【知识图文魔方·上传参考图·STEP2专线】\n' +
+        '第二层品类：' +
+        safeStr(route.mdCategoryName, route.humanLabel || '') +
+        '\n第四层手法：' +
+        techniqueEffective +
+        '\n第五层风格：' +
+        styleName +
+        '\n\n' +
+        buildVisionFirstAnalyzeBlock() +
+        '\n' +
+        styleLibBlock;
+      return (
+        refHead +
+        buildReferenceImagePromptBlock(topic, styleName, size, route, rawQuery) +
+        buildStep2OutputBlock(topic, styleName, size, route) +
+        '\n\n【第十三章·即梦字符】精简版中文卖点须完整；完整版英文画面段建议 80–900 字符。\n' +
+        '【用户确认·已批准方案】\n【用户原话】\n' +
         rawQuery
       );
     }
@@ -1091,6 +1286,18 @@ function buildCozeMessage(p) {
         '\n【笔记配图联动·最高优先】用户已写好笔记框架，完整版英文必须结合下列文案设计画面（主体/场景/卖点/版式模块），≥380字符，禁止只输出 no text 类合规堆砌。\n' +
         userNotes +
         '\n';
+    }
+    if (shouldUseReferenceImagePrompt(p, route)) {
+      return (
+        head +
+        '\n\n' +
+        buildVisionFirstAnalyzeBlock() +
+        '\n' +
+        buildReferenceImagePromptBlock(topic, style, size, route, rawQuery) +
+        buildStep2OutputBlock(topic, style, size, route) +
+        '【严禁】方括号占位；英文禁止真实品牌/商标/IP 名。\n' +
+        lifecycleConfirm
+      );
     }
     const useStep2 =
       usesFullCozePackage(route.profile) ||
@@ -1529,6 +1736,9 @@ module.exports = {
   routePlainLanguageTopic,
   parseCozeOutputPackage,
   buildStep2OutputBlock,
+  buildReferenceImagePromptBlock,
+  shouldUseReferenceImagePrompt,
+  validateReferenceImagePrompt,
   usesFullCozePackage,
   isSopTemplateSkeleton,
   sanitizeNoTextPrompt,
