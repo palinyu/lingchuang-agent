@@ -374,9 +374,15 @@ module.exports = async function handler(req, res) {
         '\n【篇幅铁律】结构化分析须含品类/手法/尺寸/风格；禁止只输出菜单而无正文。';
     }
     if (PROMPT_QUALITY_INTENTS.indexOf(intent) !== -1) {
-      if (cozeFileIds.length > 0) {
+      if (
+        cozeFileIds.length > 0 &&
+        (route.profile === 'ecom' ||
+          route.profile === 'ecom_image' ||
+          route.profile === 'ecom_dual' ||
+          route.profile === 'ecom_detail_exploded')
+      ) {
         assembledMessage +=
-          '\n\n【上传参考图·出图死命令】必须按 STEP2 标准包输出；完整版英文写与上传图一致的画面/版式/光影（可写 Chinese typography zones）；精简版须写全简体中文卖点与价格；即梦设置必须写明图生图与参考图强度 50–60。';
+          '\n\n【电商·上传参考图·出图死命令】必须按 STEP2 标准包输出；完整版英文写与上传图一致的画面/版式/光影（可写 Chinese typography zones）；精简版须写全简体中文卖点与价格；即梦设置必须写明图生图与参考图强度 50–60。';
       } else {
         assembledMessage +=
           '\n\n【工业级出图·最终死命令】必须按 STEP2 标准包输出，完整版英文不得低于质检标准。';

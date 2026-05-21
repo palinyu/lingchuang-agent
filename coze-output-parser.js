@@ -131,6 +131,8 @@ function validateCozePackage(pkg, route) {
   if (
     profile !== 'ecom' &&
     profile !== 'ecom_image' &&
+    profile !== 'ecom_dual' &&
+    profile !== 'ecom_detail_exploded' &&
     !structureRe.test(en) &&
     en.length < 200
   ) {

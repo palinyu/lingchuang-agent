@@ -3765,6 +3765,8 @@ function refreshImagePreviewUI(){
   if(n>=2){if(row){row.className='is-dual';row.style.display='flex';}if(pi)pi.style.display='none';}
   else if(n===1){if(row){row.className='';row.style.display='flex';}if(pi)pi.style.display='none';}
   else{if(row)row.style.display='none';if(pi){pi.style.display='none';pi.src='';}}
+  var ta=document.getElementById('main-textarea');
+  if(n>0&&ta&&!String(ta.value||'').trim())showEcomHint(n>=2);
 }
 function setSlotUploadStatus(slotIdx,text,isErr,isOk){
   var el=document.getElementById('preview-status-'+slotIdx);
@@ -3834,8 +3836,6 @@ function processImageFiles(imageFiles){
     var slot=startSlot+j;if(slot>1)break;
     addImageToSlot(imgs[j],slot);
   }
-  var ta=document.getElementById('main-textarea');
-  if(ta&&!ta.value)showEcomHint(uploadedImageCount>=2);
 }
 function processDocumentFile(file){
   if(!checkUploadSize(file)) return;
@@ -3953,8 +3953,8 @@ function parsePDF(ab,file,pds){
 }
 
 function showEcomHint(isDual){var hint=document.getElementById('ecom-hint');if(!hint){hint=document.createElement('div');hint.id='ecom-hint';hint.style.cssText='margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;';document.getElementById('input-stage').appendChild(hint);}
-var items=isDual?[['图B产品换到图A版式，背景改成浅米色，出一张电商海报','🖼️ 双图融合海报'],['把图B产品放到图A的构图里，换纯色背景','🎨 换背景+融合'],['参考图A风格给图B产品做详情页主图','🛍️ 详情主图']]:[['帮我做这个产品的海报','📢 做海报'],['帮我做这个产品的详情页','🛍️ 做详情页'],['参考这张图风格帮我做知识图文','🔄 复刻风格'],['识别这张图的内容帮我做知识图文提示词','📝 识别内容']];
-var html='<span style="font-size:11px;color:var(--tx3);">'+(isDual?'已上传2张：图B产品+图A风格，可点快捷话术：':'检测到图片：')+'</span>';
+var items=isDual?[['图B产品换到图A版式，背景改成浅米色，出一张电商海报','🖼️ 双图融合海报'],['把图B产品放到图A的构图里，换纯色背景','🎨 换背景+融合'],['参考图A风格给图B产品做详情页主图','🛍️ 详情主图']]:[['帮我做这个产品的促销海报，左下留二维码','📢 电商海报'],['帮我做这个产品的详情页首屏','🛍️ 详情页'],['做产品爆炸拆解卖点详情图，竖版','🔧 拆解详情'],['识别这张图，写清主体和价格，做海报','📝 识图+海报']];
+var html='<span style="font-size:11px;color:var(--tx3);">'+(isDual?'已上传2张：图B产品+图A风格，可点快捷话术：':'已上传参考图（电商），请点快捷话术或自填价格/卖点：')+'</span>';
 items.forEach(function(it){html+='<span onclick="fillEcom(\''+it[0].replace(/'/g,"\\'")+'\')" style="padding:4px 10px;background:var(--gold-dim);border:1px solid var(--bd-gold);border-radius:12px;font-size:11px;color:var(--gold);cursor:pointer;">'+it[1]+'</span>';});
 hint.innerHTML=html;hint.style.display='flex';}
 function fillEcom(text){var ta=document.getElementById('main-textarea');if(ta)ta.value=text;var hint=document.getElementById('ecom-hint');if(hint)hint.style.display='none';}
@@ -3973,7 +3973,7 @@ var LC_MD_LEGACY_OVERRIDES=[
   {keys:['贺卡','春节','中秋','端午','圣诞','生日祝福','礼物','祝福语'],categoryId:'life_science',templateKey:'festival_card',technique:'手法十九·DIY手工模板教程法',profile:'life_science'}
 ];
 var LC_MD_CATEGORIES={
-  ecom:{id:'ecom',name:'餐饮电商海报类',keys:['海报','促销','电商','主图','详情','种草','探店','牛蛙','火锅','餐饮','招牌','菜品','炭烤','套餐','128元','份'],technique:'手法二十二B·餐饮海报法',templateKey:'ecom_image',profile:'ecom_image'},
+  ecom:{id:'ecom',name:'餐饮电商海报类',keys:['海报','促销','电商','主图','详情','详情页','种草','探店','火锅','餐饮','招牌','菜品','炭烤','套餐','128元','份','拆解','爆炸图','卖点拆解','立体拆解','带货','二维码'],technique:'手法二十二B·餐饮海报法',templateKey:'ecom_image',profile:'ecom_image'},
   education:{id:'education',name:'教育学科类',keys:['学科','年级','考纲','词汇','题型','初中','高中','小学','一年级','二年级','三年级','四年级','五年级','六年级','电路','物理','化学','生物','历史','地理','政治','英语','语文','数学','单元','课时','上册','下册','考前','复习','知识点','公式','定理','光合作用','考试','知识卡','知识图','图解','四级词汇','四级','早教','教小孩','数字认知','幼儿','做成图'],technique:'手法三·结构化知识模块法',templateKey:'education',profile:'education'},
   life_science:{id:'life_science',name:'生活科普类',keys:['食疗','养生','植物','节气','百科','花卉','冬至','立春','春分','夏至','秋分','科普','原理','玫瑰','茉莉','牡丹','荷花','芍药','做成图'],technique:'手法十五·博物学六格百科图鉴法',templateKey:'life_science',profile:'life_science'},
   city:{id:'city',name:'城市文化类',keys:['城市','地标','美食地图','Citywalk','北京','上海','广州','深圳','成都','重庆','杭州','南京','苏州','武汉','西安','胡同','外滩','必打卡','老街','古镇','旅游','攻略','漫游','全貌','全貌图','全景','鸟瞰','地图图','好玩的','吃什么','故宫','西湖','长沙','做成图'],technique:'手法四升级·俯瞰鸟瞰地图法',templateKey:'city',profile:'city'},

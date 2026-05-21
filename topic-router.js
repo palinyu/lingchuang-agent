@@ -107,6 +107,23 @@ const ROUTE_RULES = [
     weight: 5,
   },
   {
+    profile: 'ecom_detail_exploded',
+    humanLabel: '电商·拆解卖点详情图',
+    technique: '手法四十五·产品爆炸拆解详情法',
+    categoryMarker: '',
+    keys: [
+      '爆炸图',
+      '拆解图',
+      '分解图',
+      '卖点拆解',
+      '立体拆解',
+      '结构图',
+      '部件标注',
+      '爆炸拆解',
+    ],
+    weight: 5,
+  },
+  {
     profile: 'interior',
     humanLabel: '家装·户型效果图',
     technique: '手法四十三：家装户型效果图法',
@@ -236,6 +253,13 @@ const STYLE_POOLS = {
   city: ['Citywalk手绘地图', '探店打卡拼贴', '复古旅游海报', '3D浮雕城市', '夜景霓虹漫游'],
   ecom: ['促销主图冲击', '极简白底产品', '节日氛围场景', '美食诱人特写', '国潮礼盒风'],
   ecom_image: ['电商主图爆款', '左下二维码预留区', '筷子夹产品特写', '详情页长图首屏', '直播切片风'],
+  ecom_detail_exploded: [
+    '产品爆炸拆解风',
+    '悬浮部件标注',
+    '科技剖面详情',
+    '卖点引线长图',
+    '竖版拆解详情',
+  ],
   knowledge_infographic: ['扁平信息图', '3D微缩场景', '手绘科普', '高密度知识卡', '杂志 editorial'],
   default: ['爆款知识图解', '小红书竖版信息图', '高饱和科普卡', '柔光教育插画', '写实+标注混合'],
 };
@@ -262,6 +286,7 @@ const KNOWLEDGE_PROFILES = {
   ecom: 1,
   ecom_image: 1,
   ecom_dual: 1,
+  ecom_detail_exploded: 1,
   interior: 1,
   template_clone: 1,
   cover: 1,
@@ -285,7 +310,18 @@ function pickRandomStyle(profile, topic, reshuffle) {
   return pool[idx];
 }
 
-function detectSpecialOverrides(blob, hasFileHint) {
+function isEcomProfile(profile) {
+  return (
+    profile === 'ecom' ||
+    profile === 'ecom_image' ||
+    profile === 'ecom_dual' ||
+    profile === 'ecom_detail_exploded'
+  );
+}
+
+function detectSpecialOverrides(blob, opts) {
+  const o = opts || {};
+  const hasFile = !!o.hasFile;
   const lower = blob.toLowerCase();
   if (/图a|图b|风格参考|双图融合/.test(lower)) {
     return ROUTE_RULES.find(function (r) {
@@ -293,23 +329,37 @@ function detectSpecialOverrides(blob, hasFileHint) {
     });
   }
   if (
-    hasFileHint &&
-    /海报|详情|诱人|食欲|餐饮|美食|火锅|牛蛙|美蛙|蛙|菜品|128|元\/份|元\/斤/.test(blob)
+    hasFile &&
+    /爆炸图|爆炸拆解|立体拆解|卖点拆解|拆解图|分解图|部件标注|结构爆炸|剖面拆解/.test(
+      blob
+    )
   ) {
-    const recipe = ROUTE_RULES.find(function (r) {
-      return r.profile === 'recipe';
-    });
-    if (recipe) {
-      return Object.assign({}, recipe, {
-        technique: '手法二十二B方案（视觉优先菜谱卡）',
-        humanLabel: '餐饮海报·上传图识别（对齐扣子 STEP1）',
-      });
-    }
-  }
-  if (hasFileHint && /海报|详情|主图|产品|推广|二维码|带货/.test(blob)) {
     return ROUTE_RULES.find(function (r) {
+      return r.profile === 'ecom_detail_exploded';
+    });
+  }
+  if (
+    hasFile &&
+    /海报|详情|诱人|食欲|餐饮|美食|火锅|牛蛙|美蛙|蛙|菜品|产品|主图|推广|二维码|带货|128|元\/份|元\/斤/.test(
+      blob
+    )
+  ) {
+    const ecom = ROUTE_RULES.find(function (r) {
       return r.profile === 'ecom_image';
     });
+    if (ecom) {
+      const isFood = /餐饮|美食|火锅|蛙|菜品|招牌|烧烤|茶饮|咖啡|烘焙|炭烤|锅/.test(
+        blob
+      );
+      return Object.assign({}, ecom, {
+        technique: isFood
+          ? '手法二十二B·餐饮电商海报法'
+          : ecom.technique,
+        humanLabel: isFood
+          ? '餐饮电商海报·上传图'
+          : '电商·单图海报（含上传图）',
+      });
+    }
   }
   if (/批量|系列|做10张|做一套/.test(blob)) {
     return ROUTE_RULES.find(function (r) {
@@ -394,12 +444,12 @@ function routePlainLanguageTopic(topic, rawQuery, rootDir, options) {
   const q = safeStr(rawQuery, t);
   const blob = t + ' ' + q;
   const opts = options || {};
-  const hasFileHint = !!opts.hasFile || /上传|附图|产品图|图a|图b/i.test(blob);
+  const hasFileHint = !!opts.hasFile;
   const imageCount = Math.max(0, parseInt(opts.imageCount, 10) || 0);
 
   const md = classifyMdCategory(blob, opts);
 
-  let override = detectSpecialOverrides(blob, hasFileHint);
+  let override = detectSpecialOverrides(blob, opts);
   if (imageCount >= 2) {
     const dual = ROUTE_RULES.find(function (r) {
       return r.profile === 'ecom_dual';
@@ -516,6 +566,7 @@ function usesFullCozePackage(profile) {
     profile === 'ecom' ||
     profile === 'ecom_image' ||
     profile === 'ecom_dual' ||
+    profile === 'ecom_detail_exploded' ||
     profile === 'interior' ||
     profile === 'template_clone' ||
     profile === 'cover'
@@ -529,6 +580,7 @@ function getStylePoolForProfile(profile) {
 
 module.exports = {
   routePlainLanguageTopic,
+  isEcomProfile,
   isKnowledgeProfile,
   usesFullCozePackage,
   buildHumanFirstBlock,
