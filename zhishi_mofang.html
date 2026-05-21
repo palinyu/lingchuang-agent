@@ -1151,8 +1151,16 @@ body.lc-thinking-active .btn-engine-cancel{display:none!important;}
 .vision-kv-v{font-size:12px;color:#ecfdf5;line-height:1.55;}
 .analysis-plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:4px;}
 @media(max-width:900px){.analysis-plan-grid{grid-template-columns:1fr;}}
-.analysis-plan-card{background:#07080f;border:1px solid rgba(243,175,66,0.2);border-radius:12px;padding:12px 14px;min-height:0;}
+.analysis-plan-card{background:#07080f;border:1px solid rgba(243,175,66,0.2);border-radius:12px;padding:12px 14px;min-height:0;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .15s;}
+.analysis-plan-card:hover{border-color:rgba(243,175,66,0.45);}
+.analysis-plan-card.is-selected{border-color:rgba(243,175,66,0.85);box-shadow:0 0 18px rgba(243,175,66,0.22);transform:translateY(-1px);}
+.analysis-plan-card .apc-pick{font-size:10px;color:rgba(255,255,255,0.4);margin-top:8px;}
+.analysis-plan-card.is-selected .apc-pick{color:#f3af42;font-weight:700;}
 .analysis-plan-card .apc-hd{font-size:12px;font-weight:800;color:#fcd34d;line-height:1.45;margin-bottom:8px;}
+.analysis-chip-wide{max-width:280px!important;flex:1.2 1 200px!important;}
+.analysis-chip-hint{font-size:10px;font-weight:500;color:rgba(255,255,255,0.5);margin-top:5px;line-height:1.45;}
+.insight-primary{background:rgba(16,185,129,0.06);border:1px solid rgba(52,211,153,0.28);border-radius:12px;padding:14px 16px;margin-bottom:12px;}
+.insight-primary .insight-block-title{color:#6ee7b7;}
 .analysis-plan-card .apc-row{font-size:11px;color:#cbd5e1;line-height:1.55;margin-bottom:6px;}
 .analysis-plan-card .apc-row b{color:rgba(243,175,66,0.85);font-weight:700;}
 .analysis-plan-card .apc-row:last-child{margin-bottom:0;}
@@ -2730,7 +2738,7 @@ function bootHeadlessConfig(){
   }
 }
 var sessionUserId=null;
-var sessionContext={coreTopic:'',style:'',technique:'',size:'',userNotes:'',fromDsNotes:false,promptProfile:'standard',routeHumanLabel:'',randomStyleName:''};
+var sessionContext={coreTopic:'',style:'',technique:'',size:'',userNotes:'',fromDsNotes:false,promptProfile:'standard',routeHumanLabel:'',randomStyleName:'',posterPlans:[],selectedPlanIndex:0,selectedPlanSummary:''};
 var uploadedFileIds=[],uploadedImageSlots=[null,null],uploadedImageFileIds=[null,null],docUploadFileId=null,uploadedImageCount=0,isFileAttached=false,cachedPrompt='',cachedPromptShort='',selectedBubbles=[],currentConversationId=null,currentChatId=null;
 var docParsePromise=Promise.resolve(),docParseResolve=null,pendingUploadPromises=[];
 var promptReadyTopic='',copywriteGenToken=0;
@@ -4021,7 +4029,7 @@ var LC_STRUCTURE_TEMPLATES={
   education:'【品类专属结构模板·教育学科·手法三】\n① 标题区：主题+年级/学科\n② 核心模块：3-5个并列知识块\n③ 解题/记忆：流程图或口诀框\n④ 易错点：红色警示2-3条\n⑤ 小结：底部复习要点',
   life_science:'【品类专属结构模板·生活科普·手法十五】\n① 标题：主题+分类标签\n② 六格图鉴2×3\n③ 核心原理流程或对比图\n④ 趣味冷知识气泡',
   constellation:'【品类专属结构模板·星座情感·手法十六/十七】\n① 顶部：星座名+日期+元素\n② 性格特征3条\n③ 优势与短板双栏\n④ 情感/配对建议\n⑤ 金句+话题标签',
-  ecom_image:'【第七章·电商单图海报模式】\n① 产品主体居中或黄金分割\n② 平台风格匹配\n③ 海报版式：大字卖点+价格条\n④ 背景按平台流行风格选定',
+  ecom_image:'【第七章·电商单图海报·手法二十二B】\n① 食欲主视觉居中（须与上传实拍一致）\n② 主标题+价格促销条+卖点图标\n③ 左下/底部预留二维码留白\n④ 背景按平台流行风格（抖音9:16/小红书3:4/美团横图16:9）',
   ecom_dual:'【第七章·电商双图融合模式】\n图A风格框架+图B产品主体，把B穿上A的外衣',
   default:'【通用·手法三结构化知识模块法】\n① 标题区：主题大字+副标题+适用人群\n② 核心内容：≥3个信息模块\n③ 视觉插图：1主+2辅\n④ 装饰层：背景纹理+边框+角标\n⑤ 底部：来源/标签/系列标识'
 };
@@ -5634,10 +5642,11 @@ function parsePosterPlanCards(plansText){
     };
   }).slice(0,3);
 }
-function isMetaDuplicatePoint(txt,fieldVals){
+function isMetaDuplicatePoint(txt,fieldVals,reasonVal){
   var t=String(txt||'').trim();
   if(!t||t.length<3) return true;
-  if(/^(品类判定|用户类型|匹配手法|推荐尺寸|本次随机风格|本次指定风格)[：:]/i.test(t)) return true;
+  if(/^(品类判定|用户类型|匹配手法|推荐尺寸|本次随机风格|本次指定风格|推荐理由)[：:]/i.test(t)) return true;
+  if(reasonVal&&t.length>10&&(t.indexOf(String(reasonVal).slice(0,40))>=0||String(reasonVal).indexOf(t.slice(0,40))>=0)) return true;
   var i=0;
   for(;i<fieldVals.length;i++){
     var fv=String(fieldVals[i]||'').trim();
@@ -5645,6 +5654,69 @@ function isMetaDuplicatePoint(txt,fieldVals){
     if(t.indexOf(fv)>=0||fv.indexOf(t.substring(0,Math.min(12,t.length)))>=0) return true;
   }
   return false;
+}
+function getTechniqueHint(techniqueName){
+  var n=String(techniqueName||'').trim();
+  var hints={
+    '手法二十二B·餐饮海报法':'食欲主图+价格促销条+卖点文案+二维码留白，主体必须与上传实拍一致',
+    '手法二十二B':'餐饮电商海报：主视觉+促销模块+平台版式（抖音/小红书/美团）',
+    '手法二十二·分步骤菜谱教程卡法':'食材清单+分步流程+避坑提示，适合菜谱教程卡',
+    '手法三·结构化知识模块法':'标题+多模块知识块+插图，适合学科/科普图解',
+    '手法四升级·俯瞰鸟瞰地图法':'手绘地标动线+打卡点，适合城市旅游攻略',
+    '手法五·场景叙事词汇法':'沉浸式场景+悬浮词汇卡，适合英语/场景记忆'
+  };
+  var k=Object.keys(hints);
+  for(var i=0;i<k.length;i++){if(n.indexOf(k[i])>=0||k[i].indexOf(n)>=0) return hints[k[i]];}
+  var tk=sessionContext.templateKey||'';
+  var tpl=LC_STRUCTURE_TEMPLATES[tk]||LC_STRUCTURE_TEMPLATES.default||'';
+  if(tpl){
+    var lines=tpl.split('\n').filter(Boolean);
+    if(lines[1]) return lines[1].replace(/^[①②③④⑤⑥⑦⑧⑨]\s*/,'').substring(0,72);
+  }
+  return '按品类自动匹配版式模块、光影与文案区结构';
+}
+function inferSizeLabelFromPlan(plan){
+  var b=[plan&&plan.title,plan&&plan.layout,plan&&plan.platform,plan&&plan.bg].join(' ');
+  if(/9\s*:\s*16|9×16|抖音|竖屏刷屏/i.test(b)) return '9:16竖版';
+  if(/16\s*:\s*9|16×9|横版|美团|头图/i.test(b)) return '16:9横版';
+  if(/1\s*:\s*1|方图|朋友圈方/i.test(b)) return '1:1方图';
+  if(/3\s*:\s*4|3×4|小红书/i.test(b)) return '3:4竖版';
+  return '';
+}
+function syncCustomSizeSelectFromLabel(sizeLabel){
+  var sel=document.getElementById('custom-size');
+  if(!sel||!sizeLabel) return;
+  var s=String(sizeLabel);
+  if(/9\s*:\s*16/i.test(s)) sel.value='A';
+  else if(/3\s*:\s*4/i.test(s)) sel.value='A2';
+  else if(/16\s*:\s*9/i.test(s)) sel.value='B';
+  else if(/1\s*:\s*1/i.test(s)) sel.value='C';
+}
+function applyPosterPlanSelection(idx,planCards,skipScroll){
+  var cards=planCards||sessionContext.posterPlans||[];
+  if(!cards.length) return;
+  var i=Math.max(0,Math.min(cards.length-1,parseInt(idx,10)||0));
+  sessionContext.selectedPlanIndex=i;
+  var p=cards[i];
+  var summary=[p.title,p.layout,p.platform].filter(Boolean).join(' · ');
+  sessionContext.selectedPlanSummary=summary.substring(0,200);
+  var planSize=inferSizeLabelFromPlan(p);
+  if(planSize){
+    aiRecSize=planSize;
+    sessionContext.size=planSize;
+    var stEl=document.getElementById('rec-size-tag');
+    if(stEl) stEl.textContent='📐 '+planSize;
+    syncCustomSizeSelectFromLabel(planSize);
+  }
+  var grid=document.querySelector('.analysis-plan-grid');
+  if(grid){
+    grid.querySelectorAll('.analysis-plan-card').forEach(function(el,j){
+      if(j===i) el.classList.add('is-selected');
+      else el.classList.remove('is-selected');
+    });
+  }
+  var btn=document.querySelector('.btn-confirm');
+  if(btn) btn.textContent='✅ 已选方案'+(i+1)+'，按此方案出图 →';
 }
 function parseVisionRecognition(raw){
   var block=parseCozeProductRecognition(raw);
@@ -5802,8 +5874,11 @@ function showAnalysisCard(raw){
     }
     if(val&&val.length>1){
       var item=document.createElement('div');
-      item.style.cssText='background:rgba(243,175,66,0.07);border:1px solid rgba(243,175,66,0.2);border-radius:10px;padding:10px 14px;flex:1;min-width:120px;max-width:220px;';
-      item.innerHTML='<div style="font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:4px;">'+f.icon+' '+f.label+'</div><div style="font-size:13px;font-weight:700;color:#f3af42;line-height:1.4;">'+val.substring(0,50)+'</div>';
+      var wide=f.label==='出图手法';
+      item.style.cssText='background:rgba(243,175,66,0.07);border:1px solid rgba(243,175,66,0.2);border-radius:10px;padding:10px 14px;flex:1;min-width:120px;max-width:'+(wide?'280px':'220px')+';'+(wide?'flex:1.2 1 200px;':'');
+      if(wide) item.className='analysis-chip-wide';
+      var hint=wide?getTechniqueHint(val):'';
+      item.innerHTML='<div style="font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:4px;">'+f.icon+' '+f.label+'</div><div style="font-size:13px;font-weight:700;color:#f3af42;line-height:1.4;">'+val.substring(0,50)+'</div>'+(hint?'<div class="analysis-chip-hint">'+escAnalysisHtml(hint)+'</div>':'');
       cardRow.appendChild(item);
     }
   });
@@ -5815,30 +5890,15 @@ function showAnalysisCard(raw){
   if(localCat&&localCat.categoryName) fieldVals.push(localCat.categoryName);
   if(localCat&&localCat.technique) fieldVals.push(localCat.technique);
 
+  var reasonVal=parseFieldFromRaw(raw,['推荐理由']);
   var unified=document.createElement('div');
   unified.className='analysis-unified';
   var hasUnified=false;
 
-  if(visionRec&&visionRec.length>2){
-    var vPart=document.createElement('div');
-    if(visionKv.subject||visionKv.assist||visionKv.tone){
-      vPart.innerHTML='<div class="analysis-unified-hd">✅ 产品识别</div><div class="vision-kv">'+
-        (visionKv.subject?'<div class="vision-kv-item"><div class="vision-kv-k">主体</div><div class="vision-kv-v">'+escAnalysisHtml(visionKv.subject)+'</div></div>':'')+
-        (visionKv.assist?'<div class="vision-kv-item"><div class="vision-kv-k">辅助元素</div><div class="vision-kv-v">'+escAnalysisHtml(visionKv.assist)+'</div></div>':'')+
-        (visionKv.tone?'<div class="vision-kv-item"><div class="vision-kv-k">主色调</div><div class="vision-kv-v">'+escAnalysisHtml(visionKv.tone)+'</div></div>':'')+
-        '</div>';
-    }else{
-      vPart.innerHTML='<div class="analysis-unified-hd">✅ 产品识别</div><div class="insight-block-body" style="margin-bottom:12px;white-space:pre-wrap;">'+escAnalysisHtml(visionRec.substring(0,800))+'</div>';
-    }
-    unified.appendChild(vPart);
-    hasUnified=true;
-  }
-
   if(cardRow.children.length>0){
     var chipHd=document.createElement('div');
     chipHd.className='analysis-unified-hd';
-    chipHd.style.marginTop='4px';
-    chipHd.textContent='📊 出图参数（与下方方案一致）';
+    chipHd.textContent='📊 出图参数';
     unified.appendChild(chipHd);
     var chipWrap=document.createElement('div');
     chipWrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;';
@@ -5847,30 +5907,53 @@ function showAnalysisCard(raw){
     hasUnified=true;
   }
 
-  var reasonVal=parseFieldFromRaw(raw,['推荐理由']);
-  if(reasonVal&&reasonVal.length>2){
-    var rPart=document.createElement('div');
-    rPart.innerHTML='<div class="insight-block" style="margin-bottom:12px;"><div class="insight-block-title">💡 推荐理由</div><div class="insight-block-body">'+escAnalysisHtml(reasonVal.substring(0,220))+'</div></div>';
-    unified.appendChild(rPart);
+  var insightTitle=docSnap?'📄 文档精要（系统识别）':'✅ 识图精要（系统识别·对齐扣子）';
+  var insightHtml='';
+  if(docSnap&&(!visionKv.subject||visionKv.subject.length<2)){
+    var docPts=extractDocKeyPoints(docSnap,5);
+    insightHtml=docPts.length?docPts.map(function(p,i){return (i+1)+'. '+escAnalysisHtml(p);}).join('<br>'):escAnalysisHtml(docSnap.replace(/\s+/g,' ').trim().substring(0,400));
+  }else if(visionKv.subject||visionKv.assist||visionKv.tone){
+    insightHtml='<div class="vision-kv">'+
+      (visionKv.subject?'<div class="vision-kv-item"><div class="vision-kv-k">主体</div><div class="vision-kv-v">'+escAnalysisHtml(visionKv.subject)+'</div></div>':'')+
+      (visionKv.assist?'<div class="vision-kv-item"><div class="vision-kv-k">辅助元素</div><div class="vision-kv-v">'+escAnalysisHtml(visionKv.assist)+'</div></div>':'')+
+      (visionKv.tone?'<div class="vision-kv-item"><div class="vision-kv-k">主色调</div><div class="vision-kv-v">'+escAnalysisHtml(visionKv.tone)+'</div></div>':'')+
+      '</div>';
+  }else if(visionRec&&visionRec.length>2){
+    insightHtml='<div class="insight-block-body" style="white-space:pre-wrap;">'+escAnalysisHtml(visionRec.substring(0,600))+'</div>';
+  }
+  if(insightHtml){
+    var ins=document.createElement('div');
+    ins.className='insight-primary';
+    ins.innerHTML='<div class="insight-block-title">'+insightTitle+'</div><div class="insight-block-body">'+insightHtml+'</div>';
+    unified.appendChild(ins);
     hasUnified=true;
   }
 
+  sessionContext.posterPlans=planCards.slice();
   if(planCards.length>0){
     var pHd=document.createElement('div');
     pHd.className='analysis-unified-hd';
-    pHd.textContent='🎨 三套海报/详情方案（择一确认出图）';
+    pHd.textContent='🎨 三套方案 · 点击选择其一后确认出图';
     unified.appendChild(pHd);
     var pGrid=document.createElement('div');
     pGrid.className='analysis-plan-grid';
-    planCards.forEach(function(p){
+    planCards.forEach(function(p,idx){
       var card=document.createElement('div');
-      card.className='analysis-plan-card';
+      card.className='analysis-plan-card'+(idx===0?' is-selected':'');
+      card.setAttribute('role','button');
+      card.setAttribute('tabindex','0');
+      card.setAttribute('data-plan-idx',String(idx));
       var html='<div class="apc-hd">'+escAnalysisHtml(p.title)+'</div>';
       if(p.layout) html+='<div class="apc-row"><b>版式</b> '+escAnalysisHtml(p.layout.substring(0,120))+'</div>';
       if(p.bg) html+='<div class="apc-row"><b>背景</b> '+escAnalysisHtml(p.bg.substring(0,80))+'</div>';
       if(p.font) html+='<div class="apc-row"><b>字体</b> '+escAnalysisHtml(p.font.substring(0,80))+'</div>';
       if(p.platform) html+='<div class="apc-row"><b>适用</b> '+escAnalysisHtml(p.platform.substring(0,80))+'</div>';
+      var ps=inferSizeLabelFromPlan(p);
+      if(ps) html+='<div class="apc-row"><b>尺寸</b> '+escAnalysisHtml(ps)+'</div>';
+      html+='<div class="apc-pick">'+(idx===0?'✓ 当前已选':'点击选此方案')+'</div>';
       card.innerHTML=html;
+      card.addEventListener('click',function(){applyPosterPlanSelection(idx,planCards);});
+      card.addEventListener('keydown',function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();applyPosterPlanSelection(idx,planCards);}});
       pGrid.appendChild(card);
     });
     unified.appendChild(pGrid);
@@ -5919,38 +6002,44 @@ function showAnalysisCard(raw){
     contentItems=merged.slice(0,6);
   }
   if(contentItems.length===1&&isAnalysisMenuLine(contentItems[0])) contentItems=[];
-  contentItems=contentItems.filter(function(t){return !isMetaDuplicatePoint(t,fieldVals);});
-  if(docSnap){
+  contentItems=contentItems.filter(function(t){return !isMetaDuplicatePoint(t,fieldVals,reasonVal);});
+  if(insightHtml||visionRec) contentItems=[];
+  if(docSnap&&!insightHtml){
     var docHint=document.createElement('div');
     docHint.style.cssText='margin-bottom:10px;padding:8px 10px;border-radius:8px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.22);font-size:11px;line-height:1.5;color:#bae6fd;';
-    docHint.innerHTML='📄 已读取文档 <strong>'+docTextContent.length+'</strong> 字'+(attachedFileName?' · '+attachedFileName:'')+' · 下方为文档前部要点（已与上方参数合并展示）';
+    docHint.innerHTML='📄 已读取文档 <strong>'+docTextContent.length+'</strong> 字'+(attachedFileName?' · '+attachedFileName:'')+'';
     grid.appendChild(docHint);
-  }
-  if(contentItems.length>0){
-    var extra=document.createElement('div');
-    extra.className='analysis-unified';
-    extra.style.marginTop='0';
-    var extraTitle=docSnap?'📄 文档补充要点':'📌 补充要点';
-    var ulHtml='<ul class="analysis-extra-list">';
-    contentItems.forEach(function(txt){
-      ulHtml+='<li>'+escAnalysisHtml(txt.substring(0,120))+'</li>';
-    });
-    ulHtml+='</ul>';
-    extra.innerHTML='<div class="analysis-unified-hd">'+extraTitle+'</div>'+ulHtml;
-    grid.appendChild(extra);
   }
 
   if(grid.children.length===0){var ra=document.getElementById('analysis-raw');if(ra){ra.textContent=raw;ra.style.display='block';}}
 
   var sizeVal=parseFieldFromRaw(raw,['推荐尺寸']);
   var styleVal=parseFieldFromRaw(raw,['本次随机风格','本次指定风格','随机风格','指定风格']);
-  aiRecSize=sizeVal||'AI推荐尺寸';
+  var defaultPlanIdx=0;
+  if(planCards.length>1&&sizeVal){
+    var si=0;
+    for(;si<planCards.length;si++){
+      var ps=inferSizeLabelFromPlan(planCards[si]);
+      if(ps&&sizeVal.replace(/\s/g,'').indexOf(ps.replace(/\s/g,'').slice(0,3))>=0){defaultPlanIdx=si;break;}
+    }
+  }
+  if(planCards.length) applyPosterPlanSelection(defaultPlanIdx,planCards,true);
+  else{
+    aiRecSize=sizeVal||'AI推荐尺寸';
+    sessionContext.size=aiRecSize;
+    var stEl0=document.getElementById('rec-size-tag');
+    if(stEl0) stEl0.textContent='📐 '+aiRecSize;
+    syncCustomSizeSelectFromLabel(aiRecSize);
+  }
   var picked=getSelectedVisualStyleValue();
   if(picked){aiRecStyle=picked;sessionContext.style=picked;}
   else if(styleVal){aiRecStyle=styleVal;sessionContext.style=styleVal;}
-  sessionContext.size=aiRecSize;
-  var stEl=document.getElementById('rec-size-tag');
-  if(stEl)stEl.textContent='📐 '+aiRecSize;
+  if(reasonVal&&sessionContext.userNotes){
+    sessionContext.userNotes+='\n【AI推荐理由】'+reasonVal.substring(0,120);
+  }
+  if(sessionContext.selectedPlanSummary){
+    sessionContext.userNotes=(sessionContext.userNotes||'')+'\n【已选方案】'+sessionContext.selectedPlanSummary;
+  }
   updateStyleDisplays();
   document.getElementById('analysis-stage').style.display='block';
   document.getElementById('analysis-stage').scrollIntoView({behavior:'smooth'});
@@ -6018,6 +6107,9 @@ function requestPromptFromCoze(session,attempt){
 function confirmAI(){
   var oldRetry=document.getElementById('confirm-retry-btn');
   if(oldRetry) oldRetry.remove();
+  if(sessionContext.posterPlans&&sessionContext.posterPlans.length){
+    applyPosterPlanSelection(sessionContext.selectedPlanIndex||0,sessionContext.posterPlans,true);
+  }
   document.getElementById('analysis-stage').style.display='none';
   document.getElementById('custom-stage').style.display='none';
   var ts=document.getElementById('thinking-stage');
