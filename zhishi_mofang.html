@@ -1142,6 +1142,23 @@ body.lc-thinking-active .btn-engine-cancel{display:none!important;}
 .acb-list li span{color:var(--tx);}
 .acb-list li .acb-num{flex-shrink:0;width:18px;height:18px;background:rgba(243,175,66,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fcd34d;margin-top:1px;}
 .acb-list li .acb-txt{flex:1;color:var(--tx);font-weight:500;}
+.analysis-unified{background:rgba(7,8,15,0.6);border:1px solid rgba(243,175,66,0.18);border-radius:14px;padding:16px 18px;margin-bottom:14px;}
+.analysis-unified-hd{font-size:12px;font-weight:800;color:rgba(243,175,66,0.95);margin-bottom:12px;letter-spacing:.4px;}
+.vision-kv{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+@media(max-width:640px){.vision-kv{grid-template-columns:1fr;}}
+.vision-kv-item{background:rgba(16,185,129,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:10px 12px;}
+.vision-kv-k{font-size:10px;color:rgba(255,255,255,0.45);margin-bottom:4px;}
+.vision-kv-v{font-size:12px;color:#ecfdf5;line-height:1.55;}
+.analysis-plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:4px;}
+@media(max-width:900px){.analysis-plan-grid{grid-template-columns:1fr;}}
+.analysis-plan-card{background:#07080f;border:1px solid rgba(243,175,66,0.2);border-radius:12px;padding:12px 14px;min-height:0;}
+.analysis-plan-card .apc-hd{font-size:12px;font-weight:800;color:#fcd34d;line-height:1.45;margin-bottom:8px;}
+.analysis-plan-card .apc-row{font-size:11px;color:#cbd5e1;line-height:1.55;margin-bottom:6px;}
+.analysis-plan-card .apc-row b{color:rgba(243,175,66,0.85);font-weight:700;}
+.analysis-plan-card .apc-row:last-child{margin-bottom:0;}
+.analysis-extra-list{margin:10px 0 0;padding:0;list-style:none;}
+.analysis-extra-list li{font-size:12px;color:#e2e8f0;line-height:1.6;padding:6px 0;border-top:1px solid rgba(255,255,255,0.06);}
+.analysis-extra-list li:first-child{border-top:none;}
 .analysis-raw{background:#07080b;border:1px solid rgba(255,255,255,0.04);border-radius:10px;padding:14px;font-size:12px;color:var(--tx2);line-height:1.8;margin-bottom:16px;max-height:200px;overflow-y:auto;white-space:pre-wrap;}
 .rec-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:rgba(243,175,66,0.04);border:1px solid rgba(243,175,66,0.15);border-radius:10px;align-items:center;}
 .rec-bar-label{font-size:12px;color:var(--tx2);font-weight:600;}
@@ -5569,6 +5586,51 @@ function parseCozePosterPlans(raw){
   if(!m) m=text.match(/(方案\s*1[\s\S]*?)(?=\n\s*1[\.、\s]*品类|\n\s*品类判定|$)/i);
   return m&&m[1]?m[1].trim():'';
 }
+function escAnalysisHtml(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function parseVisionKv(block){
+  var text=String(block||'');
+  var pick=function(re){var m=text.match(re);return m&&m[1]?m[1].trim():'';};
+  return {
+    subject:pick(/[*#\s]*主体[：:]\s*([^\n]+)/i),
+    assist:pick(/[*#\s]*辅助元素[：:]\s*([^\n]+)/i),
+    tone:pick(/[*#\s]*主色调[：:]\s*([^\n]+)/i)
+  };
+}
+function parsePosterPlanCards(plansText){
+  var text=String(plansText||'').trim();
+  if(!text) return [];
+  var chunks=text.split(/(?=\n*方案\s*[123一二三])/i).map(function(c){return c.trim();}).filter(Boolean);
+  if(chunks.length<=1&&/方案\s*1/.test(text)) chunks=[text];
+  var pickField=function(chunk,key){
+    var m=chunk.match(new RegExp('[-*•]?\\s*'+key+'[：:]([^\\n]+)','i'));
+    return m&&m[1]?m[1].trim():'';
+  };
+  return chunks.map(function(chunk,idx){
+    var titleM=chunk.match(/^方案\s*([123一二三])[：:\s-]*(.+?)(?:\n|$)/i);
+    var title=titleM?(titleM[1]+' · '+titleM[2].trim()):('方案'+(idx+1));
+    return {
+      title:title.substring(0,72),
+      layout:pickField(chunk,'版式'),
+      bg:pickField(chunk,'背景'),
+      font:pickField(chunk,'字体'),
+      platform:pickField(chunk,'适用')
+    };
+  }).slice(0,3);
+}
+function isMetaDuplicatePoint(txt,fieldVals){
+  var t=String(txt||'').trim();
+  if(!t||t.length<3) return true;
+  if(/^(品类判定|用户类型|匹配手法|推荐尺寸|本次随机风格|本次指定风格)[：:]/i.test(t)) return true;
+  var i=0;
+  for(;i<fieldVals.length;i++){
+    var fv=String(fieldVals[i]||'').trim();
+    if(!fv||fv.length<2) continue;
+    if(t.indexOf(fv)>=0||fv.indexOf(t.substring(0,Math.min(12,t.length)))>=0) return true;
+  }
+  return false;
+}
 function parseVisionRecognition(raw){
   var block=parseCozeProductRecognition(raw);
   if(block&&block.length>8) return block.substring(0,1200);
@@ -5687,29 +5749,16 @@ function showAnalysisCard(raw){
 
   var visionRec=parseVisionRecognition(raw);
   var plansBlock=parseCozePosterPlans(raw);
-  if(visionRec&&visionRec.length>2){
-    var vBlock=document.createElement('div');
-    vBlock.className='analysis-content-block';
-    vBlock.style.marginBottom='12px';
-    var esc=function(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
-    vBlock.innerHTML='<div class="acb-title">✅ 产品识别（对齐扣子详析）</div><div style="font-size:13px;color:#ecfdf5;line-height:1.75;white-space:pre-wrap;">'+esc(visionRec)+'</div>';
-    grid.appendChild(vBlock);
-    if(isFileAttached&&uploadedFileIds.length>0){
+  var planCards=parsePosterPlanCards(plansBlock);
+  var visionKv=parseVisionKv(visionRec);
+  if(isFileAttached&&uploadedFileIds.length>0){
+    var topicFromVision=visionKv.subject||'';
+    if(!topicFromVision&&visionRec){
       var topicLine=visionRec.split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean)[0]||'';
-      if(/主体/.test(topicLine)){
-        var sub=topicLine.replace(/^[*#\s]*主体[：:]\s*/,'').split(/[，,。]/)[0];
-        if(sub.length>2) sessionContext.coreTopic=sub.substring(0,96);
-      }else if(topicLine.length>2){
-        sessionContext.coreTopic=topicLine.substring(0,96);
-      }
+      if(/主体/.test(topicLine)) topicFromVision=topicLine.replace(/^[*#\s]*主体[：:]\s*/,'').split(/[，,。]/)[0];
+      else topicFromVision=topicLine;
     }
-  }
-  if(plansBlock&&plansBlock.length>20){
-    var pBlock=document.createElement('div');
-    pBlock.className='analysis-content-block';
-    pBlock.style.marginBottom='12px';
-    pBlock.innerHTML='<div class="acb-title">🎨 海报/详情风格方案</div><div style="font-size:12px;color:#fcd34d;line-height:1.7;white-space:pre-wrap;">'+String(plansBlock).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
-    grid.appendChild(pBlock);
+    if(topicFromVision.length>2) sessionContext.coreTopic=topicFromVision.substring(0,96);
   }
 
   // 字段卡片区（横向排列）
@@ -5743,22 +5792,92 @@ function showAnalysisCard(raw){
       cardRow.appendChild(item);
     }
   });
+  var fieldVals=[];
+  fields.forEach(function(f){
+    var v=parseFieldFromRaw(raw,f.keys);
+    if(v&&v.length>1) fieldVals.push(v);
+  });
+  if(localCat&&localCat.categoryName) fieldVals.push(localCat.categoryName);
+  if(localCat&&localCat.technique) fieldVals.push(localCat.technique);
+
+  var unified=document.createElement('div');
+  unified.className='analysis-unified';
+  var hasUnified=false;
+
+  if(visionRec&&visionRec.length>2){
+    var vPart=document.createElement('div');
+    if(visionKv.subject||visionKv.assist||visionKv.tone){
+      vPart.innerHTML='<div class="analysis-unified-hd">✅ 产品识别</div><div class="vision-kv">'+
+        (visionKv.subject?'<div class="vision-kv-item"><div class="vision-kv-k">主体</div><div class="vision-kv-v">'+escAnalysisHtml(visionKv.subject)+'</div></div>':'')+
+        (visionKv.assist?'<div class="vision-kv-item"><div class="vision-kv-k">辅助元素</div><div class="vision-kv-v">'+escAnalysisHtml(visionKv.assist)+'</div></div>':'')+
+        (visionKv.tone?'<div class="vision-kv-item"><div class="vision-kv-k">主色调</div><div class="vision-kv-v">'+escAnalysisHtml(visionKv.tone)+'</div></div>':'')+
+        '</div>';
+    }else{
+      vPart.innerHTML='<div class="analysis-unified-hd">✅ 产品识别</div><div class="insight-block-body" style="margin-bottom:12px;white-space:pre-wrap;">'+escAnalysisHtml(visionRec.substring(0,800))+'</div>';
+    }
+    unified.appendChild(vPart);
+    hasUnified=true;
+  }
+
   if(cardRow.children.length>0){
+    var chipHd=document.createElement('div');
+    chipHd.className='analysis-unified-hd';
+    chipHd.style.marginTop='4px';
+    chipHd.textContent='📊 出图参数（与下方方案一致）';
+    unified.appendChild(chipHd);
+    var chipWrap=document.createElement('div');
+    chipWrap.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;';
+    while(cardRow.firstChild) chipWrap.appendChild(cardRow.firstChild);
+    unified.appendChild(chipWrap);
+    hasUnified=true;
+  }
+
+  var reasonVal=parseFieldFromRaw(raw,['推荐理由']);
+  if(reasonVal&&reasonVal.length>2){
+    var rPart=document.createElement('div');
+    rPart.innerHTML='<div class="insight-block" style="margin-bottom:12px;"><div class="insight-block-title">💡 推荐理由</div><div class="insight-block-body">'+escAnalysisHtml(reasonVal.substring(0,220))+'</div></div>';
+    unified.appendChild(rPart);
+    hasUnified=true;
+  }
+
+  if(planCards.length>0){
+    var pHd=document.createElement('div');
+    pHd.className='analysis-unified-hd';
+    pHd.textContent='🎨 三套海报/详情方案（择一确认出图）';
+    unified.appendChild(pHd);
+    var pGrid=document.createElement('div');
+    pGrid.className='analysis-plan-grid';
+    planCards.forEach(function(p){
+      var card=document.createElement('div');
+      card.className='analysis-plan-card';
+      var html='<div class="apc-hd">'+escAnalysisHtml(p.title)+'</div>';
+      if(p.layout) html+='<div class="apc-row"><b>版式</b> '+escAnalysisHtml(p.layout.substring(0,120))+'</div>';
+      if(p.bg) html+='<div class="apc-row"><b>背景</b> '+escAnalysisHtml(p.bg.substring(0,80))+'</div>';
+      if(p.font) html+='<div class="apc-row"><b>字体</b> '+escAnalysisHtml(p.font.substring(0,80))+'</div>';
+      if(p.platform) html+='<div class="apc-row"><b>适用</b> '+escAnalysisHtml(p.platform.substring(0,80))+'</div>';
+      card.innerHTML=html;
+      pGrid.appendChild(card);
+    });
+    unified.appendChild(pGrid);
+    hasUnified=true;
+  }else if(plansBlock&&plansBlock.length>20){
+    var pFallback=document.createElement('div');
+    pFallback.innerHTML='<div class="analysis-unified-hd">🎨 海报/详情方案</div><div class="insight-block-body" style="white-space:pre-wrap;font-size:12px;color:#fcd34d;line-height:1.65;">'+escAnalysisHtml(plansBlock.substring(0,2000))+'</div>';
+    unified.appendChild(pFallback);
+    hasUnified=true;
+  }
+
+  if(hasUnified) grid.appendChild(unified);
+  else if(cardRow.children.length>0){
     cardRow.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;';
     grid.appendChild(cardRow);
   }
+
   if(sessionContext.routeHumanLabel){
     var routeTip=document.createElement('div');
     routeTip.style.cssText='margin-bottom:10px;padding:10px 12px;border-radius:10px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.25);font-size:12px;line-height:1.5;color:#bae6fd;';
     routeTip.innerHTML='💡 已听懂您的大白话，推荐画法：<strong style="color:#f3af42;">'+sessionContext.routeHumanLabel+'</strong>（无需您懂专业术语）';
     grid.appendChild(routeTip);
-  }
-  var reasonVal=parseFieldFromRaw(raw,['推荐理由']);
-  if(reasonVal&&reasonVal.length>2){
-    var reasonTip=document.createElement('div');
-    reasonTip.style.cssText='margin-bottom:10px;padding:10px 12px;border-radius:10px;background:rgba(243,175,66,0.06);border:1px solid rgba(243,175,66,0.22);font-size:12px;line-height:1.55;color:#e2e8f0;';
-    reasonTip.innerHTML='<span style="color:rgba(243,175,66,0.9);font-weight:700;">推荐理由 · </span>'+reasonVal.substring(0,160);
-    grid.appendChild(reasonTip);
   }
 
   var contentItems=[];
@@ -5785,33 +5904,25 @@ function showAnalysisCard(raw){
     contentItems=merged.slice(0,6);
   }
   if(contentItems.length===1&&isAnalysisMenuLine(contentItems[0])) contentItems=[];
+  contentItems=contentItems.filter(function(t){return !isMetaDuplicatePoint(t,fieldVals);});
   if(docSnap){
     var docHint=document.createElement('div');
     docHint.style.cssText='margin-bottom:10px;padding:8px 10px;border-radius:8px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.22);font-size:11px;line-height:1.5;color:#bae6fd;';
-    docHint.innerHTML='📄 已读取文档 <strong>'+docTextContent.length+'</strong> 字'+(attachedFileName?' · '+attachedFileName:'')+' · 下方要点优先来自文档正文前部（非输入框示例文案）';
+    docHint.innerHTML='📄 已读取文档 <strong>'+docTextContent.length+'</strong> 字'+(attachedFileName?' · '+attachedFileName:'')+' · 下方为文档前部要点（已与上方参数合并展示）';
     grid.appendChild(docHint);
   }
   if(contentItems.length>0){
-    var block=document.createElement('div');
-    block.className='analysis-content-block';
-    var ttl=document.createElement('div');
-    ttl.className='acb-title';
-    ttl.textContent='✅ 内容要点提炼';
-    var ul=document.createElement('ul');
-    ul.className='acb-list';
-    contentItems.forEach(function(txt,i){
-      var li=document.createElement('li');
-      var num=document.createElement('span');
-      num.className='acb-num';
-      num.textContent=i+1;
-      var tx=document.createElement('span');
-      tx.className='acb-txt';
-      tx.textContent=txt.substring(0,48);
-      li.appendChild(num);li.appendChild(tx);
-      ul.appendChild(li);
+    var extra=document.createElement('div');
+    extra.className='analysis-unified';
+    extra.style.marginTop='0';
+    var extraTitle=docSnap?'📄 文档补充要点':'📌 补充要点';
+    var ulHtml='<ul class="analysis-extra-list">';
+    contentItems.forEach(function(txt){
+      ulHtml+='<li>'+escAnalysisHtml(txt.substring(0,120))+'</li>';
     });
-    block.appendChild(ttl);block.appendChild(ul);
-    grid.appendChild(block);
+    ulHtml+='</ul>';
+    extra.innerHTML='<div class="analysis-unified-hd">'+extraTitle+'</div>'+ulHtml;
+    grid.appendChild(extra);
   }
 
   if(grid.children.length===0){var ra=document.getElementById('analysis-raw');if(ra){ra.textContent=raw;ra.style.display='block';}}
