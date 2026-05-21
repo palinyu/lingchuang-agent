@@ -1061,9 +1061,8 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
   font-size:12px;font-weight:700;cursor:pointer;
 }
 body.api-lux-loading .btn-engine-cancel{display:block;}
+body.lc-thinking-active .btn-engine-cancel{display:none!important;}
 .btn-engine-cancel:hover{background:rgba(239,68,68,0.22);}
-.btn-thinking-cancel{display:none;margin-top:14px;width:100%;max-width:280px;}
-#thinking-stage .btn-thinking-cancel{display:inline-block;}
 .ith-step.ith-drop-flash{animation:ith-drop-step .42s cubic-bezier(.22,1,.36,1) both;}
 .ith-log.ith-log-drop{animation:ith-drop-in .38s cubic-bezier(.22,1,.36,1) both;}
 .gen-wait-hint{display:none;font-size:11px;color:rgba(226,192,125,0.72);text-align:center;line-height:1.5;margin:0 0 6px;letter-spacing:0.2px;}
@@ -1809,7 +1808,7 @@ else{
         </div>
         <div class="ith-log" id="input-thinking-log"></div>
         <div class="ith-eta">预计还需约 1～2 分钟 · 请勿关闭页面</div>
-        <button type="button" class="btn-engine-cancel lux-tap" id="btn-engine-cancel" onclick="cancelActiveEngineRun()">✕ 取消本次分析（不扣次数）</button>
+        <button type="button" class="btn-engine-cancel lux-tap" id="btn-engine-cancel" onclick="cancelActiveEngineRun()">✕ 取消（仅分析阶段，出图卡片出现后不可取消）</button>
       </div>
     </div>
   </div>
@@ -2019,7 +2018,6 @@ else{
         <div class="t-value" id="t-style">--</div>
         <div class="atom-ring" id="t-ring"></div>
         <p class="t-status" id="t-status">AI大脑联网搜索爆款参数中…<br>完整提示词生成中…</p>
-        <button type="button" class="btn-engine-cancel lux-tap btn-thinking-cancel" id="btn-thinking-cancel" onclick="cancelActiveEngineRun()">✕ 取消生成（不扣次数）</button>
       </div>
       </div>
     </div>
@@ -2382,12 +2380,16 @@ function lcFetchJson(url,options,timeoutMs){
   }
   return fetch(url,opts).finally(function(){clearTimeout(tid);});
 }
+function setThinkingStageActive(on){
+  document.body.classList.toggle('lc-thinking-active',!!on);
+  var ts=document.getElementById('thinking-stage');
+  if(ts) ts.classList.toggle('thinking-active',!!on);
+}
 function cancelActiveEngineRun(){
+  if(document.body.classList.contains('lc-thinking-active')) return;
   _lcUserCancelledRun=true;
   var fc=document.getElementById('btn-engine-cancel');
-  var tc=document.getElementById('btn-thinking-cancel');
   if(fc&&document.activeElement===fc) fc.blur();
-  if(tc&&document.activeElement===tc) tc.blur();
   if(_lcEngineAbortCtrl){
     try{_lcEngineAbortCtrl.abort();}catch(e){}
     _lcEngineAbortCtrl=null;
@@ -2401,6 +2403,7 @@ function cancelActiveEngineRun(){
   _lcFreeTrialRunActive=false;
   setApiLoading(false);
   stopGenParticleFlow();
+  setThinkingStageActive(false);
   unlockGenBtn();
   var qs=document.getElementById('quantum-stage');
   if(qs) qs.style.display='none';
@@ -4104,8 +4107,6 @@ function startInputThinkingPanel(topic){
 }
 function stopInputThinkingPanel(){
   if(_ithStepTimer){clearInterval(_ithStepTimer);_ithStepTimer=null;}
-  var cancelBtn=document.getElementById('btn-engine-cancel');
-  if(cancelBtn&&document.activeElement===cancelBtn) cancelBtn.blur();
   var panel=document.getElementById('input-thinking-panel');
   if(panel){
     panel.classList.remove('is-live');
@@ -5342,7 +5343,7 @@ function isKnowledgeTopic(){
   return /知识图解|英语|单元|课时|上册|下册|古诗|诗词|做法|菜谱|科普|原理|图解/.test(t);
 }
 function isWelcome(content){if(!content)return true;var hasW=WELCOME_KW.some(function(kw){return content.indexOf(kw)>=0;});var hasR=content.indexOf('品类判定')>=0||content.indexOf('内容识别')>=0||content.indexOf('匹配手法')>=0||content.indexOf('推荐尺寸')>=0||/[A-Za-z ,.\-]{60,}/.test(content);return hasW&&!hasR;}
-function resetState(){stopGenParticleFlow();var keepStyleId=selectedVisualStyleId;currentConversationId=null;currentChatId=null;sessionUserId=null;selectedVisualStyleId=keepStyleId;sessionContext={coreTopic:'',style:keepStyleId?getSelectedVisualStyleValue():'',technique:'',size:'',userNotes:'',fromDsNotes:false,promptProfile:'standard',routeHumanLabel:'',randomStyleName:''};cachedPrompt='';cachedPromptShort='';promptReadyTopic='';copywriteGenToken=0;aiRecSize='';aiRecStyle='';userCustomSize='';userCustomStyle='';clearCopywriteOutputs();hideCopywriteSection();var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();var legal=document.getElementById('legal-risk-notice');if(legal)legal.style.display='none';['analysis-stage','custom-stage','thinking-stage','output-section','copywrite-ask','copywrite-section'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});var ring=document.getElementById('t-ring');if(ring){ring.style.animation='spin-ring .9s linear infinite';ring.style.borderColor='';ring.innerHTML='';}var s=document.getElementById('t-status');if(s){s.style.color='#cbd5e1';s.textContent='AI大脑联网搜索爆款参数中…\n完整提示词生成中…';}var sz=document.getElementById('t-size');if(sz)sz.textContent='--';var st=document.getElementById('t-style');if(st)st.textContent='--';}
+function resetState(){stopGenParticleFlow();var keepStyleId=selectedVisualStyleId;currentConversationId=null;currentChatId=null;sessionUserId=null;selectedVisualStyleId=keepStyleId;sessionContext={coreTopic:'',style:keepStyleId?getSelectedVisualStyleValue():'',technique:'',size:'',userNotes:'',fromDsNotes:false,promptProfile:'standard',routeHumanLabel:'',randomStyleName:''};cachedPrompt='';cachedPromptShort='';promptReadyTopic='';copywriteGenToken=0;aiRecSize='';aiRecStyle='';userCustomSize='';userCustomStyle='';clearCopywriteOutputs();hideCopywriteSection();var ld=document.getElementById('copywrite-loading');if(ld)ld.remove();var legal=document.getElementById('legal-risk-notice');if(legal)legal.style.display='none';['analysis-stage','custom-stage','thinking-stage','output-section','copywrite-ask','copywrite-section'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});var ring=document.getElementById('t-ring');if(ring){ring.style.animation='spin-ring .9s linear infinite';ring.style.borderColor='';ring.innerHTML='';}var s=document.getElementById('t-status');if(s){s.style.color='#cbd5e1';s.textContent='AI大脑联网搜索爆款参数中…\n完整提示词生成中…';}var sz=document.getElementById('t-size');if(sz)sz.textContent='--';var st=document.getElementById('t-style');if(st)st.textContent='--';setThinkingStageActive(false);}
 function runEngine(){
   var btn=document.getElementById('gen-btn');
   if(btn&&btn.disabled)return;
@@ -5519,6 +5520,7 @@ function runEngineFromDsNotes(){
   var ts=document.getElementById('thinking-stage');
   if(!ts) return;
   ts.style.display='flex';
+  setThinkingStageActive(true);
   var sz=document.getElementById('t-size');
   if(sz) sz.textContent=aiRecSize;
   updateStyleDisplays();
@@ -5548,6 +5550,7 @@ function runEngineFromDsNotes(){
     _lcFreeTrialRunActive=false;
     _lcTrialDeductedThisRun=false;
     _lcEngineAbortCtrl=null;
+    setThinkingStageActive(false);
     unlockGenBtn();
     updateFreeTrialHint();
   });
@@ -5861,6 +5864,7 @@ function confirmAI(){
   document.getElementById('custom-stage').style.display='none';
   var ts=document.getElementById('thinking-stage');
   ts.style.display='flex';
+  setThinkingStageActive(true);
   var sz=document.getElementById('t-size');
   var sy=document.getElementById('t-style');
   if(sz) sz.textContent = aiRecSize && aiRecSize!=='AI推荐尺寸' ? aiRecSize : (aiRecSize||'AI推荐');
@@ -5874,7 +5878,7 @@ function confirmAI(){
     var session=getCurrentSession();
     if(!session||!session.conversation_id){
       if(tStatus){tStatus.style.color='#ef4444';tStatus.textContent='❌ 会话已断开，请重新点击「启动大脑」生成分析';}
-      setTimeout(function(){ts.style.display='none';document.getElementById('analysis-stage').style.display='block';},3500);
+      setTimeout(function(){setThinkingStageActive(false);ts.style.display='none';document.getElementById('analysis-stage').style.display='block';},3500);
       return;
     }
     requestPromptFromCoze(session,0).then(function(content){
@@ -5897,7 +5901,7 @@ function confirmAI(){
 
 function showCustomPanel(){document.getElementById('custom-stage').style.display='block';handleCustomStyleChange();document.getElementById('custom-stage').scrollIntoView({behavior:'smooth'});}
 function handleCustomStyleChange(){var val=(document.getElementById('custom-style')||{}).value;var d=document.getElementById('custom-style-text');if(d){if(val==='custom_input'){d.classList.add('is-visible');}else{d.classList.remove('is-visible');d.value='';}}}
-function launchCustom(){var sizeEl=document.getElementById('custom-size');var sizeVal=sizeEl?sizeEl.value:'A';var sizeTxt=sizeEl&&sizeEl.selectedOptions[0]?sizeEl.selectedOptions[0].text.split('·')[0].trim():sizeVal;var styleVal=(document.getElementById('custom-style')||{}).value||'custom_input';var styleText='';if(styleVal==='custom_input'){styleText=((document.getElementById('custom-style-text')||{}).value||'').trim();if(!styleText){alert('请输入你的专属风格词组！');return;}}else{styleText=styleVal;}userCustomSize=sizeTxt;userCustomStyle=styleText.substring(0,20);document.getElementById('custom-stage').style.display='none';var ts=document.getElementById('thinking-stage');ts.style.display='flex';var sz=document.getElementById('t-size');var sy=document.getElementById('t-style');if(sz)sz.textContent=userCustomSize;if(sy)sy.textContent=userCustomStyle;ts.scrollIntoView({behavior:'smooth'});var session=getCurrentSession();if(!session){alert('请先生成主题分析');document.getElementById('thinking-stage').style.display='none';return;}sessionContext.size=sizeTxt;sessionContext.style=styleText;callCoze('按自定义方案出图',session,false,'🚀 自定义方案生成中…',{intent:'custom',style:styleText,size:sizeTxt}).then(function(r){currentConversationId=r.conversation_id||currentConversationId;currentChatId=r.chat_id||currentChatId;var content=extractAssistantContent(r);if(!content)throw new Error('未获取到内容');showResult(content);}).catch(function(e){var s=document.getElementById('t-status');if(s){s.style.color='#ef4444';s.textContent='❌ '+resolveUserFacingApiError(e);}setTimeout(function(){document.getElementById('thinking-stage').style.display='none';},2000);}); }
+function launchCustom(){var sizeEl=document.getElementById('custom-size');var sizeVal=sizeEl?sizeEl.value:'A';var sizeTxt=sizeEl&&sizeEl.selectedOptions[0]?sizeEl.selectedOptions[0].text.split('·')[0].trim():sizeVal;var styleVal=(document.getElementById('custom-style')||{}).value||'custom_input';var styleText='';if(styleVal==='custom_input'){styleText=((document.getElementById('custom-style-text')||{}).value||'').trim();if(!styleText){alert('请输入你的专属风格词组！');return;}}else{styleText=styleVal;}userCustomSize=sizeTxt;userCustomStyle=styleText.substring(0,20);document.getElementById('custom-stage').style.display='none';var ts=document.getElementById('thinking-stage');ts.style.display='flex';setThinkingStageActive(true);var sz=document.getElementById('t-size');var sy=document.getElementById('t-style');if(sz)sz.textContent=userCustomSize;if(sy)sy.textContent=userCustomStyle;ts.scrollIntoView({behavior:'smooth'});var session=getCurrentSession();if(!session){alert('请先生成主题分析');setThinkingStageActive(false);document.getElementById('thinking-stage').style.display='none';return;}sessionContext.size=sizeTxt;sessionContext.style=styleText;callCoze('按自定义方案出图',session,false,'🚀 自定义方案生成中…',{intent:'custom',style:styleText,size:sizeTxt}).then(function(r){currentConversationId=r.conversation_id||currentConversationId;currentChatId=r.chat_id||currentChatId;var content=extractAssistantContent(r);if(!content)throw new Error('未获取到内容');showResult(content);}).catch(function(e){var s=document.getElementById('t-status');if(s){s.style.color='#ef4444';s.textContent='❌ '+resolveUserFacingApiError(e);}setTimeout(function(){setThinkingStageActive(false);document.getElementById('thinking-stage').style.display='none';},2000);}); }
 function isAnalysisRound(raw){
   var analysisMarkers=['建议回复选项','换一套风格','我要换尺寸','我要自定义风格','用这套风格','确认后直接出图','推荐尺寸：','本次随机风格','本次指定风格','品类判定','匹配手法','用户类型','内容识别','内容要点'];
   var hitCount=0;
@@ -6213,6 +6217,7 @@ function showResult(raw,retryCount,fromConfirm){
       }
     }
     if(!extracted&&isWelcome(raw)&&!fromConfirm){
+      setThinkingStageActive(false);
       document.getElementById('thinking-stage').style.display='none';
       document.getElementById('analysis-stage').style.display='block';
       return;
@@ -6221,6 +6226,7 @@ function showResult(raw,retryCount,fromConfirm){
       statusEl.style.color='#ef4444';
       statusEl.textContent='❌ 未获得可复制生图提示词。请点击「重新生成提示词」或调整主题后重试。';
     }
+    setThinkingStageActive(false);
     document.getElementById('thinking-stage').style.display='none';
     document.getElementById('analysis-stage').style.display='block';
     return;
@@ -6267,6 +6273,7 @@ function showResult(raw,retryCount,fromConfirm){
   }
   setTimeout(function(){
     stopGenParticleFlow();
+    setThinkingStageActive(false);
     document.getElementById('thinking-stage').style.display='none';
     document.getElementById('output-section').style.display='block';
     document.getElementById('copywrite-ask').style.display='block';
