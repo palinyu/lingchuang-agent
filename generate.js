@@ -26,10 +26,10 @@ const MAX_UPLOAD_IMAGE_BYTES = 2 * 1024 * 1024;
 const MAX_UPLOAD_DOC_BYTES = 4 * 1024 * 1024;
 const MAX_UPLOAD_B64_LEN = Math.floor(3.2 * 1024 * 1024);
 
-function maxCozeAttempts(intent, fileCount) {
+function maxCozeAttempts(intent, fileCount, hasDocText) {
   if (intent === 'analyze') {
-    /** 上传图时扣子看图很慢，禁止自动重试，降低 Vercel/网关 504 */
-    if (fileCount >= 1) return 0;
+    /** 上传图/文档时扣子处理慢，禁止自动重试，降低 Vercel/网关 504 */
+    if (fileCount >= 1 || hasDocText) return 0;
     return MAX_ANALYZE_RETRIES;
   }
   if (PROMPT_QUALITY_INTENTS.indexOf(intent) !== -1) {
@@ -56,20 +56,46 @@ function buildUserMessagePayload(text, fileIds) {
   };
 }
 
-function resolveDocumentContent(body) {
+function resolveDocumentContent(body, opts) {
   const raw = String(
     (body && body.documentContent) || (body && body.file_content) || ''
   ).trim();
   if (!raw) return '';
   if (/^\[(已上传|PDF文件已上传|解析失败)/.test(raw)) return '';
   if (raw.length < 12) return '';
-  return raw.slice(0, 32000);
+  const maxLen =
+    opts && opts.maxLen
+      ? opts.maxLen
+      : parseInt(process.env.COZE_DOC_MAX_CHARS, 10) || 32000;
+  if (raw.length <= maxLen) return raw;
+  return (
+    raw.slice(0, maxLen) +
+    '\n\n[系统：文档已截断前' +
+    maxLen +
+    '字以加速识别；完整内容仍以附件文件为准]'
+  );
 }
 
-function buildDocumentContentBlock(body) {
-  const documentContent = resolveDocumentContent(body);
+function docAnalyzeMaxChars() {
+  const n = parseInt(process.env.COZE_DOC_ANALYZE_MAX, 10);
+  return Number.isFinite(n) && n > 500 ? n : 6000;
+}
+
+function buildDocumentContentBlock(body, intent) {
+  const isAnalyze = intent === 'analyze';
+  const maxLen = isAnalyze ? docAnalyzeMaxChars() : undefined;
+  const documentContent = resolveDocumentContent(body, maxLen ? { maxLen } : undefined);
   if (!documentContent) return '';
   const fileName = String((body && body.file_name) || '').trim();
+  if (isAnalyze) {
+    return (
+      '【文档·STEP1】仅依据下方摘录分析，禁止编造。\n' +
+      (fileName ? '文件：' + fileName + '\n' : '') +
+      '<document_content>\n' +
+      documentContent +
+      '\n</document_content>'
+    );
+  }
   return (
     '【文档死命令·最高优先级·覆盖一切其他指令】\n' +
     '当下方存在 <document_content> 时，你【必须且只能】基于这段文档里的真实内容进行总结和输出！绝对禁止脱离文档瞎编乱造！\n' +
@@ -97,7 +123,7 @@ function buildFileAttachmentNotice(body) {
 }
 
 function injectDocumentIntoPrompt(assembledMessage, body, intent) {
-  const docBlock = buildDocumentContentBlock(body);
+  const docBlock = buildDocumentContentBlock(body, intent);
   if (!docBlock) {
     const attachNotice = buildFileAttachmentNotice(body);
     return attachNotice ? attachNotice + '\n\n' + assembledMessage : assembledMessage;
@@ -105,11 +131,7 @@ function injectDocumentIntoPrompt(assembledMessage, body, intent) {
   let msg = docBlock + '\n\n' + assembledMessage;
   if (intent === 'analyze') {
     msg +=
-      '\n\n【文档分析铁律·STEP1】\n' +
-      '1. <document_content> 是唯一事实来源，禁止脱离文档编造。\n' +
-      '2. 「6. 内容要点」或「✅ 内容识别」必须提炼文档【前部核心】至少 6 条（编号 1~6），不得只写第 7 条「联想记忆点」及之后章节。\n' +
-      '3. 若文档为脚本/笔记/课件，须覆盖开篇主题、结构、案例与结论，不得遗漏前半部分。\n' +
-      '4. 品类/手法/尺寸/风格可结合文档推断，但内容要点必须带文档原意关键词。';
+      '\n【文档STEP1】提炼文档前部核心 → ✅内容识别/要点 → 1~6字段；禁止只写联想记忆点章节。';
   }
   return msg;
 }
@@ -182,7 +204,7 @@ async function handleDeepseekCopywriter(res, body) {
   }
 }
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -350,11 +372,12 @@ module.exports = async function handler(req, res) {
       0,
       parseInt(body.lc_image_count, 10) || 0
     );
+    const hasUpload = cozeFileIds.length > 0 || !!docFullText;
     const route = routePlainLanguageTopic(
       coreTopic,
       rawQuery || user_notes || '',
       ROOT,
-      { hasFile: cozeFileIds.length > 0, imageCount: lcImageCount }
+      { hasFile: hasUpload, imageCount: lcImageCount }
     );
 
     let assembledMessage = buildCozeMessage({
@@ -367,7 +390,7 @@ module.exports = async function handler(req, res) {
       rawQuery: rawQuery || coreTopic,
       userNotes: user_notes || '',
       route: route,
-      hasFile: cozeFileIds.length > 0,
+      hasFile: hasUpload,
       fileIds: cozeFileIds,
       imageCount: lcImageCount,
     });
@@ -427,7 +450,7 @@ module.exports = async function handler(req, res) {
     let lastValidation = { valid: true, reason: '' };
 
     const rawQueryForValidate = rawQuery || user_notes || coreTopic;
-    const cozeAttempts = maxCozeAttempts(intent, cozeFileIds.length);
+    const cozeAttempts = maxCozeAttempts(intent, cozeFileIds.length, !!docFullText);
     for (let attempt = 0; attempt <= cozeAttempts; attempt++) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), COZE_FETCH_TIMEOUT_MS);
@@ -529,10 +552,10 @@ module.exports = async function handler(req, res) {
           assistantText,
           rawQueryForValidate,
           route,
-          cozeFileIds.length > 0
+          hasUpload
         );
         if (lastValidation.valid) break;
-        if (attempt < MAX_ANALYZE_RETRIES) {
+        if (attempt < cozeAttempts) {
           console.warn(
             '[分析自我检测] 第 ' +
               (attempt + 1) +
@@ -541,7 +564,7 @@ module.exports = async function handler(req, res) {
           );
           queryForCoze =
             assembledMessage +
-            buildAnalyzeRetryBlock(lastValidation, cozeFileIds.length > 0);
+            buildAnalyzeRetryBlock(lastValidation, hasUpload);
           continue;
         }
         console.warn('[分析自我检测] 仍不达标，返回最后一次结果：' + lastValidation.reason);
@@ -650,10 +673,15 @@ module.exports = async function handler(req, res) {
   } catch (error) {
     console.error('❌ 【大后方网络/代码彻底崩溃】:', error);
     const isTimeout = error.name === 'AbortError' || /aborted/i.test(error.message || '');
-    const hasImg = Array.isArray(req.body && req.body.file_ids) && req.body.file_ids.length > 0;
+    const hasImg =
+      Array.isArray(req.body && req.body.file_ids) && req.body.file_ids.length > 0;
+    const hasDoc =
+      !!String(
+        (req.body && req.body.documentContent) || (req.body && req.body.file_content) || ''
+      ).trim();
     const msg = isTimeout
-      ? hasImg
-        ? '【扣子看图超时】上传图分析/出词较慢，请稍后重试：建议只传1张产品实拍、压缩到1MB内；若反复504需 Vercel Pro 或换自建 Node 服务'
+      ? hasImg || hasDoc
+        ? '【扣子识图/识文档超时】请①单张图≤1MB或文档精简 ②稍后再试 ③反复504：Vercel 需 Pro(maxDuration300s) 或改用自建 Node(server.js)'
         : '【扣子智能体响应超时】请稍后重试或检查网络'
       : `【链路本地崩溃诊断】: ${error.message}。如果提示 fetch failed，说明是网络/梯子阻断了本地与 Coze.cn 的连接！`;
     return res.status(500).json({ code: -1, msg, error: msg, timeout: isTimeout });
@@ -665,4 +693,8 @@ module.exports = async function handler(req, res) {
       msg: '【服务器内部错误】' + (fatal && fatal.message ? fatal.message : '请稍后重试'),
     });
   }
-};
+}
+
+/** 与 vercel.json 一致；Hobby 套餐无法跑满 300s，上传图易 504 需 Pro */
+handler.config = { maxDuration: 300 };
+module.exports = handler;

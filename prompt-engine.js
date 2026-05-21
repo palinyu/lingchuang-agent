@@ -435,6 +435,59 @@ function buildEcomDualPromptBlock(topic, style, size, route, rawQuery) {
   );
 }
 
+/** 上传识图/识文档默认走短 Prompt，降低扣子耗时与 Vercel 504；COZE_FULL_ANALYZE=1 或 COZE_LITE_ANALYZE=0 恢复完整镜像 */
+function shouldUseLiteAnalyze(p) {
+  if (safeStr(p && p.intent) !== 'analyze') return false;
+  const hasFile = !!(p && (p.hasFile || (p.fileIds && p.fileIds.length)));
+  if (!hasFile) return false;
+  if (process.env.COZE_LITE_ANALYZE === '0' || process.env.COZE_FULL_ANALYZE === '1') {
+    return false;
+  }
+  return true;
+}
+
+function buildCozeLiteAnalyzeMessage(p, route, techniqueEffective, style) {
+  const imageCount =
+    (p && p.imageCount) || (p && p.fileIds && p.fileIds.length) || 0;
+  if (imageCount >= 2) {
+    return buildCozeLiteDualAnalyzeMessage(p, route);
+  }
+  const rawQuery = safeStr(p.rawQuery, '');
+  const userNotes = safeStr(p.userNotes, '');
+  const r = route || {};
+  const ecom = isEcomProfile(r.profile) || isEcomIntentBlob('', rawQuery);
+  const lines = [
+    '【STEP1·识图/识文档·极速·对齐扣子输出结构】',
+    '先看附件图片或下方<document_content>，再写文字。禁止「已识别你的产品+三方案」缩写；禁止未看图编造主体。',
+    imageCount >= 1
+      ? '图片：主体菜名/产品名必须与画面一致；写 **主体/辅助元素/主色调**；再给方案1/2/3（版式+平台）。'
+      : '文档：以<document_content>前部核心为准，提炼要点后输出结构化字段。',
+    ecom
+      ? buildCozeDetailedAnalyzeFormatBlock(r, rawQuery)
+      : '输出 ✅内容识别 + 1.品类判定 2.用户类型 3.匹配手法 4.推荐尺寸 5.本次随机风格 6.推荐理由',
+    '预猜品类（以你判定为准）：' + safeStr(r.humanLabel, ''),
+    '风格池参考：' + safeStr(r.randomStyleName || style, 'AI智能推荐风格'),
+  ];
+  if (userNotes) lines.push('【用户补充】' + userNotes);
+  lines.push('【用户原话】' + rawQuery);
+  return lines.filter(Boolean).join('\n\n');
+}
+
+function buildCozeLiteDualAnalyzeMessage(p, route) {
+  const rawQuery = safeStr(p.rawQuery, '');
+  const userNotes = safeStr(p.userNotes, '');
+  const r = route || {};
+  return [
+    '【STEP1·双图·极速】默认第1张=产品实拍图B，第2张=版式参考图A；若第1张是错图海报、第2张是实拍，以实拍为图B。',
+    '先认哪张是实拍主体，再写 ✅内容识别 + 方案1/2/3 + 字段1~6。禁止用海报里的错商品替换实拍主体。',
+    '预猜：' + safeStr(r.humanLabel, '电商双图'),
+    userNotes ? '【补充】' + userNotes : '',
+    '【用户原话】' + rawQuery,
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+}
+
 function buildCozeMirrorAnalyzeMessage(p, route, techniqueEffective, style) {
   const imageCount =
     (p && p.imageCount) || (p && p.fileIds && p.fileIds.length) || 0;
@@ -1198,15 +1251,26 @@ function buildStrictMdCozeMessage(p) {
     styleLibBlock;
 
   if (intent === 'analyze' && hasFile) {
+    const analyzePayload = {
+      intent: intent,
+      hasFile: hasFile,
+      rawQuery: rawQuery,
+      userNotes: userNotes,
+      style: styleName,
+      coreTopic: topic,
+      fileIds: p.fileIds || [],
+      imageCount: (p && p.imageCount) || 0,
+    };
+    if (shouldUseLiteAnalyze(analyzePayload)) {
+      return buildCozeLiteAnalyzeMessage(
+        analyzePayload,
+        route,
+        techniqueEffective,
+        styleName
+      );
+    }
     return buildCozeMirrorAnalyzeMessage(
-      {
-        rawQuery: rawQuery,
-        userNotes: userNotes,
-        style: styleName,
-        coreTopic: topic,
-        fileIds: p.fileIds || [],
-        imageCount: (p && p.imageCount) || 0,
-      },
+      analyzePayload,
       route,
       techniqueEffective,
       styleName
@@ -1338,15 +1402,26 @@ function buildCozeMessage(p) {
   });
 
   if (intent === 'analyze' && hasFile) {
+    const analyzePayload = {
+      intent: intent,
+      hasFile: hasFile,
+      rawQuery: rawQuery,
+      userNotes: userNotes,
+      style: style,
+      coreTopic: topic,
+      fileIds: p.fileIds || [],
+      imageCount: p.imageCount || 0,
+    };
+    if (shouldUseLiteAnalyze(analyzePayload)) {
+      return buildCozeLiteAnalyzeMessage(
+        analyzePayload,
+        route,
+        techniqueEffective,
+        style
+      );
+    }
     return buildCozeMirrorAnalyzeMessage(
-      {
-        rawQuery: rawQuery,
-        userNotes: userNotes,
-        style: style,
-        coreTopic: topic,
-        fileIds: p.fileIds || [],
-        imageCount: p.imageCount || 0,
-      },
+      analyzePayload,
       route,
       techniqueEffective,
       style

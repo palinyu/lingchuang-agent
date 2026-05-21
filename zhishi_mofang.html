@@ -4495,7 +4495,8 @@ function parseApiResponse(r){
       var errMsg=(data&&(data.msg||data.error))||'';
       if(r.status===413) errMsg=errMsg||'文件超过大小限制：图片≤2MB，文档≤4MB，请压缩后重试';
       else if((r.status===504||r.status===502)&&!errMsg){
-        if(uploadedImageCount>=1) errMsg='云端超时(504)：上传图时扣子看图较慢。请①只传1张产品实拍并压缩≤1MB ②稍后再试 ③若仍504：Vercel需Pro套餐(maxDuration300s)或改用自建Node(server.js)';
+        var hasDoc504=!!(typeof getDocumentContent==='function'&&getDocumentContent());
+        if(uploadedImageCount>=1||hasDoc504) errMsg='云端超时(504)：识图/识文档较慢。请①图≤1MB或文档精简 ②稍后再试 ③仍504：Vercel需Pro(maxDuration300s)或自建Node(server.js)';
         else if(sessionContext.fromDsNotes) errMsg='笔记配套出图超时，请稍后重试';
         else errMsg='云端超时(504)，请稍后重试';
       }
