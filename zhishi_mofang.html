@@ -5557,14 +5557,27 @@ function runEngineFromDsNotes(){
     updateFreeTrialHint();
   });
 }
+function parseCozeProductRecognition(raw){
+  var text=String(raw||'');
+  var m=text.match(/(?:✅\s*)?(?:产品识别|内容识别)[：:\s]*\n([\s\S]*?)(?=\n\s*(?:目前|1[\.、\s]*品类|品类判定|方案\s*1|方案1)|$)/i);
+  return m&&m[1]?m[1].trim():'';
+}
+function parseCozePosterPlans(raw){
+  var text=String(raw||'');
+  var m=text.match(/(?:目前[\s\S]{0,40}?(?:海报|详情)[\s\S]{0,30}?风格|流行[\s\S]{0,20}?风格)([\s\S]*?)(?=\n\s*1[\.、\s]*品类|\n\s*品类判定|$)/i);
+  if(!m) m=text.match(/(方案\s*1[\s\S]*?)(?=\n\s*1[\.、\s]*品类|\n\s*品类判定|$)/i);
+  return m&&m[1]?m[1].trim():'';
+}
 function parseVisionRecognition(raw){
+  var block=parseCozeProductRecognition(raw);
+  if(block&&block.length>8) return block.substring(0,1200);
   var text=String(raw||'');
   var m=text.match(/✅\s*内容识别[：:\s]*\n([\s\S]*?)(?=\n\s*1[\.、\s]*品类|\n\s*品类判定|$)/i);
   if(m&&m[1]){
     var line=m[1].trim().split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean)[0];
     if(line&&line.length>2) return line;
   }
-  return parseFieldFromRaw(text,['内容识别','✅ 内容识别']);
+  return parseFieldFromRaw(text,['内容识别','✅ 内容识别','产品识别']);
 }
 function parseFieldFromRaw(raw, keys){
   var lines = raw.split('\n');
@@ -5672,14 +5685,30 @@ function showAnalysisCard(raw){
   }
 
   var visionRec=parseVisionRecognition(raw);
+  var plansBlock=parseCozePosterPlans(raw);
   if(visionRec&&visionRec.length>2){
     var vBlock=document.createElement('div');
-    vBlock.style.cssText='margin-bottom:12px;padding:12px 14px;border-radius:10px;background:rgba(34,197,94,0.08);border:1px solid rgba(74,222,128,0.35);';
-    vBlock.innerHTML='<div style="font-size:10px;color:rgba(134,239,172,0.9);margin-bottom:6px;">✅ 内容识别</div><div style="font-size:14px;font-weight:700;color:#ecfdf5;line-height:1.55;">'+visionRec.substring(0,280)+'</div>';
+    vBlock.className='analysis-content-block';
+    vBlock.style.marginBottom='12px';
+    var esc=function(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+    vBlock.innerHTML='<div class="acb-title">✅ 产品识别（对齐扣子详析）</div><div style="font-size:13px;color:#ecfdf5;line-height:1.75;white-space:pre-wrap;">'+esc(visionRec)+'</div>';
     grid.appendChild(vBlock);
     if(isFileAttached&&uploadedFileIds.length>0){
-      sessionContext.coreTopic=visionRec.substring(0,96);
+      var topicLine=visionRec.split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean)[0]||'';
+      if(/主体/.test(topicLine)){
+        var sub=topicLine.replace(/^[*#\s]*主体[：:]\s*/,'').split(/[，,。]/)[0];
+        if(sub.length>2) sessionContext.coreTopic=sub.substring(0,96);
+      }else if(topicLine.length>2){
+        sessionContext.coreTopic=topicLine.substring(0,96);
+      }
     }
+  }
+  if(plansBlock&&plansBlock.length>20){
+    var pBlock=document.createElement('div');
+    pBlock.className='analysis-content-block';
+    pBlock.style.marginBottom='12px';
+    pBlock.innerHTML='<div class="acb-title">🎨 海报/详情风格方案</div><div style="font-size:12px;color:#fcd34d;line-height:1.7;white-space:pre-wrap;">'+String(plansBlock).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
+    grid.appendChild(pBlock);
   }
 
   // 字段卡片区（横向排列）
