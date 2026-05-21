@@ -1787,7 +1787,7 @@ else{
         <textarea id="main-textarea" placeholder="直接说你想做什么图，用大白话就行…"></textarea>
         <div class="input-toolbar">
           <div class="input-toolbar-hints">
-            <span class="input-hint-line">📝 例：红烧肉的做法 / 苏州旅游攻略 / 光合作用</span>
+            <span class="input-hint-line">📝 例：红烧肉的做法 / 苏州旅游全貌图 / 光合作用做成图</span>
             <span class="input-hint-line">🖼️ 电商双图：第1张=产品(图B)，第2张=风格(图A)，可说换背景/出海报</span>
             <span class="input-hint-line input-hint-dim">📄 txt / docx / pdf 自动提取文字发给 AI</span>
           </div>
@@ -2722,18 +2722,18 @@ var docTextContent='',attachedFileName='';
 var dsRefFileId=null,dsRefSlot=null,dsRefUploadPromise=null,dsRefPreviewUrl=null;
 var WELCOME_KW=['支持四种输入方式','发送任意内容，自动启动','我是灵创星球','专注把知识变成','直接输入主题','上传文档（PDF','上传图片（截图','告诉我你想做','自动启动生图链路','灵创星球·知识图文魔方','四种输入方式','欢迎使用'];
 var KW_CATS=[
-  {name:'古诗图解',icon:'📜',rec:true,words:['静夜思图解','春晓古诗解析','望庐山瀑布知识卡','将进酒逐句解析','床前明月光做成图','帮我做一张古诗图']},
-  {name:'菜谱教程',icon:'🍳',rec:true,words:['红烧肉的做法','糖醋排骨步骤图','蛋糕烘焙教程','麻辣香锅做法','帮我做红烧肉菜谱图','戚风蛋糕做法做成图']},
-  {name:'中药本草',icon:'🌿',words:['枸杞的功效','当归中药科普','黄芪本草图鉴','陈皮食药同源','枸杞有什么用做成图']},
-  {name:'城市文化',icon:'🏙️',words:['成都必打卡地标','北京胡同文化地图','上海外滩漫游攻略','广州美食地图']},
-  {name:'星座情感',icon:'⭐',rec:true,words:['天蝎座性格分析','双鱼座人格报告','星座配对排行','狮子座优缺点','天蝎座是什么性格做成图']},
-  {name:'教育学科',icon:'📚',rec:true,words:['光合作用知识卡','初中物理电路知识','英语四级高频词汇','幼儿早教数字认知','光合作用做成图']},
-  {name:'护肤美妆',icon:'💄',words:['烟酰胺护肤成分科普','视黄醇功效图解','油皮护肤步骤','敏感肌成分避雷']},
-  {name:'健身减脂',icon:'🏃',words:['平板支撑动作分解','臀部训练动作图解','减脂饮食计划','深蹲标准姿势']},
-  {name:'财经理财',icon:'💰',words:['基金定投入门','复利原理图解','信用卡使用技巧','理财入门知识']},
-  {name:'Citywalk',icon:'🗺️',words:['成都太古里打卡攻略','上海安福路探店','广州北京路Citywalk','重庆洪崖洞打卡路线']},
-  {name:'职场技能',icon:'💼',words:['时间管理四象限法则','高效开会技巧','简历写作要点','职场沟通技巧']},
-  {name:'时尚',icon:'👗',words:['秋冬通勤搭配公式','梨形身材穿搭技巧','黑白灰搭配法则','小个子显高穿搭']},
+  {name:'古诗图解',icon:'📜',rec:true,words:['静夜思图解','春晓古诗解析','望庐山瀑布知识卡','将进酒逐句解析','春晓这首诗做成图','帮我做一张静夜思的图']},
+  {name:'菜谱教程',icon:'🍳',rec:true,words:['红烧肉的做法','糖醋排骨怎么做做成图','蛋糕烘焙教程','麻辣香锅怎么炒做成图','帮我做红烧肉菜谱图','戚风蛋糕做法做成图']},
+  {name:'中药本草',icon:'🌿',words:['枸杞的功效','当归是什么做成图','黄芪本草图鉴','陈皮食药同源','枸杞有什么用做成图','黄芪怎么用做成图']},
+  {name:'城市文化',icon:'🏙️',rec:true,words:['成都必打卡地标','苏州旅游全貌图','北京胡同做成地图图','上海外滩怎么玩做成图','广州吃什么做成图','成都有哪些好玩的做成图']},
+  {name:'星座情感',icon:'⭐',rec:true,words:['天蝎座性格分析','双鱼座的人怎么样做成图','星座配对排行','狮子座好不好做成图','哪两个星座最配做成图','天蝎座是什么性格做成图']},
+  {name:'教育学科',icon:'📚',rec:true,words:['光合作用知识卡','光合作用做成图','电路知识点做成图','四级词汇做成图','教小孩认数字做成图','幼儿早教数字认知']},
+  {name:'护肤美妆',icon:'💄',words:['烟酰胺是什么做成图','视黄醇有什么用做成图','油皮怎么护肤做成图','敏感肌成分避雷','敏感肌不能用什么做成图']},
+  {name:'健身减脂',icon:'🏃',words:['平板支撑怎么做做成图','练臀的动作做成图','怎么吃能瘦做成图','深蹲怎么做才标准做成图','臀部训练动作图解','减脂饮食计划']},
+  {name:'财经理财',icon:'💰',words:['基金怎么买做成图','复利是什么做成图','信用卡怎么用做成图','怎么理财做成图','基金定投入门','理财入门知识']},
+  {name:'Citywalk',icon:'🗺️',words:['成都太古里怎么玩做成图','上海安福路有什么好逛做成图','广州北京路怎么逛做成图','重庆洪崖洞怎么玩做成图','成都太古里打卡攻略','重庆洪崖洞打卡路线']},
+  {name:'职场技能',icon:'💼',words:['时间管理怎么做做成图','怎么开会有效率做成图','简历怎么写做成图','和领导怎么沟通做成图','时间管理四象限法则','高效开会技巧']},
+  {name:'时尚',icon:'👗',words:['秋冬上班怎么穿做成图','梨形身材怎么穿显瘦做成图','黑白灰怎么搭做成图','个子矮怎么穿高做成图','秋冬通勤搭配公式','小个子显高穿搭']},
 ];
 var BUBBLE_MAP=[
   {keys:['红烧','糖醋','炒','炖','烤','蒸','菜谱','做法','食材','美食','料理'],bubbles:[{e:'🍳',t:'食欲棚拍特写'},{e:'📋',t:'步骤分栏流'},{e:'🔥',t:'暗调烟火感'},{e:'📸',t:'白卡工序图'}]},
@@ -3967,25 +3967,25 @@ var LC_ITH_LOG_LINES=[
   '等待扣子大脑返回…'
 ];
 var LC_MD_LEGACY_OVERRIDES=[
-  {keys:['古诗','静夜思','诗词','李白','杜甫','苏轼','逐句','唐诗','宋词','文言文'],categoryId:'education',templateKey:'classic_poetry',technique:'手法十三/十四·卷轴沉浸式古诗法',profile:'poetry'},
+  {keys:['古诗','静夜思','诗词','李白','杜甫','苏轼','逐句','唐诗','宋词','文言文','春晓','望庐山瀑布','将进酒','古诗解析'],categoryId:'education',templateKey:'classic_poetry',technique:'手法十三/十四·卷轴沉浸式古诗法',profile:'poetry'},
   {keys:['unit','英语课','英语单词','四年级英语','三年级英语'],categoryId:'education',templateKey:'english_card',technique:'手法五·场景叙事词汇法',profile:'english_edu'},
   {keys:['食疗','食材搭配','汤品','膳食','药食'],categoryId:'life_science',templateKey:'food_therapy',technique:'手法六/二十·食材深度结构法',profile:'food_therapy'},
   {keys:['贺卡','春节','中秋','端午','圣诞','生日祝福','礼物','祝福语'],categoryId:'life_science',templateKey:'festival_card',technique:'手法十九·DIY手工模板教程法',profile:'life_science'}
 ];
 var LC_MD_CATEGORIES={
   ecom:{id:'ecom',name:'餐饮电商海报类',keys:['海报','促销','电商','主图','详情','种草','探店','牛蛙','火锅','餐饮','招牌','菜品','炭烤','套餐','128元','份'],technique:'手法二十二B·餐饮海报法',templateKey:'ecom_image',profile:'ecom_image'},
-  education:{id:'education',name:'教育学科类',keys:['学科','年级','考纲','词汇','题型','电路','物理','化学','生物','历史','地理','政治','英语','语文','数学','单元','课时','上册','下册','考前','复习','知识点','公式','定理','光合作用','考试'],technique:'手法三·结构化知识模块法',templateKey:'education',profile:'education'},
-  life_science:{id:'life_science',name:'生活科普类',keys:['食疗','养生','植物','节气','百科','花卉','冬至','立春','春分','夏至','秋分','科普','原理','玫瑰','茉莉','牡丹','荷花','芍药'],technique:'手法十五·博物学六格百科图鉴法',templateKey:'life_science',profile:'life_science'},
-  city:{id:'city',name:'城市文化类',keys:['城市','地标','美食地图','Citywalk','北京','上海','广州','深圳','成都','重庆','杭州','南京','苏州','武汉','西安','胡同','外滩','必打卡','老街','古镇','旅游'],technique:'手法四升级·俯瞰鸟瞰地图法',templateKey:'city',profile:'city'},
-  constellation:{id:'constellation',name:'星座情感类',keys:['星座','性格','配对','运势','白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手','摩羯','水瓶','双鱼','人格','MBTI','情感'],technique:'手法十六·星座人格深度解析法',templateKey:'constellation',profile:'constellation'},
-  recipe:{id:'recipe',name:'菜谱教程类',keys:['做法','食谱','烘焙','饮品','红烧','糖醋','清蒸','凉拌','炒','炸','蒸','煮','焖','炖','烤','蛋糕','面包','甜品','奶茶','咖啡','菜谱','食材','煲汤'],technique:'手法二十二·分步骤菜谱教程卡法',templateKey:'recipe',profile:'recipe'},
-  herb:{id:'herb',name:'中药本草类',keys:['本草','中药','药材','配伍','枸杞','当归','黄芪','陈皮','人参','党参','甘草','茯苓','药典','食药同源','功效','性味'],technique:'手法三十一·中药本草博物图鉴法',templateKey:'herb',profile:'tcm'},
-  skincare:{id:'skincare',name:'护肤美妆类',keys:['护肤','成分','肤质','妆容','美妆','烟酰胺','玻尿酸','视黄醇','水杨酸','果酸','神经酰胺','油皮','干皮','混合皮','敏感肌','面膜','精华','乳液'],technique:'手法三十九·护肤成分图鉴法',templateKey:'skincare',profile:'skincare'},
-  fitness:{id:'fitness',name:'健身减脂类',keys:['训练','运动','动作','健身','减脂','增肌','平板支撑','深蹲','俯卧撑','卷腹','硬拉','臀部','腹肌','有氧','无氧','HIIT','瑜伽','普拉提'],technique:'手法四十·健身动作分解图法',templateKey:'fitness',profile:'fitness'},
-  finance:{id:'finance',name:'财经理财类',keys:['理财','基金','投资','经济','消费','复利','股票','债券','保险','存款','定投','指数基金','ETF','黄金','资产','负债','现金流','收益','风险'],technique:'手法四十一·财经知识可视化法',templateKey:'finance',profile:'finance'},
-  citywalk:{id:'citywalk',name:'Citywalk探店类',keys:['探店','打卡','本地','攻略','咖啡店','网红店','隐藏','宝藏','人均','推荐','夜市','集市'],technique:'手法四十二·探店Citywalk地图法',templateKey:'citywalk',profile:'city'},
-  workplace:{id:'workplace',name:'职场技能类',keys:['职场','技能','简历','时间管理','四象限','汇报','PPT','Excel','沟通','高效','副业','面试','跳槽','晋升','管理','团队','直播','话术','实操','手册','脚本','流程图','sop','带货','主播','运营','转化','开播'],technique:'手法三十·快闪卡片法',templateKey:'workplace',profile:'workplace'},
-  fashion:{id:'fashion',name:'时尚搭配类',keys:['搭配','穿着','体型','色系','通勤','约会','日常','梨形','苹果','OOTD','穿搭','look','裤装','裙装','秋冬','春夏'],technique:'手法三十八·穿搭公式视觉拆解法',templateKey:'fashion',profile:'fashion'}
+  education:{id:'education',name:'教育学科类',keys:['学科','年级','考纲','词汇','题型','初中','高中','小学','一年级','二年级','三年级','四年级','五年级','六年级','电路','物理','化学','生物','历史','地理','政治','英语','语文','数学','单元','课时','上册','下册','考前','复习','知识点','公式','定理','光合作用','考试','知识卡','知识图','图解','四级词汇','四级','早教','教小孩','数字认知','幼儿','做成图'],technique:'手法三·结构化知识模块法',templateKey:'education',profile:'education'},
+  life_science:{id:'life_science',name:'生活科普类',keys:['食疗','养生','植物','节气','百科','花卉','冬至','立春','春分','夏至','秋分','科普','原理','玫瑰','茉莉','牡丹','荷花','芍药','做成图'],technique:'手法十五·博物学六格百科图鉴法',templateKey:'life_science',profile:'life_science'},
+  city:{id:'city',name:'城市文化类',keys:['城市','地标','美食地图','Citywalk','北京','上海','广州','深圳','成都','重庆','杭州','南京','苏州','武汉','西安','胡同','外滩','必打卡','老街','古镇','旅游','攻略','漫游','全貌','全貌图','全景','鸟瞰','地图图','好玩的','吃什么','故宫','西湖','长沙','做成图'],technique:'手法四升级·俯瞰鸟瞰地图法',templateKey:'city',profile:'city'},
+  constellation:{id:'constellation',name:'星座情感类',keys:['星座','性格','配对','运势','白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手','摩羯','水瓶','双鱼','人格','MBTI','情感','优缺点','人格报告','什么性格','最配','做成图'],technique:'手法十六·星座人格深度解析法',templateKey:'constellation',profile:'constellation'},
+  recipe:{id:'recipe',name:'菜谱教程类',keys:['做法','食谱','烘焙','饮品','红烧','糖醋','清蒸','凉拌','炒','炸','蒸','煮','焖','炖','烤','蛋糕','面包','甜品','奶茶','咖啡','菜谱','食材','步骤图','菜谱图','怎么做','怎么炒','麻辣香锅','糖醋排骨','戚风蛋糕','煲汤','做成图'],technique:'手法二十二·分步骤菜谱教程卡法',templateKey:'recipe',profile:'recipe'},
+  herb:{id:'herb',name:'中药本草类',keys:['本草','中药','药材','配伍','枸杞','当归','黄芪','陈皮','人参','党参','甘草','茯苓','药典','食药同源','功效','性味','有什么用','怎么用','做成图'],technique:'手法三十一·中药本草博物图鉴法',templateKey:'herb',profile:'tcm'},
+  skincare:{id:'skincare',name:'护肤美妆类',keys:['护肤','成分','肤质','妆容','美妆','烟酰胺','玻尿酸','视黄醇','水杨酸','果酸','神经酰胺','油皮','干皮','混合皮','敏感肌','面膜','精华','乳液','是什么','怎么护肤','避雷','做成图'],technique:'手法三十九·护肤成分图鉴法',templateKey:'skincare',profile:'skincare'},
+  fitness:{id:'fitness',name:'健身减脂类',keys:['训练','运动','动作','健身','减脂','增肌','平板支撑','深蹲','俯卧撑','卷腹','硬拉','臀部','腹肌','有氧','无氧','HIIT','瑜伽','普拉提','动作分解','动作图解','练臀','饮食计划','怎么吃能瘦','标准姿势','怎么做才标准','做成图'],technique:'手法四十·健身动作分解图法',templateKey:'fitness',profile:'fitness'},
+  finance:{id:'finance',name:'财经理财类',keys:['理财','基金','投资','经济','消费','复利','股票','债券','保险','存款','定投','指数基金','ETF','黄金','资产','负债','现金流','收益','风险','信用卡','怎么买','是什么','怎么用','怎么理财','定投入门','做成图'],technique:'手法四十一·财经知识可视化法',templateKey:'finance',profile:'finance'},
+  citywalk:{id:'citywalk',name:'Citywalk探店类',keys:['探店','打卡','本地','攻略','咖啡店','网红店','隐藏','宝藏','人均','推荐','夜市','集市','太古里','宽窄巷子','安福路','北京路','洪崖洞','怎么玩','怎么逛','有什么好逛','打卡路线','做成图'],technique:'手法四十二·探店Citywalk地图法',templateKey:'citywalk',profile:'city'},
+  workplace:{id:'workplace',name:'职场技能类',keys:['职场','技能','简历','时间管理','四象限','汇报','PPT','Excel','沟通','高效','副业','面试','跳槽','晋升','管理','团队','直播','话术','实操','手册','脚本','流程图','sop','带货','主播','运营','转化','开播','开会','有效率','怎么写','怎么沟通','法则','做成图'],technique:'手法三十·快闪卡片法',templateKey:'workplace',profile:'workplace'},
+  fashion:{id:'fashion',name:'时尚搭配类',keys:['搭配','穿着','体型','色系','通勤','约会','日常','梨形','苹果','OOTD','穿搭','look','裤装','裙装','秋冬','春夏','怎么穿','显瘦','显高','小个子','黑白灰','通勤搭配','做成图'],technique:'手法三十八·穿搭公式视觉拆解法',templateKey:'fashion',profile:'fashion'}
 };
 var LC_STRUCTURE_TEMPLATES={
   recipe:'【品类专属结构模板·菜谱教程·手法二十二】\n① 标题区：菜名大字毛笔体 + 红色横幅 + 时间/难度/人份标签\n② 食材清单：大圆形图标网格 + 名称克重 + 特殊警示badge\n③ 核心处理：横向流程（每步有小图示+文字+箭头）\n④ 步骤区：2×3网格（步骤插图+编号+标题+tip）\n⑤ 避坑区：红色卡片三条横排\n⑥ 变形版：底部三款小图\n⑦ 页脚：时间|难度|份量|菜系标签',
