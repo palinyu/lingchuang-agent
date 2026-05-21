@@ -836,6 +836,18 @@ html.lc-await-intro #lc-mobile-legal-bar{visibility:hidden!important;pointer-eve
   background:linear-gradient(135deg,#ef4444 0%,#b91c1c 40%,#f3af42 100%)!important;
   color:#fff!important;border-color:rgba(255,255,255,0.2)!important;
 }
+.ds-copy-chip{
+  margin-top:6px;width:100%;padding:8px 10px;font-size:11px;font-weight:700;cursor:pointer;
+  border-radius:8px;border:1px solid rgba(243,175,66,0.4);
+  background:rgba(243,175,66,0.18);color:#f3af42!important;-webkit-text-fill-color:#f3af42!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.ds-copy-chip:active{background:rgba(243,175,66,0.28);}
+.ds-copy-out .ds-copy-chip,.content-card .ds-copy-chip{
+  background:rgba(36,28,18,0.95)!important;
+  color:#FFD793!important;-webkit-text-fill-color:#FFD793!important;
+  border:1px solid rgba(230,194,128,0.55)!important;
+}
 #main-textarea.ds-pic-flash{animation:ds-ta-flash 1s ease;}
 @keyframes ds-ta-flash{0%,100%{box-shadow:inset 0 0 0 0 rgba(243,175,66,0);}40%{box-shadow:inset 0 0 0 2px rgba(243,175,66,0.45);}}
 /* 快捷关键词 · 黑金奢华胶囊 */
@@ -1042,6 +1054,14 @@ body.api-lux-loading .gen-wait-hint{display:block!important;}
 .input-thinking-panel.is-live .ith-step[data-ith="3"]{animation:ith-drop-in .48s cubic-bezier(.22,1,.36,1) both;animation-delay:.4s;}
 .input-thinking-panel.is-live .ith-log{animation:ith-drop-in .45s cubic-bezier(.22,1,.36,1) both;animation-delay:.5s;}
 .input-thinking-panel.is-live .ith-eta{animation:ith-drop-in .42s cubic-bezier(.22,1,.36,1) both;animation-delay:.58s;}
+.btn-engine-cancel{
+  display:none;margin-top:10px;width:100%;padding:9px 12px;border-radius:8px;
+  border:1px solid rgba(239,68,68,0.45);background:rgba(239,68,68,0.12);
+  color:#fca5a5!important;-webkit-text-fill-color:#fca5a5!important;
+  font-size:12px;font-weight:700;cursor:pointer;
+}
+body.api-lux-loading .btn-engine-cancel{display:block;}
+.btn-engine-cancel:hover{background:rgba(239,68,68,0.22);}
 .ith-step.ith-drop-flash{animation:ith-drop-step .42s cubic-bezier(.22,1,.36,1) both;}
 .ith-log.ith-log-drop{animation:ith-drop-in .38s cubic-bezier(.22,1,.36,1) both;}
 .gen-wait-hint{display:none;font-size:11px;color:rgba(226,192,125,0.72);text-align:center;line-height:1.5;margin:0 0 6px;letter-spacing:0.2px;}
@@ -1518,7 +1538,10 @@ window.lcToggleBtn=function(){
   btn.style.color=chk.checked?'#09090d':'#475569';
 };
 
-if(localStorage.getItem('lc_agreed')==='1'||localStorage.getItem('lingchuang_intro_done')==='1'){
+function lcReplayIntroRequested(){
+  try{return /(?:^|[?&])replay_intro=1(?:&|$)/.test(location.search||'');}catch(e){return false;}
+}
+if(!lcReplayIntroRequested()&&(localStorage.getItem('lc_agreed')==='1'||localStorage.getItem('lingchuang_intro_done')==='1')){
   lcDismissIntro();
   return;
 }
@@ -1780,6 +1803,7 @@ else{
         </div>
         <div class="ith-log" id="input-thinking-log"></div>
         <div class="ith-eta">预计还需约 1～2 分钟 · 请勿关闭页面</div>
+        <button type="button" class="btn-engine-cancel lux-tap" id="btn-engine-cancel" onclick="cancelActiveEngineRun()">✕ 取消本次分析（不扣次数）</button>
       </div>
     </div>
   </div>
@@ -2197,17 +2221,17 @@ else{
         <div class="ds-copy-out-block">
           <div class="ds-ol">📌 标题（可改）</div>
           <textarea class="ds-out-ta" id="ds-ta-title" rows="2" maxlength="120" placeholder="标题"></textarea>
-          <button type="button" class="lux-tap" style="margin-top:6px;width:100%;padding:6px;font-size:11px;" id="ds-copy-title">复制标题</button>
+          <button type="button" class="lux-tap ds-copy-chip" id="ds-copy-title">复制标题</button>
         </div>
         <div class="ds-copy-out-block">
           <div class="ds-ol">📝 正文（含占位符）</div>
           <textarea class="ds-out-ta" id="ds-ta-body" rows="10" placeholder="正文"></textarea>
-          <button type="button" class="lux-tap" style="margin-top:6px;width:100%;padding:6px;font-size:11px;" id="ds-copy-body">复制正文</button>
+          <button type="button" class="lux-tap ds-copy-chip" id="ds-copy-body">复制正文</button>
         </div>
         <div class="ds-copy-out-block">
           <div class="ds-ol"># 话题标签</div>
           <textarea class="ds-out-ta ds-tags" id="ds-ta-tags" rows="3" placeholder="#话题1 #话题2 …"></textarea>
-          <button type="button" class="lux-tap" style="margin-top:6px;width:100%;padding:6px;font-size:11px;" id="ds-copy-tags">复制话题</button>
+          <button type="button" class="lux-tap ds-copy-chip" id="ds-copy-tags">复制话题</button>
         </div>
         <div class="ds-ref-block" id="ds-ref-block">
           <div class="ds-ol">🖼️ 产品参考图（配套出图建议上传）</div>
@@ -2338,13 +2362,38 @@ function checkUploadSize(file){
   showApiError(msg);
   return false;
 }
+var _lcEngineAbortCtrl=null;
+var _lcUserCancelledRun=false;
 function lcFetchJson(url,options,timeoutMs){
   options=options||{};
   timeoutMs=timeoutMs||90000;
   var ctrl=new AbortController();
   var tid=setTimeout(function(){ctrl.abort();},timeoutMs);
   var opts=Object.assign({},options,{signal:ctrl.signal});
+  if(_lcEngineAbortCtrl&&_lcEngineAbortCtrl.signal){
+    _lcEngineAbortCtrl.signal.addEventListener('abort',function(){try{ctrl.abort();}catch(e){}});
+  }
   return fetch(url,opts).finally(function(){clearTimeout(tid);});
+}
+function cancelActiveEngineRun(){
+  _lcUserCancelledRun=true;
+  if(_lcEngineAbortCtrl){
+    try{_lcEngineAbortCtrl.abort();}catch(e){}
+    _lcEngineAbortCtrl=null;
+  }
+  if(_lcTrialDeductedThisRun&&_lcFreeTrialRunActive){
+    setFreeTrialsRemaining(getFreeTrialsRemaining()+1);
+    _lcTrialDeductedThisRun=false;
+  }
+  _lcFreeTrialRunActive=false;
+  setApiLoading(false);
+  stopGenParticleFlow();
+  unlockGenBtn();
+  var qs=document.getElementById('quantum-stage');
+  if(qs) qs.style.display='none';
+  var gh=document.getElementById('gen-wait-hint');
+  if(gh) gh.textContent='已取消。可修改主题/文档后重新点击「启动大脑」';
+  updateFreeTrialHint();
 }
 function appendConfigCacheBust(url){
   var u=String(url||'').trim();
@@ -3271,6 +3320,41 @@ function setDsCopyOpen(open){
   }
   syncLcMobileBackdrop();
 }
+function packDsCopyText(){
+  var t=document.getElementById('ds-ta-title');
+  var b=document.getElementById('ds-ta-body');
+  var tg=document.getElementById('ds-ta-tags');
+  var parts=[];
+  if(t&&String(t.value||'').trim()) parts.push('【标题】\n'+String(t.value).trim());
+  if(b&&String(b.value||'').trim()) parts.push('【正文】\n'+String(b.value).trim());
+  if(tg&&String(tg.value||'').trim()) parts.push('【话题标签】\n'+String(tg.value).trim());
+  return parts.join('\n\n');
+}
+function resolveDsPicCoreTopic(){
+  var el=document.getElementById('ds-topic');
+  return el?String(el.value||'').trim():'';
+}
+function buildPicPromptFromDs(){
+  var topic=resolveDsPicCoreTopic();
+  var pack=packDsCopyText();
+  var cat=(document.getElementById('ds-category')||{}).value||'';
+  var titleEl=document.getElementById('ds-ta-title');
+  var title=titleEl?String(titleEl.value||'').trim():'';
+  var brief=pack.trim()?pack.trim().slice(0,1200):'';
+  var refNote='';
+  if(dsRefFileId||dsRefSlot){
+    refNote='\n【已附产品参考图·图B产品】必须以附件实物为画面主体，保留包装/品类/颜色/材质，禁止换成无关商品或纯示意款。';
+  }
+  return (
+    '【知识图文笔记配图·用户已写好笔记框架】\n'+
+    '核心主题：'+topic+
+    (title?'\n笔记标题：'+title:'')+
+    (brief?'\n\n文案要点摘录（画面须与下列卖点、场景一致）：\n'+brief:'')+
+    '\n品类：'+String(cat).trim()+
+    refNote+
+    '\n【铁律】必须输出 STEP2 完整包；完整版英文≥380字符，含主体/版式模块/场景/光影/Chinese typography zones；禁止只写 no text 合规句。'
+  );
+}
 function setupDsCopyPanel(){
   var wrap=document.getElementById('ds-copy-wrap');
   var btn=document.getElementById('ds-copy-toggle');
@@ -3293,42 +3377,6 @@ function setupDsCopyPanel(){
       if(useToast!==false){try{showToast();}catch(e2){}}
     }).catch(function(){alert('复制失败，请手动选中文本复制');});
   }
-  function packDsCopyText(){
-    var t=document.getElementById('ds-ta-title');
-    var b=document.getElementById('ds-ta-body');
-    var tg=document.getElementById('ds-ta-tags');
-    var parts=[];
-    if(t&&String(t.value||'').trim()) parts.push('【标题】\n'+String(t.value).trim());
-    if(b&&String(b.value||'').trim()) parts.push('【正文】\n'+String(b.value).trim());
-    if(tg&&String(tg.value||'').trim()) parts.push('【话题标签】\n'+String(tg.value).trim());
-    return parts.join('\n\n');
-  }
-  function resolveDsPicCoreTopic(){
-    var el=document.getElementById('ds-topic');
-    return el?String(el.value||'').trim():'';
-  }
-  function buildPicPromptFromDs(){
-    var topic=resolveDsPicCoreTopic();
-    var pack=packDsCopyText();
-    var cat=(document.getElementById('ds-category')||{}).value||'';
-    var titleEl=document.getElementById('ds-ta-title');
-    var title=titleEl?String(titleEl.value||'').trim():'';
-    var brief=pack.trim()?pack.trim().slice(0,1200):'';
-    sessionContext.fromDsNotes=true;
-    var refNote='';
-    if(dsRefFileId||dsRefSlot){
-      refNote='\n【已附产品参考图·图B产品】必须以附件实物为画面主体，保留包装/品类/颜色/材质，禁止换成无关商品或纯示意款。';
-    }
-    return (
-      '【知识图文笔记配图·用户已写好笔记框架】\n'+
-      '核心主题：'+topic+
-      (title?'\n笔记标题：'+title:'')+
-      (brief?'\n\n文案要点摘录（画面须与下列卖点、场景一致）：\n'+brief:'')+
-      '\n品类：'+String(cat).trim()+
-      refNote+
-      '\n【铁律】必须输出 STEP2 完整包；完整版英文≥380字符，含主体/版式模块/场景/光影/Chinese typography zones；禁止只写 no text 合规句。'
-    );
-  }
   var refPick=document.getElementById('ds-ref-pick');
   var refInp=document.getElementById('ds-ref-input');
   var refRm=document.getElementById('ds-ref-rm');
@@ -3346,17 +3394,9 @@ function setupDsCopyPanel(){
     var topic=resolveDsPicCoreTopic();
     if(!topic){alert('请先在笔记区填写主题');return;}
     function launchPicEngine(){
-      var ta=document.getElementById('main-textarea');
-      if(ta){
-        ta.value=topic;
-        ta.classList.add('ds-pic-flash');
-        setTimeout(function(){try{ta.classList.remove('ds-pic-flash');}catch(e){}},1000);
-      }
-      sessionContext.coreTopic=topic;
-      sessionContext.userNotes=buildPicPromptFromDs();
       setDsCopyOpen(false);
       setCaseSidebarOpen(false);
-      try{if(typeof runEngine==='function') runEngine();}catch(e2){alert('已填入主题，请点击主区域「启动大脑」生成');}
+      try{if(typeof runEngineFromDsNotes==='function') runEngineFromDsNotes();}catch(e2){alert('配套出图启动失败，请重试');}
     }
     syncDsRefToMainUpload().then(function(hasRef){
       if(!hasRef&&!dsRefFileId){
@@ -3923,7 +3963,7 @@ var LC_MD_CATEGORIES={
   fitness:{id:'fitness',name:'健身减脂类',keys:['训练','运动','动作','健身','减脂','增肌','平板支撑','深蹲','俯卧撑','卷腹','硬拉','臀部','腹肌','有氧','无氧','HIIT','瑜伽','普拉提'],technique:'手法四十·健身动作分解图法',templateKey:'fitness',profile:'fitness'},
   finance:{id:'finance',name:'财经理财类',keys:['理财','基金','投资','经济','消费','复利','股票','债券','保险','存款','定投','指数基金','ETF','黄金','资产','负债','现金流','收益','风险'],technique:'手法四十一·财经知识可视化法',templateKey:'finance',profile:'finance'},
   citywalk:{id:'citywalk',name:'Citywalk探店类',keys:['探店','打卡','本地','攻略','咖啡店','网红店','隐藏','宝藏','人均','推荐','夜市','集市'],technique:'手法四十二·探店Citywalk地图法',templateKey:'citywalk',profile:'city'},
-  workplace:{id:'workplace',name:'职场技能类',keys:['职场','技能','简历','时间管理','四象限','汇报','PPT','Excel','沟通','高效','副业','面试','跳槽','晋升','管理','团队'],technique:'手法三十·快闪卡片法',templateKey:'workplace',profile:'workplace'},
+  workplace:{id:'workplace',name:'职场技能类',keys:['职场','技能','简历','时间管理','四象限','汇报','PPT','Excel','沟通','高效','副业','面试','跳槽','晋升','管理','团队','直播','话术','实操','手册','脚本','流程图','sop','带货','主播','运营','转化','开播'],technique:'手法三十·快闪卡片法',templateKey:'workplace',profile:'workplace'},
   fashion:{id:'fashion',name:'时尚搭配类',keys:['搭配','穿着','体型','色系','通勤','约会','日常','梨形','苹果','OOTD','穿搭','look','裤装','裙装','秋冬','春夏'],technique:'手法三十八·穿搭公式视觉拆解法',templateKey:'fashion',profile:'fashion'}
 };
 var LC_STRUCTURE_TEMPLATES={
@@ -3978,7 +4018,7 @@ function getLcStructureTemplate(templateKey){
   return LC_STRUCTURE_TEMPLATES[templateKey]||LC_STRUCTURE_TEMPLATES.default;
 }
 function guessCategoryLabel(topic){
-  return classifyTopicCategory(topic).categoryName;
+  return classifyTopicCategory(getClassifyBlob(topic)).categoryName;
 }
 function playInputThinkingDrop(){
   var panel=document.getElementById('input-thinking-panel');
@@ -4082,17 +4122,53 @@ function getDocumentContent(){
   if(/^\[(已上传|PDF文件|解析失败)/.test(t)) return '';
   return t;
 }
+function getClassifyBlob(topic){
+  var doc=getDocumentContent();
+  var t=String(topic||'').trim();
+  if(doc) return (t?t+'\n':'')+doc.slice(0,8000);
+  return t;
+}
+function extractDocKeyPoints(doc,maxN){
+  maxN=maxN||6;
+  var text=String(doc||'').trim();
+  if(!text) return [];
+  var head=text.slice(0,Math.min(text.length,14000));
+  var out=[],seen={};
+  function pushLine(s){
+    var t=String(s||'').replace(/\s+/g,' ').trim();
+    if(t.length<8||t.length>140) return;
+    if(/^(目录|封面|版权|第\s*\d+\s*页)/.test(t)) return;
+    var k=t.slice(0,28);
+    if(seen[k]) return;
+    seen[k]=1;
+    out.push(t);
+  }
+  var re=/[①②③④⑤⑥⑦⑧⑨⑩]|[0-9]+[\.、．\)）]|\u2022|[-*•]/;
+  head.split(/\r?\n/).forEach(function(line){
+    line=line.replace(/\s+/g,' ').trim();
+    if(!line) return;
+    if(re.test(line)) pushLine(line.replace(/^[\s①②③④⑤⑥⑦⑧⑨⑩0-9\.、．\)）\u2022\-\*•]+/,''));
+    else if(line.length>=10) pushLine(line);
+  });
+  if(out.length<3){
+    head.split(/[。！？；\n]+/).forEach(function(seg){pushLine(seg);});
+  }
+  return out.slice(0,maxN);
+}
 function buildUserQuery(topic){
   var bubbleStr=selectedBubbles.length>0?'\n追加排版方向：'+selectedBubbles.join('、'):'';
   var fileNotice=(isFileAttached&&uploadedFileIds.length>0)?'\n【已上传文件，请识别内容】':'';
   var doc=getDocumentContent();
   if(doc){
     fileNotice+='\n【文档原文已解析·必须按全文前部提炼1~6条内容要点，禁止只写联想记忆点及以后章节】';
-    var excerpt=doc.replace(/\s+/g,' ').trim().slice(0,1200);
-    if(excerpt) fileNotice+='\n【文档摘录】\n'+excerpt+(doc.length>1200?'…':'');
+    if(attachedFileName) fileNotice+='\n【文档文件名】'+attachedFileName;
+    var excerpt=doc.replace(/\s+/g,' ').trim().slice(0,4500);
+    if(excerpt) fileNotice+='\n【文档摘录·前4500字】\n'+excerpt+(doc.length>4500?'…':'');
+    var docPts=extractDocKeyPoints(doc,6);
+    if(docPts.length) fileNotice+='\n【文档要点候选·须从中选取并改写为1~6条】\n'+docPts.map(function(p,i){return (i+1)+'. '+p;}).join('\n');
   }
   if(isFileAttached&&!doc&&!topic) fileNotice+='\n【请识别上传的图片或文件内容】';
-  var classifyBlob=(topic||'')+bubbleStr+fileNotice+(doc?doc.slice(0,800):'');
+  var classifyBlob=getClassifyBlob(topic)+bubbleStr;
   var cat=classifyTopicCategory(classifyBlob);
   sessionContext.categoryId=cat.categoryId;
   sessionContext.categoryName=cat.categoryName;
@@ -4105,7 +4181,8 @@ function buildUserQuery(topic){
     '\n【匹配手法】'+cat.technique+
     '\n'+tpl+
     '\n【执行铁律】按上述结构模板逐模块填充画面与版式，禁止空框占位。';
-  return (topic||'请识别上传文件内容')+bubbleStr+fileNotice+catBlock;
+  var headTopic=topic||(attachedFileName?attachedFileName.replace(/\.[^.]+$/,''):'')||(doc?'请按上传文档出图':'请识别上传文件内容');
+  return headTopic+bubbleStr+fileNotice+catBlock;
 }
 function extractCoreTopicFromInput(topic){
   var t=String(topic||'').trim();
@@ -4650,6 +4727,33 @@ var LC_FREE_TRIALS_KEY='lc_free_trials';
 var LC_FIRST_VISIT_KEY='lc_free_trials_first_date';
 var LC_QUOTA_DATE_KEY='lc_free_trials_quota_date';
 var LC_FREE_TRIALS_VERSION='v3';
+var LC_FT_COOKIE_KEY='lc_ft_first';
+function lcReadFtCookie(){
+  try{
+    var m=document.cookie.match(new RegExp('(?:^|; )'+LC_FT_COOKIE_KEY+'=([^;]*)'));
+    return m?decodeURIComponent(m[1]):'';
+  }catch(e){return '';}
+}
+function lcWriteFtCookie(ymd){
+  try{
+    document.cookie=LC_FT_COOKIE_KEY+'='+encodeURIComponent(ymd)+';path=/;max-age='+(365*24*3600)+';SameSite=Lax';
+  }catch(e){}
+}
+/** localStorage 被清时，用 Cookie 恢复首访日，避免重复发新人 10 次 */
+function lcRestoreFtFromCookie(cfg){
+  var c=lcReadFtCookie();
+  if(!c||!/^\d{8}$/.test(c)) return false;
+  var today=todayYmd();
+  try{
+    localStorage.setItem(LC_FIRST_VISIT_KEY,c);
+    if(!localStorage.getItem(LC_QUOTA_DATE_KEY)) localStorage.setItem(LC_QUOTA_DATE_KEY,today);
+    var cur=parseInt(localStorage.getItem(LC_FREE_TRIALS_KEY),10);
+    if(isNaN(cur)||cur<0){
+      localStorage.setItem(LC_FREE_TRIALS_KEY,c===today?String(cfg.newUser):String(cfg.daily));
+    }
+  }catch(e){return false;}
+  return true;
+}
 function todayYmd(){
   var d=new Date();
   return ''+d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2);
@@ -4675,10 +4779,18 @@ function syncFreeTrialQuota(funnel){
   try{
     var first=localStorage.getItem(LC_FIRST_VISIT_KEY);
     if(!first){
-      localStorage.setItem(LC_FIRST_VISIT_KEY,today);
-      localStorage.setItem(LC_QUOTA_DATE_KEY,today);
-      localStorage.setItem(LC_FREE_TRIALS_KEY,String(cfg.newUser));
-      return;
+      if(lcRestoreFtFromCookie(cfg)){
+        first=localStorage.getItem(LC_FIRST_VISIT_KEY);
+      }else{
+        lcWriteFtCookie(today);
+        localStorage.setItem(LC_FIRST_VISIT_KEY,today);
+        localStorage.setItem(LC_QUOTA_DATE_KEY,today);
+        localStorage.setItem(LC_FREE_TRIALS_KEY,String(cfg.newUser));
+        return;
+      }
+    }
+    if(first){
+      lcWriteFtCookie(first);
     }
     if(first===today){
       var cur0=parseInt(localStorage.getItem(LC_FREE_TRIALS_KEY),10);
@@ -4708,11 +4820,17 @@ function initFreeTrialQuota(funnel){
       var cur=parseInt(localStorage.getItem(LC_FREE_TRIALS_KEY),10);
       if(isNaN(cur)||cur<0) cur=cfg.newUser;
       if(!localStorage.getItem(LC_FIRST_VISIT_KEY)){
-        localStorage.setItem(LC_FIRST_VISIT_KEY,today);
-        localStorage.setItem(LC_QUOTA_DATE_KEY,today);
-        if(cur>cfg.newUser) cur=cfg.newUser;
-        localStorage.setItem(LC_FREE_TRIALS_KEY,String(cur));
+        if(lcRestoreFtFromCookie(cfg)){
+          syncFreeTrialQuota(funnel);
+        }else{
+          lcWriteFtCookie(today);
+          localStorage.setItem(LC_FIRST_VISIT_KEY,today);
+          localStorage.setItem(LC_QUOTA_DATE_KEY,today);
+          if(cur>cfg.newUser) cur=cfg.newUser;
+          localStorage.setItem(LC_FREE_TRIALS_KEY,String(cur));
+        }
       }else{
+        lcWriteFtCookie(localStorage.getItem(LC_FIRST_VISIT_KEY));
         syncFreeTrialQuota(funnel);
       }
       localStorage.setItem('lc_free_trials_version',LC_FREE_TRIALS_VERSION);
@@ -5093,7 +5211,9 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
   opts=opts||{};
   if(!ensureCardKey()) return Promise.reject(new Error('请先填写体验卡密'));
   if(!query||!String(query).trim()) return Promise.reject(new Error('请输入提示词或文案需求'));
-  lockSessionFromInput((document.getElementById('main-textarea')||{}).value||'');
+  if(!opts.preserveSessionNotes){
+    lockSessionFromInput((document.getElementById('main-textarea')||{}).value||'');
+  }
   var body={mode:'coze',query:String(query).trim()};
   var ctx=getContextPayload({intent:opts.intent,style:opts.style,size:opts.size});
   body.core_topic=ctx.core_topic;
@@ -5128,9 +5248,9 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
   if(withFiles&&uploadedFileIds.length>0) body.file_ids=uploadedFileIds;
   if(uploadedImageCount>0) body.lc_image_count=uploadedImageCount;
   setApiLoading(true,loadingLabel||'⚡ AI大脑运算中…');
-  deductFreeTrialOnFetch();
   try{
-    var fetchMs=(ctx.intent==='analyze'&&uploadedImageCount>=2)?120000:(ctx.intent==='analyze'?95000:90000);
+    var hasDoc=!!getDocumentContent();
+    var fetchMs=(ctx.intent==='analyze'&&uploadedImageCount>=2)?240000:(ctx.intent==='analyze'&&hasDoc?130000:(ctx.intent==='analyze'?100000:90000));
     return lcFetchJson(API_BASE+'/api/generate',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -5138,6 +5258,7 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
     },fetchMs)
       .then(parseApiResponse)
       .then(function(data){
+        if(_lcFreeTrialRunActive&&!_lcTrialDeductedThisRun) deductFreeTrialOnFetch();
         if(!data) throw new Error(LC_NETWORK_TIP);
         try{
           if(window.DEBUG_COZE){
@@ -5154,6 +5275,7 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
         return data;
       })
       .catch(function(err){
+        if(_lcUserCancelledRun) throw err;
         var msg=resolveUserFacingApiError(err);
         notifyApiFailure(err);
         throw new Error(msg);
@@ -5188,11 +5310,21 @@ function runEngine(){
   var btn=document.getElementById('gen-btn');
   if(btn&&btn.disabled)return;
   lockGenBtn();
+  _lcEngineAbortCtrl=new AbortController();
+  var gh=document.getElementById('gen-wait-hint');
+  if(gh) gh.textContent='分析完成后将展示推荐方案，请勿重复点击';
   var topic=(document.getElementById('main-textarea')||{}).value;
   topic=(topic||'').trim();
   if(!topic&&!isFileAttached){
     alert('请先输入你想做什么图，或者上传参考文件！');
     unlockGenBtn();
+    _lcEngineAbortCtrl=null;
+    return;
+  }
+  if(attachedFileName&&!getDocumentContent()&&docTextContent&&/^\[/.test(String(docTextContent))){
+    alert('文档尚未解析完成或解析失败，请换 txt/docx 重传，或稍候再点「启动大脑」');
+    unlockGenBtn();
+    _lcEngineAbortCtrl=null;
     return;
   }
   if(getFreeTrialsRemaining()<=0&&!hasValidCardKey()){
@@ -5228,7 +5360,16 @@ function runEngine(){
   updateStyleDisplays();
   runQuantumScan(topic||'上传文件');
   var waitMs=uploadedImageCount>=2?25000:12000;
-  waitForFileReady(waitMs).then(function(){
+  var docWaitMs=getDocumentContent()?18000:12000;
+  waitForFileReady(Math.max(waitMs,docWaitMs)).then(function(){
+    if(attachedFileName&&!getDocumentContent()){
+      unlockGenBtn();
+      _lcFreeTrialRunActive=false;
+      _lcEngineAbortCtrl=null;
+      alert('未读取到文档正文，无法按文档分析。请确认文件为 txt/docx/pdf 且非空，或压缩后重试。');
+      document.getElementById('quantum-stage').style.display='none';
+      return Promise.reject(new Error('document empty'));
+    }
     if(uploadedImageCount>=2){
       var miss=[];
       if(!uploadedImageFileIds[0]) miss.push('图B产品');
@@ -5265,13 +5406,125 @@ function runEngine(){
         showAnalysisCard(content);
       },500);
     }).catch(function(e){
+      if(_lcUserCancelledRun){
+        _lcUserCancelledRun=false;
+        document.getElementById('quantum-stage').style.display='none';
+        return;
+      }
       document.getElementById('quantum-stage').style.display='none';
     }).finally(function(){
       _lcFreeTrialRunActive=false;
       _lcTrialDeductedThisRun=false;
+      _lcEngineAbortCtrl=null;
       unlockGenBtn();
       updateFreeTrialHint();
     });
+}
+function applyDsNotesSessionContext(topic,dsNotes){
+  sessionContext.coreTopic=topic;
+  sessionContext.userNotes=dsNotes;
+  sessionContext.fromDsNotes=true;
+  var cat=classifyTopicCategory(topic+'\n'+dsNotes);
+  sessionContext.categoryId=cat.categoryId;
+  sessionContext.categoryName=cat.categoryName;
+  sessionContext.templateKey=cat.templateKey;
+  sessionContext.promptProfile=cat.profile||'standard';
+  sessionContext.routeHumanLabel=cat.categoryName||'知识图解';
+  if(cat.technique&&!isLifecycleTopic(topic)) sessionContext.technique=cat.technique;
+  else sessionContext.technique=cat.technique||'爆款知识图解手法';
+  aiRecSize='9:16 竖版';
+  aiRecStyle=getSelectedVisualStyleValue()||'清新扁平插画风';
+  sessionContext.size=aiRecSize;
+  sessionContext.style=aiRecStyle;
+  var stEl=document.getElementById('rec-size-tag');
+  if(stEl) stEl.textContent='📐 '+aiRecSize;
+  updateStyleDisplays();
+}
+function runEngineFromDsNotes(){
+  var topic=resolveDsPicCoreTopic();
+  if(!topic){alert('请先在笔记区填写主题');return;}
+  var bodyEl=document.getElementById('ds-ta-body');
+  if(!bodyEl||!String(bodyEl.value||'').trim()){
+    alert('请先生成笔记框架（或填写正文）后再点「配套出图」');
+    return;
+  }
+  var btn=document.getElementById('gen-btn');
+  if(btn&&btn.disabled) return;
+  if(getFreeTrialsRemaining()<=0&&!hasValidCardKey()){
+    handleFreeTrialExhausted();
+    return;
+  }
+  var useFreeTrial=canUseFreeTrialWithoutCardKey();
+  _lcEngineAbortCtrl=new AbortController();
+  _lcFreeTrialRunActive=useFreeTrial;
+  _lcTrialDeductedThisRun=false;
+  if(!useFreeTrial&&!ensureCardKey()){
+    _lcEngineAbortCtrl=null;
+    return;
+  }
+  var dsNotes=buildPicPromptFromDs();
+  resetState();
+  applyDsNotesSessionContext(topic,dsNotes);
+  sessionUserId='lc_'+Date.now()+'_'+Math.random().toString(36).slice(2,9);
+  var ta=document.getElementById('main-textarea');
+  if(ta){
+    ta.value=topic;
+    ta.classList.add('ds-pic-flash');
+    setTimeout(function(){try{ta.classList.remove('ds-pic-flash');}catch(e){}},1000);
+  }
+  startGenParticleFlow();
+  var qs=document.getElementById('quantum-stage');
+  if(qs) qs.style.display='none';
+  ['analysis-stage','custom-stage','output-section','copywrite-ask','copywrite-section'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.style.display='none';
+  });
+  var ts=document.getElementById('thinking-stage');
+  if(!ts) return;
+  ts.style.display='flex';
+  var sz=document.getElementById('t-size');
+  if(sz) sz.textContent=aiRecSize;
+  updateStyleDisplays();
+  var ring=document.getElementById('t-ring');
+  if(ring){ring.style.cssText='';ring.innerHTML='';}
+  var tStatus=document.getElementById('t-status');
+  if(tStatus){
+    tStatus.style.color='#cbd5e1';
+    tStatus.textContent='✨ 正在根据笔记文案生成配图提示词（跳过重复分析）…';
+  }
+  try{ts.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){}
+  lockGenBtn();
+  waitForFileReady(uploadedImageCount>=2?25000:8000).then(function(){
+    if(uploadedImageCount>=2){
+      var miss=[];
+      if(!uploadedImageFileIds[0]) miss.push('图B产品');
+      if(!uploadedImageFileIds[1]) miss.push('图A风格');
+      if(miss.length){
+        unlockGenBtn();
+        _lcFreeTrialRunActive=false;
+        alert(miss.join('、')+' 未上传成功，请换更小图片后重试');
+        return Promise.reject(new Error('dual image upload incomplete'));
+      }
+    }
+    return requestPromptFromCoze(null,0);
+  }).then(function(content){
+    showResult(content,0,true);
+  }).catch(function(e){
+    if(_lcUserCancelledRun){
+      _lcUserCancelledRun=false;
+      return;
+    }
+    if(tStatus){
+      tStatus.style.color='#ef4444';
+      tStatus.textContent='❌ '+(e&&e.message?String(e.message):'生成失败');
+    }
+  }).finally(function(){
+    _lcFreeTrialRunActive=false;
+    _lcTrialDeductedThisRun=false;
+    _lcEngineAbortCtrl=null;
+    unlockGenBtn();
+    updateFreeTrialHint();
+  });
 }
 function parseVisionRecognition(raw){
   var text=String(raw||'');
@@ -5376,6 +5629,16 @@ function showAnalysisCard(raw){
   var grid=document.getElementById('analysis-grid');
   if(!grid) return;
   grid.innerHTML='';
+  var docSnap=getDocumentContent();
+  var localCat=null;
+  if(docSnap){
+    localCat=classifyTopicCategory(getClassifyBlob(sessionContext.coreTopic||''));
+    sessionContext.categoryId=localCat.categoryId;
+    sessionContext.categoryName=localCat.categoryName;
+    sessionContext.templateKey=localCat.templateKey;
+    sessionContext.promptProfile=localCat.profile||sessionContext.promptProfile||'standard';
+    if(localCat.technique) sessionContext.technique=localCat.technique;
+  }
 
   var visionRec=parseVisionRecognition(raw);
   if(visionRec&&visionRec.length>2){
@@ -5407,6 +5670,11 @@ function showAnalysisCard(raw){
   }
   fields.forEach(function(f){
     var val=parseFieldFromRaw(raw,f.keys);
+    if(localCat&&f.label==='目标品类') val=localCat.categoryName;
+    if(localCat&&f.label==='出图手法') val=localCat.technique;
+    if(val&&/红烧|糖醋|菜谱教程|食材清单|煲汤|烘焙/.test(val)&&docSnap&&localCat&&localCat.categoryId!=='recipe'){
+      val=localCat.technique;
+    }
     if(val&&val.length>1){
       var item=document.createElement('div');
       item.style.cssText='background:rgba(243,175,66,0.07);border:1px solid rgba(243,175,66,0.2);border-radius:10px;padding:10px 14px;flex:1;min-width:120px;max-width:220px;';
@@ -5432,30 +5700,34 @@ function showAnalysisCard(raw){
     grid.appendChild(reasonTip);
   }
 
-  var contentItems=extractNumberedPoints1to6(raw);
-  if(contentItems.length===0) contentItems=parseContentList(raw);
-  if(contentItems.length===0){
-    var sv=parseFieldFromRaw(raw,['内容识别','内容要点']);
-    if(sv&&!isAnalysisMenuLine(sv)) contentItems=[sv];
+  var contentItems=[];
+  if(docSnap){
+    contentItems=extractDocKeyPoints(docSnap,6);
+  }
+  if(contentItems.length<3){
+    var aiItems=extractNumberedPoints1to6(raw);
+    if(aiItems.length===0) aiItems=parseContentList(raw);
+    if(aiItems.length===0){
+      var sv=parseFieldFromRaw(raw,['内容识别','内容要点']);
+      if(sv&&!isAnalysisMenuLine(sv)) aiItems=[sv];
+    }
+    aiItems=aiItems.filter(function(t){
+      return t&&!isAnalysisMenuLine(t)&&!/红烧|糖醋|菜谱|食材|母亲节|父亲节/.test(t);
+    });
+    var seen={}, merged=contentItems.slice();
+    aiItems.forEach(function(t){
+      var k=t.slice(0,24);
+      if(seen[k]) return;
+      seen[k]=1;
+      merged.push(t);
+    });
+    contentItems=merged.slice(0,6);
   }
   if(contentItems.length===1&&isAnalysisMenuLine(contentItems[0])) contentItems=[];
-  if(contentItems.length===0){
-    var insight=parseInsightSection(raw,['内容要点','内容识别']);
-    insight=insight.filter(function(t){return !/^[7-9][\.、．]/.test(t)&&t.indexOf('联想记忆点')<0&&t.indexOf('场景延伸')<0;});
-    if(insight.length) contentItems=insight.slice(0,6);
-  }
-  var docSnap=getDocumentContent();
-  if(docSnap&&contentItems.length>0&&contentItems[0].indexOf('联想记忆')>=0){
-    contentItems=extractNumberedPoints1to6(raw);
-    if(!contentItems.length){
-      var docLines=docSnap.split(/\r?\n/).map(function(l){return l.trim();}).filter(function(l){return l.length>8&&l.length<120;});
-      contentItems=docLines.slice(0,6);
-    }
-  }
   if(docSnap){
     var docHint=document.createElement('div');
     docHint.style.cssText='margin-bottom:10px;padding:8px 10px;border-radius:8px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.22);font-size:11px;line-height:1.5;color:#bae6fd;';
-    docHint.innerHTML='📄 已读取文档 <strong>'+docTextContent.length+'</strong> 字'+(attachedFileName?' · '+attachedFileName:'')+' · 要点须来自文档前部核心';
+    docHint.innerHTML='📄 已读取文档 <strong>'+docTextContent.length+'</strong> 字'+(attachedFileName?' · '+attachedFileName:'')+' · 下方要点优先来自文档正文前部（非输入框示例文案）';
     grid.appendChild(docHint);
   }
   if(contentItems.length>0){
@@ -5521,7 +5793,11 @@ function requestPromptFromCoze(session,attempt){
     var statusDs=document.getElementById('t-status');
     if(statusDs) statusDs.textContent='✨ 第'+(attempt+1)+'轮 · 按笔记要点生成配图提示词…';
     syncSessionRecommendations();
-    return callCoze(queryDs,session,false,'✨ 生成工业级提示词…',{intent:'prompt'}).then(function(res){
+    return callCoze(queryDs,session,false,'✨ 生成工业级提示词…',{
+      intent:'prompt',
+      forceNewSession:!(session&&session.conversation_id),
+      preserveSessionNotes:true
+    }).then(function(res){
       currentConversationId=res.conversation_id||currentConversationId;
       currentChatId=res.chat_id||currentChatId;
       var content=extractAssistantContent(res);
