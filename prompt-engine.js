@@ -446,43 +446,79 @@ function shouldUseLiteAnalyze(p) {
   return true;
 }
 
+/** 上传识图：截断用户侧长文本，避免 Prompt 膨胀导致 504 */
+function truncateAnalyzeUserText(text, maxLen) {
+  const max =
+    maxLen ||
+    parseInt(process.env.COZE_ANALYZE_USER_TEXT_MAX, 10) ||
+    420;
+  const s = safeStr(text, '').trim();
+  if (s.length <= max) return s;
+  return (
+    s.slice(0, max) +
+    '\n[系统：用户描述已截断，请以图片/文档附件为准，勿展开长文]'
+  );
+}
+
+/** 识图 STEP1 精简输出格式（防「图片描述过长」拖垮接口） */
+function buildCozeBriefAnalyzeFormatBlock(route, rawQuery) {
+  const dishHint = /海报|详情/.test(String(rawQuery || ''))
+    ? '海报/详情'
+    : '海报';
+  return (
+    '\n【输出格式·精简·必遵守篇幅上限】\n' +
+    '全文（含方案+6行字段）控制在 **1500 字以内**；禁止长段落铺陈、禁止重复用户原文。\n' +
+    '✅ 产品识别（三行即可，每行≤50字）：\n' +
+    '主体：（菜名/产品名与画面一致）\n' +
+    '辅助元素：（配菜/器皿/桌面，一句）\n' +
+    '主色调：（配色+氛围，一句）\n' +
+    '方案1/2/3：各用 **4 行** — 标题一行；版式一行；背景/字体合并一行；适用平台一行。不要写成长文案。\n' +
+    '用户诉求「' +
+    dishHint +
+    '」体现在方案标题中即可。\n' +
+    '最后 6 行（各一行，勿展开）：\n' +
+    '1. 品类判定：\n2. 用户类型：\n3. 匹配手法：\n4. 推荐尺寸：\n5. 本次随机风格：\n6. 推荐理由：'
+  );
+}
+
 function buildCozeLiteAnalyzeMessage(p, route, techniqueEffective, style) {
   const imageCount =
     (p && p.imageCount) || (p && p.fileIds && p.fileIds.length) || 0;
   if (imageCount >= 2) {
     return buildCozeLiteDualAnalyzeMessage(p, route);
   }
-  const rawQuery = safeStr(p.rawQuery, '');
-  const userNotes = safeStr(p.userNotes, '');
+  const rawQuery = truncateAnalyzeUserText(p.rawQuery, 320);
+  const userNotes = truncateAnalyzeUserText(p.userNotes, 280);
   const r = route || {};
   const ecom = isEcomProfile(r.profile) || isEcomIntentBlob('', rawQuery);
   const lines = [
-    '【STEP1·识图/识文档·极速·对齐扣子输出结构】',
-    '先看附件图片或下方<document_content>，再写文字。禁止「已识别你的产品+三方案」缩写；禁止未看图编造主体。',
+    '【STEP1·识图/识文档·极速】',
+    '先看附件再输出；禁止未看图编造；禁止长篇图片描述与营销散文。',
     imageCount >= 1
-      ? '图片：主体菜名/产品名必须与画面一致；写 **主体/辅助元素/主色调**；再给方案1/2/3（版式+平台）。'
-      : '文档：以<document_content>前部核心为准，提炼要点后输出结构化字段。',
+      ? '以图为准：产品识别三行 + 方案1/2/3（各≤4行）+ 字段1~6（各一行）。'
+      : '以<document_content>为准：要点精炼 + 字段1~6。',
     ecom
-      ? buildCozeDetailedAnalyzeFormatBlock(r, rawQuery)
-      : '输出 ✅内容识别 + 1.品类判定 2.用户类型 3.匹配手法 4.推荐尺寸 5.本次随机风格 6.推荐理由',
-    '预猜品类（以你判定为准）：' + safeStr(r.humanLabel, ''),
-    '风格池参考：' + safeStr(r.randomStyleName || style, 'AI智能推荐风格'),
+      ? buildCozeBriefAnalyzeFormatBlock(r, rawQuery)
+      : buildCozeBriefAnalyzeFormatBlock(r, rawQuery),
+    '预猜品类：' + safeStr(r.humanLabel, ''),
   ];
-  if (userNotes) lines.push('【用户补充】' + userNotes);
-  lines.push('【用户原话】' + rawQuery);
+  if (userNotes) lines.push('【用户补充·已截断】' + userNotes);
+  if (rawQuery) lines.push('【用户原话·已截断】' + rawQuery);
   return lines.filter(Boolean).join('\n\n');
 }
 
 function buildCozeLiteDualAnalyzeMessage(p, route) {
-  const rawQuery = safeStr(p.rawQuery, '');
-  const userNotes = safeStr(p.userNotes, '');
+  const rawQuery = truncateAnalyzeUserText(p.rawQuery, 280);
+  const userNotes = truncateAnalyzeUserText(p.userNotes, 240);
   const r = route || {};
   return [
-    '【STEP1·双图·极速】默认第1张=产品实拍图B，第2张=版式参考图A；若第1张是错图海报、第2张是实拍，以实拍为图B。',
-    '先认哪张是实拍主体，再写 ✅内容识别 + 方案1/2/3 + 字段1~6。禁止用海报里的错商品替换实拍主体。',
+    '【STEP1·双图·极速·全文≤1500字】',
+    '第1张=产品实拍图B，第2张=版式图A（若顺序反了以实拍为准）。',
+    '产品识别三行（各≤50字）+ 方案1/2/3（各≤4行）+ 字段1~6（各一行）。禁止长文。',
+    buildCozeBriefAnalyzeFormatBlock(r, rawQuery),
     '预猜：' + safeStr(r.humanLabel, '电商双图'),
     userNotes ? '【补充】' + userNotes : '',
-    '【用户原话】' + rawQuery,
+    rawQuery ? '【原话】' + rawQuery : '',
   ]
     .filter(Boolean)
     .join('\n\n');

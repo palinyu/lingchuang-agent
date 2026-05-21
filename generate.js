@@ -373,22 +373,34 @@ async function handler(req, res) {
       parseInt(body.lc_image_count, 10) || 0
     );
     const hasUpload = cozeFileIds.length > 0 || !!docFullText;
+    let rawQueryEff = rawQuery;
+    let userNotesEff = user_notes || '';
+    let coreTopicEff = coreTopic;
+    if (intent === 'analyze' && hasUpload) {
+      const cap = (s, n) => {
+        const t = String(s || '').trim();
+        return t.length > n ? t.slice(0, n) : t;
+      };
+      rawQueryEff = cap(rawQueryEff, 420);
+      userNotesEff = cap(userNotesEff, 520);
+      coreTopicEff = cap(coreTopicEff, 120);
+    }
     const route = routePlainLanguageTopic(
-      coreTopic,
-      rawQuery || user_notes || '',
+      coreTopicEff,
+      rawQueryEff || userNotesEff || '',
       ROOT,
       { hasFile: hasUpload, imageCount: lcImageCount }
     );
 
     let assembledMessage = buildCozeMessage({
       rootDir: ROOT,
-      coreTopic,
+      coreTopic: coreTopicEff,
       style: style || route.randomStyleName || 'AI智能推荐风格',
       technique: technique || route.technique || '爆款知识图解手法',
       size: size || 'AI推荐尺寸',
       intent,
-      rawQuery: rawQuery || coreTopic,
-      userNotes: user_notes || '',
+      rawQuery: rawQueryEff || coreTopicEff,
+      userNotes: userNotesEff,
       route: route,
       hasFile: hasUpload,
       fileIds: cozeFileIds,
@@ -415,11 +427,15 @@ async function handler(req, res) {
       }
     }
     assembledMessage = injectDocumentIntoPrompt(assembledMessage, body, intent);
+    if (intent === 'analyze' && hasUpload && assembledMessage.length > 14000) {
+      assembledMessage =
+        '【系统】请极简输出，全文≤1500字。\n\n' + assembledMessage.slice(0, 14000);
+    }
     const styleForRetry = style || route.randomStyleName || 'AI智能推荐风格';
 
     console.log(`\n🚀 [灵创星球] 开始全链路追踪...`);
     console.log(`[参数检查] 目标BotID: ${targetBotId}`);
-    console.log(`[参数检查] Intent: ${intent} | 核心主题: ${coreTopic}`);
+    console.log(`[参数检查] Intent: ${intent} | 核心主题: ${coreTopicEff}`);
     console.log(`[参数检查] 组装后 Prompt 长度: ${assembledMessage.length}`);
     console.log(`[参数检查] Route: ${route.profile} | file_ids: ${cozeFileIds.length}`);
     if (bot_id) {

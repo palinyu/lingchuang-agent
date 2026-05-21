@@ -4191,17 +4191,27 @@ function extractDocKeyPoints(doc,maxN){
   }
   return out.slice(0,maxN);
 }
+function buildUserQueryBrief(topic){
+  var bubbleStr=selectedBubbles.length>0?'\n追加：'+selectedBubbles.join('、'):'';
+  var head=(topic||'').trim()||(uploadedImageCount>=1?'请识别上传图片并给出海报方案':'请识别上传文件');
+  var line=(head+bubbleStr).replace(/\s+/g,' ').trim();
+  if(uploadedImageCount>=1) line+='\n【已上传图片·以画面为准，文字仅补充价格/平台/用途】';
+  return line.substring(0,380);
+}
 function buildUserQuery(topic){
   var bubbleStr=selectedBubbles.length>0?'\n追加排版方向：'+selectedBubbles.join('、'):'';
   var fileNotice=(isFileAttached&&uploadedFileIds.length>0)?'\n【已上传文件，请识别内容】':'';
   var doc=getDocumentContent();
+  var docCap=uploadedImageCount>=1?900:4500;
   if(doc){
     fileNotice+='\n【文档原文已解析·必须按全文前部提炼1~6条内容要点，禁止只写联想记忆点及以后章节】';
     if(attachedFileName) fileNotice+='\n【文档文件名】'+attachedFileName;
-    var excerpt=doc.replace(/\s+/g,' ').trim().slice(0,4500);
-    if(excerpt) fileNotice+='\n【文档摘录·前4500字】\n'+excerpt+(doc.length>4500?'…':'');
-    var docPts=extractDocKeyPoints(doc,6);
-    if(docPts.length) fileNotice+='\n【文档要点候选·须从中选取并改写为1~6条】\n'+docPts.map(function(p,i){return (i+1)+'. '+p;}).join('\n');
+    var excerpt=doc.replace(/\s+/g,' ').trim().slice(0,docCap);
+    if(excerpt) fileNotice+='\n【文档摘录·前'+docCap+'字】\n'+excerpt+(doc.length>docCap?'…':'');
+    if(docCap>=2000){
+      var docPts=extractDocKeyPoints(doc,6);
+      if(docPts.length) fileNotice+='\n【文档要点候选·须从中选取并改写为1~6条】\n'+docPts.map(function(p,i){return (i+1)+'. '+p;}).join('\n');
+    }
   }
   if(isFileAttached&&!doc&&!topic) fileNotice+='\n【请识别上传的图片或文件内容】';
   var classifyBlob=getClassifyBlob(topic)+bubbleStr;
@@ -4236,7 +4246,8 @@ function extractCoreTopicFromInput(topic){
   }
   return t;
 }
-function lockSessionFromInput(topic){
+function lockSessionFromInput(topic,opts){
+  opts=opts||{};
   sessionContext.coreTopic=extractCoreTopicFromInput(topic)||'上传文件内容识别';
   var baseTech=selectedBubbles.length>0?selectedBubbles.join('、'):'爆款知识图解手法';
   var ct=sessionContext.coreTopic;
@@ -4246,8 +4257,8 @@ function lockSessionFromInput(topic){
   else sessionContext.technique=baseTech;
   sessionContext.style=getSelectedVisualStyleValue()||'';
   sessionContext.size='';
-  var full=buildUserQuery(topic);
-  sessionContext.userNotes=full;
+  var useBrief=opts.briefNotes||(uploadedImageCount>=1&&!getDocumentContent());
+  sessionContext.userNotes=useBrief?buildUserQueryBrief(topic):buildUserQuery(topic);
 }
 function getContextPayload(opts){
   opts=opts||{};
@@ -4513,7 +4524,7 @@ function parseApiResponse(r){
       if(r.status===413) errMsg=errMsg||'文件超过大小限制：图片≤2MB，文档≤4MB，请压缩后重试';
       else if((r.status===504||r.status===502)&&!errMsg){
         var hasDoc504=!!(typeof getDocumentContent==='function'&&getDocumentContent());
-        if(uploadedImageCount>=1||hasDoc504) errMsg='云端超时(504)：识图/识文档较慢。请①图≤1MB或文档精简 ②稍后再试 ③仍504：Vercel需Pro(maxDuration300s)或自建Node(server.js)';
+        if(uploadedImageCount>=1||hasDoc504) errMsg='云端超时(504)：识图较慢。请①单图≤1MB ②输入框只写价格/平台/用途（勿长文描述）③稍后再试';
         else if(sessionContext.fromDsNotes) errMsg='笔记配套出图超时，请稍后重试';
         else errMsg='云端超时(504)，请稍后重试';
       }
@@ -5440,8 +5451,12 @@ function runEngine(){
         return Promise.reject(new Error('dual image upload incomplete'));
       }
     }
-  lockSessionFromInput(topic);
-  var query=buildUserQuery(topic);
+  var useImgBrief=uploadedImageCount>=1&&!getDocumentContent();
+  if(useImgBrief&&String(topic||'').length>200){
+    qLog('⚠️ <span class="q-dim">TIP</span> · 描述过长已自动精简，识图以图片为准',null,0);
+  }
+  lockSessionFromInput(topic,{briefNotes:useImgBrief});
+  var query=useImgBrief?buildUserQueryBrief(topic):buildUserQuery(topic);
   qLog('📡 <span class="q-gold">CALLING</span> · 呼叫AI大脑…',null,0);
   qLog('⏳ <span class="q-dim">WAIT</span> · 联网分析中…',null,300);
   setVisTxt('等待AI<br>响应…');
