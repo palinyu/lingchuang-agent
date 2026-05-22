@@ -6,6 +6,15 @@
 const fs = require('fs');
 const path = require('path');
 
+// 内嵌风格库数据（优先使用，解决 Vercel 路径问题）
+let _embeddedSop = null;
+try {
+  const embedded = require('./style_lib_data.js');
+  _embeddedSop = embedded.EMBEDDED_SOP_TEXT || null;
+} catch(e) {
+  _embeddedSop = null;
+}
+
 const MAX_DISTILLED_CHARS = 14000;
 const MAX_TECHNIQUE_SNIPPET = 2200;
 const MAX_CATEGORY_SNIPPET = 1800;
@@ -87,6 +96,10 @@ function resolveStyleLibPaths(rootDir) {
 }
 
 function readFirstExisting(paths) {
+  // 优先使用内嵌数据
+  if (_embeddedSop && _embeddedSop.trim()) {
+    return { path: '__embedded__', raw: _embeddedSop, mtimeMs: 1 };
+  }
   for (let i = 0; i < paths.length; i++) {
     const p = paths[i];
     try {
