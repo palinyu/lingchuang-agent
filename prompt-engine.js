@@ -30,6 +30,181 @@ const { JIMENG_CHAR_LIMIT, JIMENG_TAIL_LITE } = require('./prompt-compress.js');
 /** 《系统逻辑完整版》严格模式：默认开启，仅后端 Prompt 组装 */
 const STRICT_MD_MODE = process.env.STRICT_MD_MODE !== '0';
 
+/** 主理人钢印：大白话直出 + 绝对控图（默认开启；STEEL_RULE_MODE=0 走旧版长 Prompt） */
+const STEEL_RULE_MODE = process.env.STEEL_RULE_MODE !== '0';
+
+const STYLE_REPLACE_RE =
+  /参考.{0,16}风格.{0,16}替换|风格.{0,12}替换.{0,12}(图片|内容|主体)|复刻.{0,12}换.{0,12}主体|换掉.{0,8}主体|替换图片内容|学这个风格|按.{0,10}版式.{0,10}换|用这个风格做|参考图.{0,8}换主体/i;
+
+const PROMO_VISUAL_RE =
+  /海报|详情|宣传|主图|推广|带货|种草|电商|朋友圈|广告图|促销|详情页|宝贝详情/i;
+
+function userWantsStyleReplace(blob) {
+  return STYLE_REPLACE_RE.test(String(blob || ''));
+}
+
+function isPromoVisualRequest(blob, hasFile) {
+  if (hasFile) return true;
+  return PROMO_VISUAL_RE.test(String(blob || ''));
+}
+
+function buildLuxuryVisualBoosters() {
+  return (
+    'cinematic side lighting, rim light, soft volumetric glow, black-gold luxury atmosphere, ' +
+    'red-gold e-commerce poster mood, premium studio backdrop, 8k ultra-detailed, ' +
+    'professional commercial composition, masterpiece, best quality'
+  );
+}
+
+/** 三大钢印总纲（每条 Coze 请求置顶） */
+function buildSteelRulePreamble() {
+  return (
+    '【灵创星球·钢印逻辑·最高优先级·覆盖旧版拆解】\n' +
+    '钢印1·大白话直出：用户一句话 = 心里所想 → 直接输出即梦/豆包可复制的出图提示词；禁止长篇拆解、禁止让用户补专业词。\n' +
+    '钢印2·绝对控图：上传图做海报/详情/宣传图时，主体/产品形状·材质·颜色·结构·数量·摆盘【100%与附件一致】；禁止换品、改形、联想、重绘主体；提示词只能写背景美化/光影/高端排版/红金白底环境。\n' +
+    '钢印3·唯一特例：仅当用户明确「参考风格替换内容/复刻并换掉主体」时，才允许风格提取并替换主体；否则一律【产品图绝对锁定美化模式】。\n'
+  );
+}
+
+function buildSteelRuleDirectOutputFormat(intent) {
+  if (intent === 'analyze') {
+    return (
+      '\n【输出·极简·禁止废话】\n' +
+      '✅ 内容识别（≤3行：主体+场景+用户诉求）\n' +
+      '方案1/2/3（各≤3行：平台比例+版式+背景氛围）\n' +
+      '1.品类判定 2.用户类型 3.匹配手法 4.推荐尺寸 5.本次随机风格 6.推荐理由（各一行）\n' +
+      '全文≤1200字。'
+    );
+  }
+  return (
+    '\n【输出·直出·即梦可复制】\n' +
+    '仅四段，禁止多余解释：\n' +
+    '📊【一行画面要点】\n' +
+    '🎨【完整版】一段英文（可直接粘贴即梦，含 ' +
+    buildLuxuryVisualBoosters().slice(0, 80) +
+    '…）\n' +
+    '📱【精简版】简体中文（主标题+价格+卖点，可上屏）\n' +
+    '⚙️【即梦设置】模式/比例/参考图与强度\n'
+  );
+}
+
+/** 钢印2：绝对控图（默认） */
+function buildAbsoluteImageLockBlock(rawQuery, imageCount) {
+  const dual = imageCount >= 2;
+  let slot =
+    '单图：附件主体=唯一产品，100%保持形状材质颜色结构不变。';
+  if (dual) {
+    slot =
+      '双图：第1张图A=产品主体（100%锁定不变）；第2张图B=仅借版式/配色/排版，禁止用图B商品替换图A。';
+  }
+  return (
+    '\n\n【绝对控图·产品图锁定美化模式·钢印2】\n' +
+    slot +
+    '\n' +
+    '【死刑线】禁止：换品类、改形状、改材质、增删主体部件、生熟颠倒、AI自由发挥联想、用英文描述与附件不同的物体。\n' +
+    '【只允许写】高级背景（黑金/红金/白底电商棚）、侧逆光/轮廓光/环境光渲染、标题区/价格条/卖点图标/二维码留白等排版模块。\n' +
+    '【完整版英文】必须含：same subject/product 100% unchanged from reference, identical shape material color, only enhance background lighting and luxury poster layout。\n' +
+    '【即梦】图生图；必传上传图作主体参考；参考强度72–88（锁死主体）；禁止低于70导致主体漂移。\n' +
+    (safeStr(rawQuery, '') ? '【用户原话·价格平台用途可采纳】' + safeStr(rawQuery, '').slice(0, 200) : '')
+  );
+}
+
+/** 钢印3：风格替换特例 */
+function buildStyleReplaceAllowedBlock(rawQuery, imageCount) {
+  return (
+    '\n\n【风格替换特例·钢印3·用户已授权】\n' +
+    '用户明确要求参考风格并替换/复刻内容，允许：从参考图提取版式+氛围，并按用户话替换主体或融合双图。\n' +
+    (imageCount >= 2
+      ? '双图：图A产品实拍+图B版式参考；若用户指定以哪张为准，从其说明。\n'
+      : '单图：可提取风格元素，但替换范围须与用户原话一致。\n') +
+    '【用户授权原话】\n' +
+    safeStr(rawQuery, '').slice(0, 400)
+  );
+}
+
+function buildSteelRuleImageLockBlock(rawQuery, imageCount) {
+  if (userWantsStyleReplace(rawQuery)) {
+    return buildStyleReplaceAllowedBlock(rawQuery, imageCount);
+  }
+  return buildAbsoluteImageLockBlock(rawQuery, imageCount);
+}
+
+/** 钢印1：无上传图 · 大白话直出 STEP2 */
+function buildPlainTextDirectPromptBlock(topic, rawQuery, style, size, route) {
+  const topicClean = stripPriceFromTopicText(topic) || topic;
+  const styleHint = (route && route.randomStyleName) || style || '高奢黑金光影';
+  const sizeHint = size || '9:16 竖版';
+  return (
+    '\n\n【大白话直出·心里所想→出图提示词·钢印1】\n' +
+    '把用户心里所想翻译成可直接用于即梦/豆包/通义的出图内容，叠加高奢构图词：' +
+    buildLuxuryVisualBoosters() +
+    '。\n' +
+    '主题【' +
+    topicClean +
+    '】；风格修饰【' +
+    styleHint +
+    '】；比例【' +
+    sizeHint +
+    '】。\n' +
+    '禁止：空壳表格、知识图解长篇分模块、让用户补英文参数。\n' +
+    buildSteelRuleDirectOutputFormat('prompt') +
+    '\n【用户心里所想·原话】\n' +
+    safeStr(rawQuery, topic)
+  );
+}
+
+function buildSteelRuleImageAnalyzeBlock(rawQuery, imageCount) {
+  return (
+    '【STEP1·识图·极简·钢印】\n' +
+    '先看附件：写清画面主体名称（与图一致），再给3套海报/详情方案（各≤3行）。\n' +
+    buildSteelRuleImageLockBlock(rawQuery, imageCount) +
+    buildSteelRuleDirectOutputFormat('analyze')
+  );
+}
+
+function buildSteelRuleTextAnalyzeBlock(topic, rawQuery) {
+  return (
+    '【STEP1·大白话分析·钢印1】\n' +
+    '用户心里所想【' +
+    (stripPriceFromTopicText(topic) || topic) +
+    '】→ 直接给出可出图的品类/手法/尺寸/风格各一行，禁止教程式拆解。\n' +
+    buildSteelRuleDirectOutputFormat('analyze') +
+    '\n【用户原话】\n' +
+    safeStr(rawQuery, topic)
+  );
+}
+
+function buildSteelRuleLockedImagePromptBlock(topic, style, size, route, rawQuery, imageCount) {
+  const styleHint = (route && route.randomStyleName) || style || '高奢黑金电商风';
+  const sizeHint = size && /16:9/i.test(size) ? '16:9' : '9:16';
+  const topicClean = stripPriceFromTopicText(topic) || topic;
+  return (
+    '\n\n【上传图·直出提示词·绝对控图·钢印2】\n' +
+    buildSteelRuleImageLockBlock(rawQuery, imageCount) +
+    '\n主题【' +
+    topicClean +
+    '】；风格【' +
+    styleHint +
+    '】；比例【' +
+    sizeHint +
+    '】。\n' +
+    '【完整版英文】描述：附件主体完全不变 + ' +
+    buildLuxuryVisualBoosters() +
+    ' + reserved zones for Chinese headline price promo QR code。\n' +
+    '【精简版中文】写全主标题/价格/卖点。\n' +
+    '【即梦设置】图生图；主体参考强度72–88；仅背景/版式可创作。\n' +
+    buildSteelRuleDirectOutputFormat('prompt')
+  );
+}
+
+function buildSteelRuleStyleReplacePromptBlock(topic, style, size, route, rawQuery, imageCount) {
+  return (
+    '\n\n【风格替换·钢印3·已授权】\n' +
+    buildStyleReplaceAllowedBlock(rawQuery, imageCount) +
+    buildPlainTextDirectPromptBlock(topic, rawQuery, style, size, route)
+  );
+}
+
 const FLUFF_LINE_RE =
   /^(好的|好的！|确认|确认后|确认后直接出图|我要换|换一套|用这套|建议回复|【建议|⭕|💡|👆|长按|复制\s*→|打开即梦|发送任意|支持四种|我是灵创|欢迎使用|灵创星球·|✅)/;
 
@@ -163,36 +338,14 @@ function buildVisionFirstAnalyzeBlock() {
   );
 }
 
-/** 电商上传参考图：禁止换品、禁止只学形态发挥想象 */
+/** @deprecated 钢印模式改用 buildAbsoluteImageLockBlock */
+function buildPosterBeautifyMandatoryBlock() {
+  return buildAbsoluteImageLockBlock('', 0);
+}
+
+/** 上传参考图：钢印2 绝对控图（默认）或钢印3 风格替换 */
 function buildReferenceImageFidelityBlock(rawQuery, imageCount) {
-  const q = safeStr(rawQuery, '');
-  const dual = imageCount >= 2;
-  let roleHint =
-    '单张上传图 = 产品/菜品实拍参考：任务是在此商品基础上【美化、排版、加文案】做海报/详情，不是换成别的商品重画。';
-  if (dual) {
-    roleHint =
-      '双图分工（默认附件顺序：第1张=图A产品实拍，第2张=图B版式/风格参考）。\n' +
-      '- 若第1张已是带大段排版文字的海报成品、第2张才是菜品/产品实拍：则【以实拍那张为图A主体】，海报那张仅借版式当图B，严禁把海报里的错误商品当主体。\n' +
-      '- 若用户写明「图一/图二」「生成图/参考图」：以用户说明为准，但【参考图/实拍】永远是产品主体来源，【生成图/海报】只借版式不借主体。\n' +
-      '- 图A：必须与实拍同一道菜/同一产品（如红烧狮子头就写狮子头，禁止写成鸡胸肉丸、牛蛙等其它菜）。\n' +
-      '- 图B：只提取配色、模块布局、字体层级，禁止复制图B里的商品种类替换图A。';
-  }
-  if (/图一|图1|第一张/.test(q) && /参考|实拍|产品/.test(q)) {
-    roleHint += '\n用户已标明图一：按用户说明锁定产品主体图。';
-  }
-  if (/图二|图2|第二张/.test(q) && /参考|实拍|产品/.test(q)) {
-    roleHint += '\n用户已标明图二：按用户说明锁定产品主体图。';
-  }
-  return (
-    '\n\n【参考图忠实度·死刑线·电商专用】\n' +
-    roleHint +
-    '\n' +
-    '① 主体锁定：STEP1「内容识别」写明的菜名/产品名 = 全程唯一主体；用户输入框若写了别的品名（如鸡胸肉丸），仍以【上传实拍】为准，仅采纳价格/促销/平台话。\n' +
-    '② 任务定义：在参考图基础上做海报设计优化（光影、背景、版式、卖点文案区），不是文生图凭空创作、不是只学「球形/圆形」形态换一道菜。\n' +
-    '③ 禁止：脱离参考图换品类；禁止用联网或常识替换画面主体；禁止英文 Prompt 描述与识别结果不一致的食物/产品。\n' +
-    '④ 即梦出图：必须图生图并上传【产品实拍】作主体参考，强度建议 65–75（还原优先）；版式可参考第二张或用户指定的风格图。\n' +
-    '⑤ 精简版中文文案：标题/卖点须对应识别出的真实商品（如「红烧狮子头」「酱汁狮子头」），不得写参考图里没有的品类。'
-  );
+  return buildSteelRuleImageLockBlock(rawQuery, imageCount);
 }
 
 function isEcomUploadContext(hasFile, route, topic, rawQuery, imageCount) {
@@ -208,6 +361,7 @@ function buildCozeAnalyzeFewShot() {
     '【扣子智能体·全品类识别范例·学流程不抄答案】\n' +
     '范例A·餐饮实拍（红烧琵琶鸡腿+红亮酱汁+葱花+红白瓷碗）+「做海报详情图」→ 产品识别须写：主体=琵琶鸡腿、酱汁、器皿、油亮食欲；辅助元素=辣椒姜蒜木桌；主色调=红棕+暖木色；再给3套海报风格方案（家常实拍/复古杂志/国潮手绘）。\n' +
     '反例（禁止）：上传狮子头或鸡腿实拍，却写成「鸡胸肉丸」「低卡健身丸」或只写「已识别你的产品+三方案」。\n' +
+    '反例（禁止·美化）：上传【锅内熟牛蛙/夹起现炒】，方案或成图却变成【生肉冷盘贴图】或「直接使用上传图不精修」——必须写「食欲精修主视觉」并描述重绘布光。\n' +
     '范例A2·餐饮图+「做海报128元/份」→ 内容识别写清【画面里是什么菜】；品类判定：餐饮海报；风格从餐饮池选（如国潮美食风）。\n' +
     '范例B·护肤品图+「做小红书种草」→ 内容识别写【瓶身/质地/场景】；品类判定：护肤美妆种草图；风格从美妆池选（如清新棚拍/成分图解）。\n' +
     '范例C·城市风光图+「旅游攻略」→ 内容识别写【地标/季节/氛围】；品类判定：旅行攻略图；风格从城市池选（如手绘地图/浮雕城市）。\n' +
@@ -313,7 +467,7 @@ function buildReferenceImagePromptBlock(topic, style, size, route, rawQuery) {
       '产品爆炸拆解详情图：中心完整产品，关键部件悬浮分离并引线标注，标注区预留中文卖点/材质，科技或美食剖面均可，竖版 9:16。';
   } else if (foodPoster) {
     layoutGuide =
-      '餐饮促销海报：上传菜品为唯一主体（色泽摆盘须还原），国潮/节庆/食欲版式，主标题+价格（如128元/份）+ 卖点四字，左下二维码留白，禁止换成与图无关的食物。';
+      '餐饮促销海报：上传菜品为唯一主体（须与图同一道菜、同一熟制状态），主视觉做【食欲精修重绘】（油光/蒸汽/暖光/景深），国潮/节庆版式，主标题+价格+卖点，左下二维码留白；禁止生肉贴图、禁止原图未处理硬贴。';
   }
 
   return (
@@ -337,7 +491,7 @@ function buildReferenceImagePromptBlock(topic, style, size, route, rawQuery) {
     (size || sizeHint) +
     '】。\n\n' +
     '【完整版（推荐）·画面英文描述】\n' +
-    '- 一段连贯英文（约 60–120 词，≤900 字符）：必须用 STEP1 识别的同一 subject（菜名/产品名英文描述），composition/lighting/texture 与上传实拍一致；写明海报版式模块与 reserved clean zones for Chinese headline, price tag, promo badges, QR code corner。禁止 describing a different food/product than the reference photo。\n' +
+    '- 一段连贯英文（约 60–120 词，≤900 字符）：必须用 STEP1 识别的同一 subject（菜名/熟制状态/摆盘），但画面须描述为 **enhanced promotional food photography**（relight, glossy sauce, steam, shallow depth of field），composition 为海报版式而非原图复制；写明 reserved clean zones for Chinese headline, price tag, promo badges, QR code corner。禁止 different food/product；禁止 raw photo paste collage。\n' +
     '- 允许 typography zones / bilingual label areas 描述中文标注区；禁止 no text、blank banner、empty title strip 等规避上屏文案的堆砌。\n' +
     '- 禁止 --ar、--v、--sref、Midjourney 参数行；平台参数只写在「即梦设置」中文条目中。\n' +
     buildNoBrandInPromptBlock() +
@@ -348,7 +502,8 @@ function buildReferenceImagePromptBlock(topic, style, size, route, rawQuery) {
     '【即梦设置·必写·不可省略】\n' +
     '模式：图生图（img2img）\n' +
     '参考图：使用用户上传的产品/菜品实拍（即梦「参考图/主体参考」）\n' +
-    '参考强度：65–75（同一商品还原优先，禁止换菜；仅版式/背景/文案区可适度创作）\n' +
+    '参考强度：50–62（同一菜品美化重绘，禁止换菜/禁止贴原图；版式/背景可适度创作）\n' +
+    '精修说明：须提升食欲光影与质感，不得「直接使用上传图」作为成图主体\n' +
     '比例：' +
     sizeHint +
     '\n' +
@@ -474,7 +629,9 @@ function buildReferenceImagePromptRetryBlock(validation, topic, style, route, ra
     '】；风格【' +
     (r.randomStyleName || style) +
     '】。\n' +
-    '必须重新输出完整 STEP2 包：📊结构化要点 → 完整版英文（与上传图同一主体一致）→ 精简版【全部中文卖点与价格】→ 即梦设置【图生图+参考强度65-75】。\n' +
+    '必须重新输出完整 STEP2 包：📊结构化要点 → 完整版英文（同一主体+海报精修描述，禁止贴原图/生熟颠倒）→ 精简版【全部中文卖点与价格】→ 即梦设置【图生图+参考强度50-62·美化重绘】。\n' +
+    buildPosterBeautifyMandatoryBlock() +
+    '\n' +
     buildReferenceImagePromptBlock(topic, style, 'AI推荐尺寸', r, rawQuery || topic)
   );
 }
@@ -493,7 +650,9 @@ function buildEcomDualPromptBlock(topic, style, size, route, rawQuery) {
     (size || 'AI推荐尺寸') +
     '】。\n' +
     '英文 Prompt 须描述：layout from style reference image A, product hero from image B, background color as user requested, reserved clean zone for QR code if poster.\n' +
-    '末尾中文提示：即梦图生图【必传图A产品实拍】作主体参考，强度 65–75；图B仅风格/版式参考（强度约40–50），严禁用图B商品覆盖图A。\n' +
+    '末尾中文提示：即梦图生图【必传图A产品实拍】作主体参考，强度 50–62（美化重绘同一菜品，禁止贴原图）；图B仅版式参考（强度约35–48），严禁用图B商品覆盖图A。\n' +
+    buildPosterBeautifyMandatoryBlock() +
+    '\n' +
     buildStep2OutputBlock(topic, style, size, route, rawQuery)
   );
 }
@@ -1440,6 +1599,9 @@ function buildStrictMdCozeMessage(p) {
   }
 
   if (intent === 'analyze') {
+    const docBlock = p.docContent && p.docContent.trim()
+      ? '\n\n【文档内容·必须基于以下内容分析】\n' + p.docContent.trim().slice(0, 8000)
+      : '';
     return (
       head +
       '\n\n' +
@@ -1447,7 +1609,8 @@ function buildStrictMdCozeMessage(p) {
       '\n\n【STEP1·主题分析】核心主题【' +
       topic +
       '】\n【用户原话】\n' +
-      rawQuery
+      rawQuery +
+      docBlock
     );
   }
 
