@@ -16,6 +16,11 @@ const {
 } = require(path.join(ROOT, 'prompt-engine.js'));
 const { fetchDeepseekCopywrite } = require(path.join(ROOT, 'deepseek-copy-util.js'));
 const { initStyleLib, getStyleLibStatus } = require(path.join(ROOT, 'style-lib-loader.js'));
+const {
+  resolveRecommendedSize,
+  isAiRecommendedSize,
+  normalizeSizeLabel,
+} = require(path.join(ROOT, 'aspect-ratio-resolver.js'));
 const { finalizeCozeResponse } = require(path.join(ROOT, 'coze-response-pipeline.js'));
 const PROMPT_QUALITY_INTENTS = ['prompt', 'custom'];
 const MAX_MASTERS_PROMPT_RETRIES = 2;
@@ -404,13 +409,22 @@ async function handler(req, res) {
         lockedProfile: lockedProfile,
       }
     );
+    const sizeIn = String(size || '').trim();
+    const sizeEffective = isAiRecommendedSize(sizeIn)
+      ? route.recommendedSize ||
+        resolveRecommendedSize({
+          topic: coreTopicEff,
+          rawQuery: rawQueryEff || userNotesEff,
+          route,
+        })
+      : normalizeSizeLabel(sizeIn) || sizeIn;
 
     let assembledMessage = buildCozeMessage({
       rootDir: ROOT,
       coreTopic: coreTopicEff,
       style: style || route.randomStyleName || 'AI智能推荐风格',
       technique: technique || route.technique || '爆款知识图解手法',
-      size: size || 'AI推荐尺寸',
+      size: sizeEffective,
       intent,
       rawQuery: rawQueryEff || coreTopicEff,
       userNotes: userNotesEff,
@@ -663,7 +677,8 @@ async function handler(req, res) {
         core_topic: coreTopic,
         style,
         technique,
-        size,
+        size: sizeEffective,
+        recommended_size: route.recommendedSize || sizeEffective,
         prompt_profile: route.profile || 'standard',
         route_human_label: route.humanLabel || '',
         route_confidence: route.confidence,

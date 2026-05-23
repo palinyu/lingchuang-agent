@@ -3,6 +3,7 @@
  */
 
 const { ensureStyleLibFresh, pickBestSnippet } = require('./style-lib-loader.js');
+const { resolveRecommendedSize } = require('./aspect-ratio-resolver.js');
 const {
   classifyMdCategory,
   getUserTypeForCategory,
@@ -556,8 +557,15 @@ function routePlainLanguageTopic(topic, rawQuery, rootDir, options) {
     mdTemplateKey: override ? best.profile : md.templateKey,
     userType: getUserTypeForCategory(md.categoryId),
     networkFallbackBlock: getNetworkFallbackBlock(),
+    recommendedSize: '',
   };
-  return mergeLockedRouteProfile(out, opts.lockedProfile);
+  const merged = mergeLockedRouteProfile(out, opts.lockedProfile);
+  merged.recommendedSize = resolveRecommendedSize({
+    topic: t,
+    rawQuery: q,
+    route: merged,
+  });
+  return merged;
 }
 
 function isKnowledgeProfile(profile) {

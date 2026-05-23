@@ -17,6 +17,11 @@ const {
 const { initStyleLib, ensureStyleLibFresh, getStyleLibStatus } = require('./style-lib-loader.js');
 const { fetchDeepseekCopywrite } = require('./deepseek-copy-util.js');
 const { finalizeCozeResponse } = require('./coze-response-pipeline.js');
+const {
+  resolveRecommendedSize,
+  isAiRecommendedSize,
+  normalizeSizeLabel,
+} = require('./aspect-ratio-resolver.js');
 
 const PROMPT_QUALITY_INTENTS = ['prompt', 'custom'];
 const MAX_MASTERS_PROMPT_RETRIES = 2;
@@ -465,12 +470,21 @@ app.post('/api/generate', async function (req, res) {
         lockedProfile: lockedProfile,
       }
     );
+    const sizeIn = String(size || '').trim();
+    const sizeEffective = isAiRecommendedSize(sizeIn)
+      ? route.recommendedSize ||
+        resolveRecommendedSize({
+          topic: coreTopicEff,
+          rawQuery: rawQueryEff || userNotesEff,
+          route,
+        })
+      : normalizeSizeLabel(sizeIn) || sizeIn;
     let assembledMessage = buildCozeMessage({
       rootDir: ROOT,
       coreTopic: coreTopicEff,
       style: style || route.randomStyleName || 'AI智能推荐风格',
       technique: technique || route.technique || '爆款知识图解手法',
-      size: size || 'AI推荐尺寸',
+      size: sizeEffective,
       intent,
       rawQuery: rawQueryEff || coreTopicEff,
       userNotes: userNotesEff,
@@ -645,7 +659,8 @@ app.post('/api/generate', async function (req, res) {
       core_topic: coreTopic,
       style,
       technique,
-      size,
+      size: sizeEffective,
+      recommended_size: route.recommendedSize || sizeEffective,
       prompt_profile: route.profile || 'standard',
       route_human_label: route.humanLabel || '',
       route_confidence: route.confidence,

@@ -26,6 +26,13 @@ const {
   getNetworkFallbackBlock,
 } = require('./system-logic-data.js');
 const { JIMENG_CHAR_LIMIT, JIMENG_TAIL_LITE } = require('./prompt-compress.js');
+const {
+  resolveRecommendedSize,
+  isAiRecommendedSize,
+  normalizeSizeLabel,
+  resolveAspectHint,
+  buildRecommendedSizeInstruction,
+} = require('./aspect-ratio-resolver.js');
 
 /** 《系统逻辑完整版》严格模式：默认开启，仅后端 Prompt 组装 */
 const STRICT_MD_MODE = process.env.STRICT_MD_MODE !== '0';
@@ -382,6 +389,8 @@ function buildCategoryFirstWorkflowBlock(route) {
     '【流水线·先品类后风格·全品类】\n' +
     '第一步（闸门）：综合上传图 + 用户大白话 → 写 ✅内容识别 与 1.品类判定。不限定牛蛙，画面是护肤/旅游/数码/古诗/健身等均可。\n' +
     '第二步：品类确定后，再从该品类风格池挑选 5.本次随机风格，并匹配对应手法与尺寸；禁止未定了品类就乱套无关风格。\n' +
+    buildRecommendedSizeInstruction(route, '', '') +
+    '\n' +
     '系统根据文字预猜品类（仅供参考）：' +
     safeStr(route && route.humanLabel, '待看图判定') +
     '。若与画面不符，以你写的「1.品类判定」为准。\n' +
@@ -719,9 +728,8 @@ function buildCozeLiteAnalyzeMessage(p, route, techniqueEffective, style) {
     imageCount >= 1
       ? '以图为准：产品识别三行 + 方案1/2/3（各≤4行）+ 字段1~6（各一行）。'
       : '以<document_content>为准：要点精炼 + 字段1~6。',
-    ecom
-      ? buildCozeBriefAnalyzeFormatBlock(r, rawQuery)
-      : buildCozeBriefAnalyzeFormatBlock(r, rawQuery),
+    buildCozeBriefAnalyzeFormatBlock(r, rawQuery),
+    buildRecommendedSizeInstruction(r, safeStr(p.coreTopic, ''), rawQuery),
     '预猜品类：' + safeStr(r.humanLabel, ''),
   ];
   if (userNotes) lines.push('【用户补充·已截断】' + userNotes);
@@ -760,6 +768,7 @@ function buildCozeMirrorAnalyzeMessage(p, route, techniqueEffective, style) {
     buildVisionFirstAnalyzeBlock(),
     buildReferenceImageFidelityBlock(rawQuery, imageCount),
     buildCategoryFirstWorkflowBlock(r),
+    buildRecommendedSizeInstruction(r, safeStr(p.coreTopic, ''), rawQuery),
     buildCozeAnalyzeFewShot(),
     '\n【系统预匹配·写入时须服从你判定的品类】',
     '预猜画法：' + safeStr(r.humanLabel, ''),
@@ -821,9 +830,16 @@ function buildAnalyzeOutputFormatBlock(hasFile, route, rawQuery) {
       '6. 推荐理由：'
     );
   }
+  const sizeHint = buildRecommendedSizeInstruction(
+    route || {},
+    '',
+    String(rawQuery || '')
+  );
   return (
     '\n\n请输出结构化分析（禁止菜单选项）：\n' +
-    '1. 品类判定\n2. 用户类型\n3. 匹配手法\n4. 推荐尺寸\n5. 本次随机风格\n' +
+    sizeHint +
+    '\n' +
+    '1. 品类判定\n2. 用户类型\n3. 匹配手法\n4. 推荐尺寸（须与上文系统预选一致）\n5. 本次随机风格\n' +
     '6. 内容要点\n7. 联想记忆点\n8. 场景延伸\n9. 电商应用潜力\n10. 全息深度洞察'
   );
 }
@@ -956,11 +972,11 @@ function buildNoBrandInPromptBlock() {
   );
 }
 
-function resolveAspectHint(size) {
-  if (size && /16:9|16×9/i.test(size)) return '--ar 16:9';
-  if (size && /9:16|9×16/i.test(size)) return '--ar 9:16';
-  if (size && /1:1/i.test(size)) return '--ar 1:1';
-  return '--ar 16:9';
+function coercePromptSize(size, topic, rawQuery, route) {
+  const s = safeStr(size, '');
+  if (s && !isAiRecommendedSize(s)) return normalizeSizeLabel(s) || s;
+  if (route && route.recommendedSize) return route.recommendedSize;
+  return resolveRecommendedSize({ topic, rawQuery, route });
 }
 
 function buildMastersFormulaBlock(topic, style, size) {
@@ -1518,7 +1534,6 @@ function buildDeepAnalysisBlock(topic) {
 function buildStrictMdCozeMessage(p) {
   const topic = safeStr(p.coreTopic, safeStr(p.rawQuery, '用户主题'));
   const style = safeStr(p.style, 'AI智能推荐风格');
-  const size = safeStr(p.size, 'AI推荐尺寸');
   const intent = safeStr(p.intent, 'analyze');
   const userNotes = safeStr(p.userNotes, '');
   const rawQuery = safeStr(p.rawQuery, topic);
@@ -1529,6 +1544,7 @@ function buildStrictMdCozeMessage(p) {
       hasFile: hasFile,
       imageCount: (p && p.imageCount) || 0,
     });
+  const size = coercePromptSize(p.size, topic, rawQuery || userNotes, route);
   const techniqueEffective = safeStr(
     p.technique,
     route.technique || '手法三·结构化知识模块法'
@@ -1694,7 +1710,6 @@ function buildCozeMessage(p) {
   }
   const topic = safeStr(p.coreTopic, safeStr(p.rawQuery, '用户主题'));
   const style = safeStr(p.style, 'AI智能推荐风格');
-  const size = safeStr(p.size, 'AI推荐尺寸');
   const intent = safeStr(p.intent, 'analyze');
   const userNotes = safeStr(p.userNotes, '');
   const rawQuery = safeStr(p.rawQuery, topic);
@@ -1706,6 +1721,7 @@ function buildCozeMessage(p) {
       hasFile: hasFile,
       imageCount: (p && p.imageCount) || 0,
     });
+  const size = coercePromptSize(p.size, topic, rawQuery || userNotes, route);
   const technique = safeStr(
     p.technique,
     route.technique || '爆款知识图解手法'
