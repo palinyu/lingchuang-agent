@@ -2362,7 +2362,7 @@ else{
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js" crossorigin="anonymous"></script>
-<script src="aspect-ratio-client.js?v=20260520"></script>
+<script src="aspect-ratio-client.js?v=20260521"></script>
 <script>
 var API_BASE=(function(){
   try{
@@ -2842,6 +2842,15 @@ function lcAttachCaseImg(img,fullUrl,opt){
     }
   });
 }
+var GALLERY_IMGS=[
+  {url:CASE_IMG.lotus,label:'🌿 植物科普'},
+  {url:CASE_IMG.osmanthus,label:'🌸 国风水彩'},
+  {url:CASE_IMG.suzhou,label:'🏙️ 城市浮雕'},
+  {url:CASE_IMG.changsha,label:'🗺️ 手绘地图'},
+  {url:CASE_IMG.hotpot,label:'🦞 美食菜谱'},
+  {url:CASE_IMG.knowledge,label:'📚 知识图文'},
+  {url:CASE_IMG.huangshan,label:'🏔️ 山水旅游'}
+];
 function preloadCaseGalleryImages(){
   if(window._lcGalleryPreloaded) return;
   window._lcGalleryPreloaded=1;
@@ -2853,16 +2862,7 @@ function preloadCaseGalleryImages(){
     lcPreloadZoomUrl(item.url);
   });
 }
-var GALLERY_IMGS=[
-  {url:CASE_IMG.lotus,label:'🌿 植物科普'},
-  {url:CASE_IMG.osmanthus,label:'🌸 国风水彩'},
-  {url:CASE_IMG.suzhou,label:'🏙️ 城市浮雕'},
-  {url:CASE_IMG.changsha,label:'🗺️ 手绘地图'},
-  {url:CASE_IMG.hotpot,label:'🦞 美食菜谱'},
-  {url:CASE_IMG.knowledge,label:'📚 知识图文'},
-  {url:CASE_IMG.huangshan,label:'🏔️ 山水旅游'}
-];
-try{preloadCaseGalleryImages();}catch(e){}
+try{preloadCaseGalleryImages();}catch(e){console.warn('[灵创] 案例图预加载跳过',e);}
 var CASE_ACTIVE_TAB='edu';
 var _pendingCaseItem=null;
 var _caseApplyPreset=null;
@@ -2982,7 +2982,18 @@ function initGallery(){
       imgWrap.classList.add('is-loaded');
       imgWrap.classList.remove('is-loading');
     });
-    img.addEventListener('error',function(){imgWrap.classList.remove('is-loading');});
+    img.addEventListener('error',function(){
+      imgWrap.classList.remove('is-loading');
+      imgWrap.classList.add('is-loaded');
+      img.style.opacity='0.35';
+      if(!imgWrap.querySelector('.g-img-fallback')){
+        var fb=document.createElement('span');
+        fb.className='g-img-fallback';
+        fb.style.cssText='position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;padding:8px;font-size:11px;font-weight:700;color:rgba(243,175,66,0.85);text-align:center;line-height:1.35;pointer-events:none;';
+        fb.textContent=item.label||'案例';
+        imgWrap.appendChild(fb);
+      }
+    });
     imgWrap.appendChild(img);
     if(img.complete&&img.naturalWidth>0){
       imgWrap.classList.add('is-loaded');
@@ -3779,7 +3790,30 @@ function triggerPromptGoldenWave(){
   block.classList.add('prompt-wave');
   setTimeout(function(){block.classList.remove('prompt-wave');},700);
 }
-function initKeywords(){var tabs=document.getElementById('kw-tabs');if(!tabs)return;KW_CATS.forEach(function(cat,idx){var tab=document.createElement('div');tab.className='kw-tab'+(cat.rec?' rec-tab':'');tab.textContent=cat.icon+' '+cat.name;tab.onclick=function(){currentCatIdx=idx;chipOffset=0;renderChips();tab.classList.add('active');setTimeout(function(){tab.classList.remove('active');},420);};tabs.appendChild(tab);});renderChips();}
+function initKeywords(){
+  var tabs=document.getElementById('kw-tabs');
+  if(!tabs) return;
+  tabs.innerHTML='';
+  if(currentCatIdx<0||currentCatIdx>=KW_CATS.length){
+    var def=0;
+    for(var di=0;di<KW_CATS.length;di++){if(KW_CATS[di].rec){def=di;break;}}
+    currentCatIdx=def;
+  }
+  KW_CATS.forEach(function(cat,idx){
+    var tab=document.createElement('div');
+    tab.className='kw-tab'+(cat.rec?' rec-tab':'')+(idx===currentCatIdx?' active':'');
+    tab.textContent=cat.icon+' '+cat.name;
+    tab.onclick=function(){
+      currentCatIdx=idx;
+      chipOffset=0;
+      tabs.querySelectorAll('.kw-tab').forEach(function(t){t.classList.remove('active');});
+      tab.classList.add('active');
+      renderChips();
+    };
+    tabs.appendChild(tab);
+  });
+  renderChips();
+}
 function renderChips(){var chips=document.getElementById('kw-chips');if(!chips)return;chips.innerHTML='';if(currentCatIdx<0||currentCatIdx>=KW_CATS.length)return;var cat=KW_CATS[currentCatIdx];var words=cat.words;var start=chipOffset%words.length;var subset=[];var _cl=Math.min(CHIPS_PER_PAGE,words.length);for(var i=0;i!==_cl;i++)subset.push(words[(start+i)%words.length]);subset.forEach(function(w){var chip=document.createElement('div');chip.className='kw-chip lux-tap';chip.textContent=w;chip.onclick=function(){document.querySelectorAll('.kw-chip.is-active').forEach(function(c){c.classList.remove('is-active');});chip.classList.add('is-active');document.getElementById('main-textarea').value=w;document.getElementById('main-textarea').focus();matchBubbles(w);setTimeout(function(){chip.classList.remove('is-active');},700);};chips.appendChild(chip);});}
 function refreshChips(){if(currentCatIdx<0||currentCatIdx>=KW_CATS.length)return;var cat=KW_CATS[currentCatIdx];chipOffset=(chipOffset+CHIPS_PER_PAGE)%cat.words.length;renderChips();}
 var debounceTimer=null;
@@ -4154,6 +4188,23 @@ function startInputThinkingPanel(topic){
     }
   },8500);
 }
+function finishInputThinkingSuccess(logMsg){
+  if(_ithStepTimer){clearInterval(_ithStepTimer);_ithStepTimer=null;}
+  setInputThinkingStep(3);
+  var steps=document.querySelectorAll('#input-thinking-steps .ith-step');
+  var si=0;
+  for(;si<steps.length;si++){
+    steps[si].classList.remove('is-active');
+    steps[si].classList.add('is-done');
+  }
+  var logEl=document.getElementById('input-thinking-log');
+  if(logEl){
+    logEl.textContent=logMsg||'✅ 分析完成，正在展示推荐方案…';
+    flashInputThinkingLog();
+  }
+  var eta=document.querySelector('.input-thinking-panel .ith-eta');
+  if(eta) eta.textContent='即将进入下方「推荐方案」确认出图';
+}
 function stopInputThinkingPanel(){
   if(_ithStepTimer){clearInterval(_ithStepTimer);_ithStepTimer=null;}
   var panel=document.getElementById('input-thinking-panel');
@@ -4164,6 +4215,8 @@ function stopInputThinkingPanel(){
   if(logEl) logEl.textContent='';
   var guess=document.getElementById('input-thinking-guess');
   if(guess) guess.textContent='';
+  var eta=document.querySelector('.input-thinking-panel .ith-eta');
+  if(eta) eta.textContent='预计还需约 1～2 分钟 · 请勿关闭页面';
 }
 function setApiLoading(on,statusText,thinkingOnly){
   if(on){_apiLoadingCount++;}else{_apiLoadingCount=Math.max(0,_apiLoadingCount-1);}
@@ -4182,6 +4235,10 @@ function setApiLoading(on,statusText,thinkingOnly){
 function showApiError(msg){
   var toast=document.getElementById('api-status-toast');
   if(toast){toast.textContent='⚠ '+msg;toast.style.display='block';toast.style.borderColor='rgba(239,68,68,0.5)';toast.style.color='#fca5a5';setTimeout(function(){toast.style.display='none';toast.style.borderColor='';toast.style.color='';},5000);}
+}
+function showApiSuccess(msg){
+  var toast=document.getElementById('api-status-toast');
+  if(toast){toast.textContent=msg;toast.style.display='block';toast.style.borderColor='rgba(52,211,153,0.45)';toast.style.color='#6ee7b7';setTimeout(function(){toast.style.display='none';toast.style.borderColor='';toast.style.color='';},6000);}
 }
 function getDocumentContent(){
   if(!docTextContent) return '';
@@ -4332,6 +4389,7 @@ function getContextPayload(opts){
   };
 }
 function purifyAnalysisDisplay(raw){
+  raw=coerceApiTextual(raw);
   if(!raw) return '';
   var topic=sessionContext.coreTopic||'';
   return raw.split(/\r?\n/).filter(function(line){
@@ -5429,7 +5487,9 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
         notifyApiFailure(err);
         throw new Error(msg);
       })
-      .finally(function(){setApiLoading(false);});
+      .finally(function(){
+        if(opts.intent!=='analyze') setApiLoading(false);
+      });
   }catch(syncErr){
     setApiLoading(false);
     var syncMsg=resolveUserFacingApiError(syncErr);
@@ -5600,27 +5660,43 @@ function runEngine(){
   }).then(function(res){
       currentConversationId=res.conversation_id||currentConversationId;
       currentChatId=res.chat_id||currentChatId;
-      var msg=res.messages&&res.messages.filter(function(m){return m.role==='assistant'&&(m.type==='answer'||m.type==='text');})[0];
-      var content=msg&&(msg.content||msg.text)||res.answer||'';
-      if(!content) throw new Error('未获取到智能体响应');
+      var content=coerceApiTextual(extractAssistantContent(res));
+      if(!content) throw new Error('未获取到智能体响应，请稍后重试');
       if(isWelcome(content)){
+        setApiLoading(false);
         document.getElementById('quantum-stage').style.display='none';
         alert('AI未识别到有效内容，请在输入框输入主题后重试！');
         return;
       }
       qLog('✅ <span class="q-gold">SUCCESS</span> · 识别完成',null,0);
       setVisTxt('完成✓');
+      finishInputThinkingSuccess('✅ 扣子分析完成，正在组装推荐方案…');
+      var ghOk=document.getElementById('gen-wait-hint');
+      if(ghOk) ghOk.textContent='分析完成 · 请向下查看推荐方案并点击「确定出图」';
       setTimeout(function(){
         document.getElementById('quantum-stage').style.display='none';
-        showAnalysisCard(content);
-      },500);
+        try{
+          showAnalysisCard(content);
+          showApiSuccess('✅ 分析完成 · 请向下确认推荐方案后点击「确定出图」');
+        }catch(cardErr){
+          console.error('[灵创] 展示分析卡失败:',cardErr);
+          notifyApiFailure(cardErr);
+        }finally{
+          setApiLoading(false);
+        }
+      },320);
     }).catch(function(e){
+      setApiLoading(false);
       if(_lcUserCancelledRun){
         _lcUserCancelledRun=false;
         document.getElementById('quantum-stage').style.display='none';
         return;
       }
       document.getElementById('quantum-stage').style.display='none';
+      if(e&&e.message&&String(e.message).indexOf('document empty')<0&&!_lcUserCancelledRun){
+        var ghErr=document.getElementById('gen-wait-hint');
+        if(ghErr) ghErr.textContent='分析未完成 · 可修改主题后重新点击「启动大脑」';
+      }
     }).finally(function(){
       _lcFreeTrialRunActive=false;
       _lcTrialDeductedThisRun=false;
@@ -5941,6 +6017,7 @@ function parseContentList(raw){
   }).slice(0,6);
 }
 function showAnalysisCard(raw){
+  try{
   raw=purifyAnalysisDisplay(raw);
   sessionContext.lastAnalyzeRaw=raw||'';
   var grid=document.getElementById('analysis-grid');
@@ -6182,8 +6259,15 @@ function showAnalysisCard(raw){
   if(picked){aiRecStyle=picked;sessionContext.style=picked;}
   else if(styleVal){aiRecStyle=styleVal;sessionContext.style=styleVal;}
   updateStyleDisplays();
-  document.getElementById('analysis-stage').style.display='block';
-  document.getElementById('analysis-stage').scrollIntoView({behavior:'smooth'});
+  var stageEl=document.getElementById('analysis-stage');
+  if(stageEl){
+    stageEl.style.display='block';
+    stageEl.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  }catch(e){
+    console.error('[灵创] showAnalysisCard:',e);
+    throw e;
+  }
 }
 function isLifecycleTopic(t){
   var s=String(t||'').trim();
@@ -6828,21 +6912,24 @@ function initCockpitDecor(){
   }
 }
 function bootApp(){
-  try{preloadCaseGalleryImages();}catch(e){}
-  try{initFreeTrialQuota(_systemConfigCache&&_systemConfigCache.business_funnel);}catch(e){}
-  try{initCaseSidebar();setupCaseSidebarToggle();}catch(e){}
-  try{setupDsCopyPanel();}catch(e){}
-  try{setupLcMobileChrome();}catch(e){}
-  try{initGallery();}catch(e){}
-  try{initKeywords();}catch(e){}
-  try{updateStyleDisplays();}catch(e){}
-  try{setupBubbles();}catch(e){}
-  try{handleCustomStyleChange();}catch(e){}
-  try{initCockpitDecor();}catch(e){}
-  try{initCardkeyModal();}catch(e){}
-  try{initLuxMicroInteractions();}catch(e){}
-  try{updateFreeTrialHint();}catch(e){}
-  try{initLegalNotices();}catch(e){}
+  function bootStep(name,fn){
+    try{fn();}catch(e){console.error('[灵创] 启动步骤失败:',name,e);}
+  }
+  bootStep('preloadCaseGalleryImages',preloadCaseGalleryImages);
+  bootStep('initFreeTrialQuota',function(){initFreeTrialQuota(_systemConfigCache&&_systemConfigCache.business_funnel);});
+  bootStep('initCaseSidebar',function(){initCaseSidebar();setupCaseSidebarToggle();});
+  bootStep('setupDsCopyPanel',setupDsCopyPanel);
+  bootStep('setupLcMobileChrome',setupLcMobileChrome);
+  bootStep('initGallery',initGallery);
+  bootStep('initKeywords',initKeywords);
+  bootStep('updateStyleDisplays',updateStyleDisplays);
+  bootStep('setupBubbles',setupBubbles);
+  bootStep('handleCustomStyleChange',handleCustomStyleChange);
+  bootStep('initCockpitDecor',initCockpitDecor);
+  bootStep('initCardkeyModal',initCardkeyModal);
+  bootStep('initLuxMicroInteractions',initLuxMicroInteractions);
+  bootStep('updateFreeTrialHint',updateFreeTrialHint);
+  bootStep('initLegalNotices',initLegalNotices);
 }
 function setupLcMobileChrome(){
   if(!window._imgZoomEscBound){
