@@ -107,24 +107,81 @@
     return detectProfileSize(profile, blob);
   }
 
-  function shouldOverrideCozeSize(parsedSize, topic, profile) {
-    if (!parsedSize || isAiRecommendedSize(parsedSize)) return true;
-    var expected = resolveRecommendedSize({
+  var NON_ECOM_PROFILES = {
+    city: 1,
+    citywalk: 1,
+    education: 1,
+    textbook: 1,
+    poetry: 1,
+    recipe: 1,
+    fitness: 1,
+    tcm: 1,
+    herb: 1,
+    skincare: 1,
+    finance: 1,
+    workplace: 1,
+    fashion: 1,
+    constellation: 1,
+    lifecycle: 1,
+    english_edu: 1,
+    season_relief: 1,
+    batch_series: 1,
+    interior: 1,
+    template_clone: 1,
+    knowledge_infographic: 1,
+    life_science: 1,
+    pet: 1,
+  };
+
+  function isEcomLikeProfile(profile) {
+    var p = trim(profile);
+    if (!p || p === 'standard') return false;
+    if (NON_ECOM_PROFILES[p]) return false;
+    return /^(ecom|ecom_|cover)/.test(p);
+  }
+
+  function userExplicitPlatformSize(blob) {
+    var t = trim(blob);
+    if (!t) return '';
+    if (/小红书|种草|笔记封面|图文详情/.test(t) && /3\s*:\s*4|3:4/.test(t)) return '3:4竖版';
+    if (/小红书|种草|笔记封面/.test(t)) return '3:4竖版';
+    if (/抖音|9\s*:\s*16|9:16/.test(t)) return '9:16竖版';
+    if (/16\s*:\s*9|16:9|美团|横版|视频号|ppt/i.test(t)) return '16:9横版';
+    if (/朋友圈|1\s*:\s*1|方图/.test(t)) return '1:1方图';
+    return '';
+  }
+
+  function resolveDisplaySize(parsedSize, opts) {
+    opts = opts || {};
+    var topic = trim(opts.topic);
+    var rawQuery = trim(opts.rawQuery);
+    var blob = topic + ' ' + rawQuery;
+    var prof = trim(opts.profile) || 'default';
+    var system = resolveRecommendedSize({
       topic: topic,
-      rawQuery: topic,
-      profile: profile,
+      rawQuery: blob,
+      profile: prof,
+      route: { profile: prof },
     });
+    if (!isEcomLikeProfile(prof)) return system;
+    var explicit = userExplicitPlatformSize(blob);
+    if (explicit) return explicit;
+    if (!parsedSize || isAiRecommendedSize(parsedSize)) return system;
     var p = normalizeSizeLabel(parsedSize);
-    if (p === '3:4竖版' && expected !== '3:4竖版') {
-      if (!/小红书|种草|3\s*:\s*4|3:4|笔记封面/.test(String(topic || ''))) return true;
-    }
-    return false;
+    if (p === system) return p;
+    if (p === '3:4竖版' && /小红书|种草|3\s*:\s*4|3:4|笔记封面/.test(blob)) return p;
+    if (p === '9:16竖版' && /抖音|9\s*:\s*16|9:16/.test(blob)) return p;
+    if (p === '16:9横版' && /16\s*:\s*9|16:9|美团|横版|视频号/i.test(blob)) return p;
+    if (p === '1:1方图' && /朋友圈|1\s*:\s*1|方图/.test(blob)) return p;
+    return system;
   }
 
   global.LcAspectRatio = {
     resolveRecommendedSize: resolveRecommendedSize,
+    resolveDisplaySize: resolveDisplaySize,
     normalizeSizeLabel: normalizeSizeLabel,
     isAiRecommendedSize: isAiRecommendedSize,
-    shouldOverrideCozeSize: shouldOverrideCozeSize,
+    isEcomLikeProfile: isEcomLikeProfile,
+    userExplicitPlatformSize: userExplicitPlatformSize,
   };
 })(typeof window !== 'undefined' ? window : global);

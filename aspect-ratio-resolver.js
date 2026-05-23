@@ -163,6 +163,70 @@ function resolveAspectHint(size) {
   return '--ar 9:16';
 }
 
+const NON_ECOM_PROFILES = new Set([
+  'city',
+  'citywalk',
+  'education',
+  'textbook',
+  'poetry',
+  'recipe',
+  'fitness',
+  'tcm',
+  'herb',
+  'skincare',
+  'finance',
+  'workplace',
+  'fashion',
+  'constellation',
+  'lifecycle',
+  'english_edu',
+  'season_relief',
+  'batch_series',
+  'interior',
+  'template_clone',
+  'knowledge_infographic',
+  'life_science',
+  'pet',
+]);
+
+function isEcomLikeProfile(profile) {
+  const p = safeStr(profile, '');
+  if (!p || p === 'standard') return false;
+  if (NON_ECOM_PROFILES.has(p)) return false;
+  return /^(ecom|ecom_|cover)/.test(p);
+}
+
+function userExplicitPlatformSize(blob) {
+  const t = safeStr(blob, '');
+  if (!t) return '';
+  if (/小红书|种草|笔记封面|图文详情/.test(t) && /3\s*:\s*4|3:4/.test(t)) return '3:4竖版';
+  if (/小红书|种草|笔记封面/.test(t)) return '3:4竖版';
+  if (/抖音|9\s*:\s*16|9:16/.test(t)) return '9:16竖版';
+  if (/16\s*:\s*9|16:9|美团|横版|视频号|ppt/i.test(t)) return '16:9横版';
+  if (/朋友圈|1\s*:\s*1|方图/.test(t)) return '1:1方图';
+  return '';
+}
+
+/** 展示/出图用：非电商类忽略扣子默认 3:4 */
+function resolveDisplaySize(parsedSize, opts) {
+  const topic = safeStr(opts && opts.topic, '');
+  const rawQuery = safeStr(opts && opts.rawQuery, '');
+  const blob = topic + ' ' + rawQuery;
+  const prof = safeStr((opts && opts.profile) || (opts && opts.route && opts.route.profile), 'default');
+  const system = resolveRecommendedSize({ topic, rawQuery: blob, route: { profile: prof } });
+  if (!isEcomLikeProfile(prof)) return system;
+  const explicit = userExplicitPlatformSize(blob);
+  if (explicit) return explicit;
+  if (!parsedSize || isAiRecommendedSize(parsedSize)) return system;
+  const p = normalizeSizeLabel(parsedSize);
+  if (p === system) return p;
+  if (p === '3:4竖版' && /小红书|种草|3\s*:\s*4|3:4|笔记封面/.test(blob)) return p;
+  if (p === '9:16竖版' && /抖音|9\s*:\s*16|9:16/.test(blob)) return p;
+  if (p === '16:9横版' && /16\s*:\s*9|16:9|美团|横版|视频号/i.test(blob)) return p;
+  if (p === '1:1方图' && /朋友圈|1\s*:\s*1|方图/.test(blob)) return p;
+  return system;
+}
+
 function buildRecommendedSizeInstruction(route, topic, rawQuery) {
   const size = resolveRecommendedSize({ topic, rawQuery, route });
   const prof = safeStr(route && route.profile, 'default');
@@ -184,9 +248,11 @@ function buildRecommendedSizeInstruction(route, topic, rawQuery) {
 module.exports = {
   PROFILE_SIZE_DEFAULTS,
   isAiRecommendedSize,
+  isEcomLikeProfile,
   detectPlatformSize,
   detectProfileSize,
   resolveRecommendedSize,
+  resolveDisplaySize,
   normalizeSizeLabel,
   resolveAspectHint,
   buildRecommendedSizeInstruction,

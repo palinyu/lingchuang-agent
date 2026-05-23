@@ -2362,7 +2362,7 @@ else{
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js" crossorigin="anonymous"></script>
-<script src="aspect-ratio-client.js"></script>
+<script src="aspect-ratio-client.js?v=20260520"></script>
 <script>
 var API_BASE=(function(){
   try{
@@ -5437,20 +5437,37 @@ function callCoze(query,convId,withFiles,loadingLabel,opts){
     return Promise.reject(new Error(syncMsg));
   }
 }
-function resolveAiRecSize(parsedSize){
-  var topic=sessionContext.coreTopic||'';
-  var prof=sessionContext.promptProfile||'';
+function getSizeResolveProfile(profileOverride){
+  if(profileOverride) return profileOverride;
+  if(sessionContext.promptProfile&&sessionContext.promptProfile!=='standard') return sessionContext.promptProfile;
+  try{
+    var cat=classifyTopicCategory(getClassifyBlob(sessionContext.coreTopic||''));
+    return cat.profile||'';
+  }catch(e){return '';}
+}
+function isEcomLikeProfile(p){
   var Lc=typeof window!=='undefined'&&window.LcAspectRatio;
-  if(!Lc) return parsedSize||'';
-  if(Lc.shouldOverrideCozeSize(parsedSize,topic,prof)){
-    return Lc.resolveRecommendedSize({
+  if(Lc&&Lc.isEcomLikeProfile) return Lc.isEcomLikeProfile(p);
+  return /^(ecom|ecom_|cover)/.test(String(p||''));
+}
+function resolveAiRecSize(parsedSize,profileOverride){
+  var topic=sessionContext.coreTopic||'';
+  var prof=getSizeResolveProfile(profileOverride);
+  var Lc=typeof window!=='undefined'&&window.LcAspectRatio;
+  if(!Lc) return parsedSize||'9:16竖版';
+  if(Lc.resolveDisplaySize){
+    return Lc.resolveDisplaySize(parsedSize,{
       topic:topic,
       rawQuery:(sessionContext.userNotes||'')+' '+topic,
-      profile:prof,
-      route:{profile:prof}
+      profile:prof
     });
   }
-  return Lc.normalizeSizeLabel(parsedSize)||parsedSize||'';
+  return Lc.resolveRecommendedSize({
+    topic:topic,
+    rawQuery:(sessionContext.userNotes||'')+' '+topic,
+    profile:prof,
+    route:{profile:prof}
+  });
 }
 function applyAiRecSizeLabel(sizeLabel){
   if(!sizeLabel) return;
@@ -5785,6 +5802,7 @@ function getTechniqueHint(techniqueName){
   return '按品类自动匹配版式模块、光影与文案区结构';
 }
 function inferSizeLabelFromPlan(plan){
+  if(!isEcomLikeProfile(sessionContext.promptProfile)) return '';
   var b=[plan&&plan.title,plan&&plan.layout,plan&&plan.platform,plan&&plan.bg].join(' ');
   if(/9\s*:\s*16|9×16|抖音|竖屏刷屏/i.test(b)) return '9:16竖版';
   if(/16\s*:\s*9|16×9|横版|美团|头图/i.test(b)) return '16:9横版';
@@ -5810,13 +5828,8 @@ function applyPosterPlanSelection(idx,planCards,skipScroll){
   var summary=[p.title,p.layout,p.platform].filter(Boolean).join(' · ');
   sessionContext.selectedPlanSummary=summary.substring(0,200);
   var planSize=inferSizeLabelFromPlan(p);
-  if(planSize){
-    aiRecSize=planSize;
-    sessionContext.size=planSize;
-    var stEl=document.getElementById('rec-size-tag');
-    if(stEl) stEl.textContent='📐 '+planSize;
-    syncCustomSizeSelectFromLabel(planSize);
-  }
+  if(planSize) applyAiRecSizeLabel(resolveAiRecSize(planSize));
+  else applyAiRecSizeLabel(resolveAiRecSize(''));
   var grid=document.querySelector('.analysis-plan-grid');
   if(grid){
     grid.querySelectorAll('.analysis-plan-card').forEach(function(el,j){
@@ -5947,8 +5960,18 @@ function showAnalysisCard(raw){
     sessionContext.categoryId=localCat.categoryId;
     sessionContext.categoryName=localCat.categoryName;
     sessionContext.templateKey=localCat.templateKey;
-    sessionContext.promptProfile=localCat.profile||sessionContext.promptProfile||'ecom_image';
+    sessionContext.promptProfile=localCat.profile||sessionContext.promptProfile||'standard';
   }
+  if(!localCat&&(sessionContext.promptProfile||sessionContext.categoryName)){
+    localCat={
+      categoryId:sessionContext.categoryId||'',
+      categoryName:sessionContext.categoryName||'',
+      templateKey:sessionContext.templateKey||'',
+      technique:sessionContext.technique||'',
+      profile:sessionContext.promptProfile||''
+    };
+  }
+  if(localCat&&localCat.profile) sessionContext.promptProfile=localCat.profile;
 
   var visionRec=parseVisionRecognition(raw);
   var plansBlock=parseCozePosterPlans(raw);
@@ -5985,6 +6008,9 @@ function showAnalysisCard(raw){
     var val=parseFieldFromRaw(raw,f.keys);
     if(localCat&&f.label==='目标品类') val=localCat.categoryName;
     if(localCat&&f.label==='出图手法') val=localCat.technique;
+    if(f.label==='推荐尺寸'){
+      val=resolveAiRecSize(val,(localCat&&localCat.profile)||sessionContext.promptProfile);
+    }
     if(val&&/红烧|糖醋|菜谱教程|食材清单|煲汤|烘焙/.test(val)&&docSnap&&localCat&&localCat.categoryId!=='recipe'){
       val=localCat.technique;
     }
@@ -6138,7 +6164,7 @@ function showAnalysisCard(raw){
 
   if(grid.children.length===0){var ra=document.getElementById('analysis-raw');if(ra){ra.textContent=raw;ra.style.display='block';}}
 
-  var sizeVal=resolveAiRecSize(parseFieldFromRaw(raw,['推荐尺寸']));
+  var sizeVal=resolveAiRecSize(parseFieldFromRaw(raw,['推荐尺寸']),(localCat&&localCat.profile)||sessionContext.promptProfile);
   var styleVal=parseFieldFromRaw(raw,['本次随机风格','本次指定风格','随机风格','指定风格']);
   var defaultPlanIdx=0;
   if(planCards.length>1&&sizeVal){
