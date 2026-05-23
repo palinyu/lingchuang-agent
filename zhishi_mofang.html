@@ -1133,6 +1133,16 @@ body.lc-thinking-active .btn-engine-cancel{display:none!important;}
 .insight-block-body{font-size:13px;color:#e2e8f0;line-height:1.75;}
 .insight-block-body li{margin:0 0 8px 16px;padding:0;}
 .insight-block-body li:last-child{margin-bottom:0;}
+/* 精要美化排版 ib- = insight-body */
+.ib-sep{height:1px;background:rgba(255,255,255,0.06);margin:10px 0;}
+.ib-point{display:flex;gap:8px;align-items:flex-start;padding:6px 0;font-size:13px;color:#e2e8f0;line-height:1.65;}
+.ib-point+.ib-point{padding-top:4px;}
+.ib-num{flex:none;min-width:26px;height:22px;display:inline-flex;align-items:center;justify-content:center;background:rgba(243,175,66,0.15);color:#f3af42;border-radius:6px;font-size:11px;font-weight:700;}
+.ib-emoji{padding:5px 0;font-size:13px;color:#e2e8f0;line-height:1.65;}
+.ib-text{padding:4px 0;font-size:13px;color:#cbd5e1;line-height:1.7;}
+.ib-kv{display:flex;gap:8px;align-items:baseline;padding:5px 0;}
+.ib-k{flex:none;font-size:11px;color:rgba(52,211,153,0.85);font-weight:700;min-width:56px;}
+.ib-v{font-size:13px;color:#e2e8f0;line-height:1.6;word-break:break-word;}
 /* 内容识别列表区 */
 .analysis-content-block{background:#07080f;border:1px solid rgba(243,175,66,0.15);border-radius:10px;padding:14px 16px;margin-bottom:14px;}
 .analysis-content-block .acb-title{font-size:11px;color:var(--tx2);font-weight:800;margin-bottom:10px;letter-spacing:.5px;}
@@ -5814,6 +5824,43 @@ function parseCozePosterPlans(raw){
 function escAnalysisHtml(s){
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+/** 分析精要美化排版：分段、编号高亮、图标行样式 */
+function formatInsightBody(text){
+  var s=String(text||'').trim();
+  if(!s) return '';
+  var lines=s.split(/\r?\n/);
+  var out=[], lastWasSep=true;
+  var count=0;
+  lines.forEach(function(raw,i){
+    var t=raw.trim();
+    if(!t){
+      if(!lastWasSep){ out.push('<div class="ib-sep"></div>'); lastWasSep=true; }
+      return;
+    }
+    lastWasSep=false;
+    // 编号行 1. 2. 或 ① ②
+    var nm=t.match(/^[\s*#]*([0-9]+|[①②③④⑤⑥⑦⑧⑨⑩])[\.、．\)\]]\s]/);
+    if(nm){
+      count++;
+      out.push('<div class="ib-point"><span class="ib-num">'+escAnalysisHtml(nm[0])+'</span>'+escAnalysisHtml(t.substring(nm[0].length))+'</div>');
+      return;
+    }
+    // emoji 开头行
+    if(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}✅❌⚠️🔥💡📌🎯]/.test(t)){
+      out.push('<div class="ib-emoji">'+escAnalysisHtml(t)+'</div>');
+      return;
+    }
+    // 关键词标签行（含：的key-value）
+    var kv=t.match(/^(.{2,10})[：:](.{4,})$/);
+    if(kv){
+      out.push('<div class="ib-kv"><span class="ib-k">'+escAnalysisHtml(kv[1])+'</span><span class="ib-v">'+escAnalysisHtml(kv[2])+'</span></div>');
+      return;
+    }
+    // 普通段落
+    out.push('<div class="ib-text">'+escAnalysisHtml(t)+'</div>');
+  });
+  return out.join('');
+}
 function parseVisionKv(block){
   var text=String(block||'');
   var pick=function(re){var m=text.match(re);return m&&m[1]?m[1].trim():'';};
@@ -6138,7 +6185,8 @@ function showAnalysisCard(raw){
       (visionKv.tone?'<div class="vision-kv-item"><div class="vision-kv-k">主色调</div><div class="vision-kv-v">'+escAnalysisHtml(visionKv.tone)+'</div></div>':'')+
       '</div>';
   }else if(visionRec&&visionRec.length>2){
-    insightHtml='<div class="insight-block-body" style="white-space:pre-wrap;">'+escAnalysisHtml(visionRec.substring(0,600))+'</div>';
+    var formatted=formatInsightBody(visionRec.substring(0,2000));
+    insightHtml='<div class="insight-block-body">'+formatted+'</div>';
   }
   if(insightHtml){
     var ins=document.createElement('div');
