@@ -4089,7 +4089,7 @@ var LC_STRUCTURE_TEMPLATES={
   education:'【品类专属结构模板·教育学科·手法三】\n① 标题区：主题+年级/学科\n② 核心模块：3-5个并列知识块\n③ 解题/记忆：流程图或口诀框\n④ 易错点：红色警示2-3条\n⑤ 小结：底部复习要点',
   life_science:'【品类专属结构模板·生活科普·手法十五】\n① 标题：主题+分类标签\n② 六格图鉴2×3\n③ 核心原理流程或对比图\n④ 趣味冷知识气泡',
   constellation:'【品类专属结构模板·星座情感·手法十六/十七】\n① 顶部：星座名+日期+元素\n② 性格特征3条\n③ 优势与短板双栏\n④ 情感/配对建议\n⑤ 金句+话题标签',
-  ecom_image:'【第七章·电商单图海报·手法二十二B】\n① 食欲主视觉居中（与上传同一道菜，须精修重绘非原图贴图）\n② 主标题+价格促销条+卖点图标\n③ 左下/底部预留二维码留白\n④ 背景按平台流行风格（抖音9:16/小红书3:4/美团横图16:9）',
+  ecom_image:'【第七章·电商单图海报·手法二十二B】\n① 食欲主视觉居中（与上传同一道菜，须精修重绘非原图贴图）\n② 主标题+价格促销条+卖点图标\n③ 左下/底部预留二维码留白\n④ 背景按平台流行风格（抖音9:16/小红书9:16/美团横图16:9）',
   ecom_dual:'【第七章·电商双图融合模式】\n图A产品主体+图B版式框架，把A穿上B的外衣',
   default:'【通用·手法三结构化知识模块法】\n① 标题区：主题大字+副标题+适用人群\n② 核心内容：≥3个信息模块\n③ 视觉插图：1主+2辅\n④ 装饰层：背景纹理+边框+角标\n⑤ 底部：来源/标签/系列标识'
 };
@@ -5879,7 +5879,7 @@ function parsePosterPlanCards(plansText){
     var m=chunk.match(new RegExp('[-*•]?\\s*'+key+'[：:]([^\\n]+)','i'));
     return m&&m[1]?m[1].trim():'';
   };
-  return chunks.map(function(chunk,idx){
+  var cards=chunks.map(function(chunk,idx){
     var titleM=chunk.match(/^方案\s*([123一二三])[：:\s-]*(.+?)(?:\n|$)/i);
     var title=titleM?(titleM[1]+' · '+titleM[2].trim()):('方案'+(idx+1));
     return {
@@ -5890,6 +5890,21 @@ function parsePosterPlanCards(plansText){
       platform:pickField(chunk,'适用')
     };
   }).slice(0,3);
+  // === 强制差异化：三张卡尺寸/平台不能雷同 ===
+  if(cards.length>=2){
+    var szs=cards.map(function(c){return inferSizeLabelFromPlan(c);});
+    var szSame=szs.length>=2 && szs.every(function(s){return s===szs[0];});
+    var szPool=['9:16竖版','16:9横版','1:1方图'];
+    cards.forEach(function(c,i){
+      if(szSame || !szs[i]) c._size=szPool[i]||szPool[0];
+      else c._size=szs[i];
+      var plat=(c.platform||'').trim();
+      if(!plat || (i>0 && plat===((cards[0].platform||'').trim()))){
+        c.platform=['抖音/竖屏刷屏','小红书/图文社区','公众号/视频号'][i]||'多平台通用';
+      }
+    });
+  }
+  return cards;
 }
 function isMetaDuplicatePoint(txt,fieldVals,reasonVal){
   var t=String(txt||'').trim();
@@ -5925,22 +5940,20 @@ function getTechniqueHint(techniqueName){
   return '按品类自动匹配版式模块、光影与文案区结构';
 }
 function inferSizeLabelFromPlan(plan){
-  if(!isEcomLikeProfile(sessionContext.promptProfile)) return '';
   var b=[plan&&plan.title,plan&&plan.layout,plan&&plan.platform,plan&&plan.bg].join(' ');
   if(/9\s*:\s*16|9×16|抖音|竖屏刷屏/i.test(b)) return '9:16竖版';
   if(/16\s*:\s*9|16×9|横版|美团|头图/i.test(b)) return '16:9横版';
   if(/1\s*:\s*1|方图|朋友圈方/i.test(b)) return '1:1方图';
-  if(/3\s*:\s*4|3×4|小红书/i.test(b)) return '3:4竖版';
-  return '';
+  return '9:16竖版';
 }
 function syncCustomSizeSelectFromLabel(sizeLabel){
   var sel=document.getElementById('custom-size');
   if(!sel||!sizeLabel) return;
   var s=String(sizeLabel);
   if(/9\s*:\s*16/i.test(s)) sel.value='A';
-  else if(/3\s*:\s*4/i.test(s)) sel.value='A2';
   else if(/16\s*:\s*9/i.test(s)) sel.value='B';
   else if(/1\s*:\s*1/i.test(s)) sel.value='C';
+  else sel.value='A';
 }
 function applyPosterPlanSelection(idx,planCards,skipScroll){
   var cards=planCards||sessionContext.posterPlans||[];
@@ -5950,9 +5963,14 @@ function applyPosterPlanSelection(idx,planCards,skipScroll){
   var p=cards[i];
   var summary=[p.title,p.layout,p.platform].filter(Boolean).join(' · ');
   sessionContext.selectedPlanSummary=summary.substring(0,200);
-  var planSize=inferSizeLabelFromPlan(p);
-  if(planSize) applyAiRecSizeLabel(resolveAiRecSize(planSize));
-  else applyAiRecSizeLabel(resolveAiRecSize(''));
+  var planSize=p._size||inferSizeLabelFromPlan(p);
+  if(planSize){
+    aiRecSize=planSize;
+    sessionContext.size=planSize;
+    var stEl=document.getElementById('rec-size-tag');
+    if(stEl) stEl.textContent='📐 '+planSize;
+    syncCustomSizeSelectFromLabel(planSize);
+  }
   var grid=document.querySelector('.analysis-plan-grid');
   if(grid){
     grid.querySelectorAll('.analysis-plan-card').forEach(function(el,j){
