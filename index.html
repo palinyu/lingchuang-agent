@@ -118,11 +118,13 @@ canvas#stars{position:fixed;inset:0;width:100%;height:100%;z-index:0;opacity:.72
 body.legal-modal-open{overflow:hidden}
 .legal-modal{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.72);backdrop-filter:blur(10px)}
 .legal-modal.is-visible{display:flex}
-.legal-box{width:min(560px,100%);border:1px solid rgba(245,200,75,.28);border-radius:18px;background:linear-gradient(145deg,rgba(18,18,24,.96),rgba(8,8,12,.96));box-shadow:0 26px 90px rgba(0,0,0,.56),0 0 44px rgba(245,200,75,.1);padding:24px;text-align:left}
+.legal-box{width:min(640px,100%);border:1px solid rgba(245,200,75,.28);border-radius:18px;background:linear-gradient(145deg,rgba(18,18,24,.96),rgba(8,8,12,.96));box-shadow:0 26px 90px rgba(0,0,0,.56),0 0 44px rgba(245,200,75,.1);padding:24px;text-align:left}
 .legal-kicker{display:inline-flex;align-items:center;height:28px;border-radius:999px;border:1px solid rgba(245,200,75,.28);background:rgba(245,200,75,.08);color:var(--gold);font-size:12px;font-weight:900;padding:0 12px;margin-bottom:14px}
 .legal-box h2{font-size:24px;line-height:1.25;margin-bottom:12px;color:#fff}
-.legal-box p{color:var(--muted);font-size:14px;line-height:1.75}
-.legal-list{margin:14px 0 0;padding-left:18px;color:#cfc8bd;font-size:13px;line-height:1.75}
+.legal-box p{color:var(--muted);font-size:14px;line-height:1.75;margin:0}
+.legal-box p+p{margin-top:10px}
+.legal-list{margin:16px 0 0;padding-left:18px;color:#cfc8bd;font-size:13px;line-height:1.78}
+.legal-list li+li{margin-top:8px}
 .legal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px;flex-wrap:wrap}
 .legal-btn{height:42px;border:0;border-radius:12px;padding:0 18px;font:inherit;font-size:14px;font-weight:900;cursor:pointer}
 .legal-btn.primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#050506;box-shadow:0 10px 28px rgba(245,200,75,.22)}
@@ -204,11 +206,12 @@ body.legal-modal-open{overflow:hidden}
   <div class="legal-box">
     <span class="legal-kicker">合规使用提醒</span>
     <h2 id="legal-title">请先确认 AI 内容使用边界</h2>
-    <p id="legal-desc">知识图文魔方为 AI 辅助创作工具，生成内容仅供创作参考。发布前请自行核对文字、图片、价格、功效、版权和平台规则。</p>
+    <p id="legal-desc">知识图文魔方为 AI 辅助创作工具，生成的文案、图片、提示词和方案仅供参考模板，不构成正式发布内容，也不构成法律、医疗、金融或广告合规建议。</p>
+    <p>发布前，请根据真实商品、真实服务和实际活动，自行修改、审核后再发布。</p>
     <ul class="legal-list">
-      <li>请勿用于违法违规、侵权、虚假宣传、医疗金融承诺等场景。</li>
-      <li>涉及商标、IP、真人肖像、商品功效和活动价格时，请确认已获得授权或具备真实依据。</li>
-      <li>平台发布前，请按对应平台规则进行人工审核和必要修改。</li>
+      <li>请勿生成或传播违法违规内容，包括虚假宣传、夸大功效、价格欺诈、侵权内容、低俗违法或违反平台规则的内容。</li>
+      <li>涉及商品功效、活动价格、优惠折扣、数据结论、版权素材、人物肖像、品牌商标等信息时，请务必自行核实真实性、授权情况和适用平台规则。</li>
+      <li>因用户发布、使用或传播生成内容产生的责任，由用户自行承担。</li>
     </ul>
     <div class="legal-actions">
       <button type="button" class="legal-btn secondary" id="legal-later">暂不进入</button>
@@ -218,7 +221,7 @@ body.legal-modal-open{overflow:hidden}
 </div>
 
 <script>
-const LEGAL_NOTICE_KEY='lc_legal_notice_v20260608';
+const LEGAL_NOTICE_KEY='lc_legal_notice_v20260608b';
 let pendingLegalHref='';
 let pendingLegalDownload=false;
 function hasAcceptedLegalNotice(){
