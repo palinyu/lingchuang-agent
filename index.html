@@ -226,13 +226,13 @@ let pendingLegalHref='';
 let pendingLegalDownload=false;
 const ZS_ENTRY_ORIGIN='https://zs.lcxq88.com';
 const DESKTOP_INSTALLER_URL=ZS_ENTRY_ORIGIN+'/desktop/lingchuang-prompt-master-setup.exe';
-const INVITE_PARAM_KEYS=['invite','inviter','ref_invite'];
+const INVITE_PARAM_KEYS=['invite','inviter','ref_invite','ref'];
 function getInviteParams(){
   const out=new URLSearchParams();
   const current=new URLSearchParams(window.location.search||'');
   INVITE_PARAM_KEYS.forEach(key=>{
     const value=(current.get(key)||'').trim();
-    if(value) out.set(key,value.toUpperCase());
+    if(value) out.set(key==='ref'?'invite':key,value.toUpperCase());
   });
   return out;
 }
