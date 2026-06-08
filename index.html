@@ -115,6 +115,18 @@ canvas#stars{position:fixed;inset:0;width:100%;height:100%;z-index:0;opacity:.72
 .strip-btn.subtle{border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font-weight:800}
 .strip-btn.subtle:hover{border-color:rgba(245,200,75,.38);color:var(--gold)}
 .footer{padding-top:28px;text-align:center;color:var(--dim);font-size:12px;line-height:1.7}
+body.legal-modal-open{overflow:hidden}
+.legal-modal{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.72);backdrop-filter:blur(10px)}
+.legal-modal.is-visible{display:flex}
+.legal-box{width:min(560px,100%);border:1px solid rgba(245,200,75,.28);border-radius:18px;background:linear-gradient(145deg,rgba(18,18,24,.96),rgba(8,8,12,.96));box-shadow:0 26px 90px rgba(0,0,0,.56),0 0 44px rgba(245,200,75,.1);padding:24px;text-align:left}
+.legal-kicker{display:inline-flex;align-items:center;height:28px;border-radius:999px;border:1px solid rgba(245,200,75,.28);background:rgba(245,200,75,.08);color:var(--gold);font-size:12px;font-weight:900;padding:0 12px;margin-bottom:14px}
+.legal-box h2{font-size:24px;line-height:1.25;margin-bottom:12px;color:#fff}
+.legal-box p{color:var(--muted);font-size:14px;line-height:1.75}
+.legal-list{margin:14px 0 0;padding-left:18px;color:#cfc8bd;font-size:13px;line-height:1.75}
+.legal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px;flex-wrap:wrap}
+.legal-btn{height:42px;border:0;border-radius:12px;padding:0 18px;font:inherit;font-size:14px;font-weight:900;cursor:pointer}
+.legal-btn.primary{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#050506;box-shadow:0 10px 28px rgba(245,200,75,.22)}
+.legal-btn.secondary{border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text)}
 @media(max-width:720px){
   .page{padding:18px 16px 30px}
   .nav{height:auto}
@@ -127,6 +139,9 @@ canvas#stars{position:fixed;inset:0;width:100%;height:100%;z-index:0;opacity:.72
   .product-copy{text-align:center}
   .product-actions{justify-content:center;width:100%}
   .strip-btn{width:100%}
+  .legal-box{padding:20px}
+  .legal-actions{display:grid;grid-template-columns:1fr}
+  .legal-btn{width:100%}
 }
 </style>
 </head>
@@ -185,7 +200,89 @@ canvas#stars{position:fixed;inset:0;width:100%;height:100%;z-index:0;opacity:.72
   </footer>
 </main>
 
+<div class="legal-modal" id="legal-modal" role="dialog" aria-modal="true" aria-labelledby="legal-title" aria-describedby="legal-desc">
+  <div class="legal-box">
+    <span class="legal-kicker">合规使用提醒</span>
+    <h2 id="legal-title">请先确认 AI 内容使用边界</h2>
+    <p id="legal-desc">知识图文魔方为 AI 辅助创作工具，生成内容仅供创作参考。发布前请自行核对文字、图片、价格、功效、版权和平台规则。</p>
+    <ul class="legal-list">
+      <li>请勿用于违法违规、侵权、虚假宣传、医疗金融承诺等场景。</li>
+      <li>涉及商标、IP、真人肖像、商品功效和活动价格时，请确认已获得授权或具备真实依据。</li>
+      <li>平台发布前，请按对应平台规则进行人工审核和必要修改。</li>
+    </ul>
+    <div class="legal-actions">
+      <button type="button" class="legal-btn secondary" id="legal-later">暂不进入</button>
+      <button type="button" class="legal-btn primary" id="legal-accept">我已知晓，继续使用</button>
+    </div>
+  </div>
+</div>
+
 <script>
+const LEGAL_NOTICE_KEY='lc_legal_notice_v20260608';
+let pendingLegalHref='';
+let pendingLegalDownload=false;
+function hasAcceptedLegalNotice(){
+  try{return localStorage.getItem(LEGAL_NOTICE_KEY)==='1';}catch(e){return false;}
+}
+function setAcceptedLegalNotice(){
+  try{localStorage.setItem(LEGAL_NOTICE_KEY,'1');}catch(e){}
+}
+function showLegalNotice(href,download){
+  pendingLegalHref=href||'';
+  pendingLegalDownload=!!download;
+  const modal=document.getElementById('legal-modal');
+  if(modal){
+    modal.classList.add('is-visible');
+    document.body.classList.add('legal-modal-open');
+  }
+}
+function hideLegalNotice(){
+  const modal=document.getElementById('legal-modal');
+  if(modal) modal.classList.remove('is-visible');
+  document.body.classList.remove('legal-modal-open');
+}
+function continuePendingLegalAction(){
+  const href=pendingLegalHref;
+  const download=pendingLegalDownload;
+  pendingLegalHref='';
+  pendingLegalDownload=false;
+  if(!href) return;
+  if(download){
+    const a=document.createElement('a');
+    a.href=href;
+    a.download='';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    return;
+  }
+  window.location.href=href;
+}
+document.addEventListener('click',event=>{
+  const link=event.target&&event.target.closest?event.target.closest('a[href^="https://zs.lcxq88.com"]'):null;
+  if(!link||hasAcceptedLegalNotice()) return;
+  event.preventDefault();
+  showLegalNotice(link.href,link.hasAttribute('download'));
+});
+document.addEventListener('DOMContentLoaded',()=>{
+  const accept=document.getElementById('legal-accept');
+  const later=document.getElementById('legal-later');
+  if(accept){
+    accept.addEventListener('click',()=>{
+      setAcceptedLegalNotice();
+      hideLegalNotice();
+      continuePendingLegalAction();
+    });
+  }
+  if(later){
+    later.addEventListener('click',()=>{
+      pendingLegalHref='';
+      pendingLegalDownload=false;
+      hideLegalNotice();
+    });
+  }
+  if(!hasAcceptedLegalNotice()) showLegalNotice('',false);
+});
 const canvas=document.getElementById('stars');
 const ctx=canvas.getContext('2d');
 let stars=[];
