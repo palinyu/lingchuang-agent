@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /pet
+Disallow: /lingchuang_agent_final.html
+
+Sitemap: https://www.lcxq88.com/sitemap.xml
