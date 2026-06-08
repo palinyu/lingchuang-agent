@@ -153,14 +153,14 @@ body.legal-modal-open{overflow:hidden}
 
 <main class="page">
   <nav class="nav" aria-label="顶部导航">
-    <a class="brand" href="https://zs.lcxq88.com">
+    <a class="brand" href="https://zs.lcxq88.com" data-zs-entry>
       <div class="mark">灵</div>
       <div>
         <b>灵创星球</b>
         <span>灵创星球官网入口</span>
       </div>
     </a>
-    <a class="nav-link" href="https://zs.lcxq88.com">进入知识图文魔方 →</a>
+    <a class="nav-link" href="https://zs.lcxq88.com" data-zs-entry>进入知识图文魔方 →</a>
   </nav>
 
   <section class="hero">
@@ -169,9 +169,9 @@ body.legal-modal-open{overflow:hidden}
     <p class="lead">灵创星球知识图文魔方支持输入主题、上传图片或文档，系统自动完成内容理解、风格匹配、提示词生成与配套文案，让创作者更快做出可发布的图文内容。</p>
     <p class="seo-note">推广时可搜索「灵创星球」或「灵创星球知识图文魔方」，认准官网 lcxq88.com，进入后打开知识图文魔方。</p>
     <div class="actions">
-      <a class="primary" href="https://zs.lcxq88.com">立即进入 →</a>
-      <a class="secondary" href="https://zs.lcxq88.com/desktop/lingchuang-prompt-master-setup.exe" download>下载桌面端</a>
-      <a class="secondary" href="https://zs.lcxq88.com?tool=ecom-detail-planner">电商详情页策划</a>
+      <a class="primary" href="https://zs.lcxq88.com" data-zs-entry>立即进入 →</a>
+      <a class="secondary" href="https://zs.lcxq88.com/desktop/lingchuang-prompt-master-setup.exe" download data-desktop-download>下载桌面端</a>
+      <a class="secondary" href="https://zs.lcxq88.com?tool=ecom-detail-planner" data-zs-entry data-zs-tool="ecom-detail-planner">电商详情页策划</a>
     </div>
 
     <div class="metrics" aria-label="能力数据">
@@ -192,8 +192,8 @@ body.legal-modal-open{overflow:hidden}
       <span>面向小红书、公众号、短视频封面、电商图文的 AI 创作工作台。浏览器搜索灵创星球，认准 lcxq88.com。</span>
     </div>
     <div class="product-actions">
-      <a class="strip-btn" href="https://zs.lcxq88.com">打开系统 →</a>
-      <a class="strip-btn subtle" href="https://zs.lcxq88.com/desktop/lingchuang-prompt-master-setup.exe" download>下载桌面应用</a>
+      <a class="strip-btn" href="https://zs.lcxq88.com" data-zs-entry>打开系统 →</a>
+      <a class="strip-btn subtle" href="https://zs.lcxq88.com/desktop/lingchuang-prompt-master-setup.exe" download data-desktop-download>下载桌面应用</a>
     </div>
   </section>
 
@@ -224,6 +224,49 @@ body.legal-modal-open{overflow:hidden}
 const LEGAL_NOTICE_KEY='lc_legal_notice_v20260608b';
 let pendingLegalHref='';
 let pendingLegalDownload=false;
+const ZS_ENTRY_ORIGIN='https://zs.lcxq88.com';
+const DESKTOP_INSTALLER_URL=ZS_ENTRY_ORIGIN+'/desktop/lingchuang-prompt-master-setup.exe';
+const INVITE_PARAM_KEYS=['invite','inviter','ref_invite'];
+function getInviteParams(){
+  const out=new URLSearchParams();
+  const current=new URLSearchParams(window.location.search||'');
+  INVITE_PARAM_KEYS.forEach(key=>{
+    const value=(current.get(key)||'').trim();
+    if(value) out.set(key,value.toUpperCase());
+  });
+  return out;
+}
+function buildZsEntryUrl(extra){
+  const url=new URL(ZS_ENTRY_ORIGIN+'/');
+  const invite=getInviteParams();
+  invite.forEach((value,key)=>url.searchParams.set(key,value));
+  Object.keys(extra||{}).forEach(key=>{
+    const value=extra[key];
+    if(value!==undefined&&value!==null&&String(value).trim()) url.searchParams.set(key,String(value).trim());
+  });
+  return url.toString();
+}
+function hasInviteParam(){
+  const invite=getInviteParams();
+  return Array.from(invite.keys()).length>0;
+}
+function syncZsEntryLinks(){
+  document.querySelectorAll('[data-zs-entry]').forEach(link=>{
+    const extra={};
+    const tool=link.getAttribute('data-zs-tool');
+    if(tool) extra.tool=tool;
+    link.href=buildZsEntryUrl(extra);
+  });
+  document.querySelectorAll('[data-desktop-download]').forEach(link=>{
+    if(hasInviteParam()){
+      link.href=buildZsEntryUrl({download:'desktop'});
+      link.removeAttribute('download');
+    }else{
+      link.href=DESKTOP_INSTALLER_URL;
+      link.setAttribute('download','');
+    }
+  });
+}
 function hasAcceptedLegalNotice(){
   try{return localStorage.getItem(LEGAL_NOTICE_KEY)==='1';}catch(e){return false;}
 }
@@ -268,6 +311,7 @@ document.addEventListener('click',event=>{
   showLegalNotice(link.href,link.hasAttribute('download'));
 });
 document.addEventListener('DOMContentLoaded',()=>{
+  syncZsEntryLinks();
   const accept=document.getElementById('legal-accept');
   const later=document.getElementById('legal-later');
   if(accept){
