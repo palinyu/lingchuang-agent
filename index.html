@@ -732,10 +732,10 @@ body.legal-modal-open,body.partner-modal-open,body.mobile-modal-open{overflow:hi
 
 <div class="modal mobile-entry-modal" id="mobile-entry-modal" role="dialog" aria-modal="true" aria-labelledby="mobile-entry-title">
   <div class="modal-box">
-    <span class="modal-kicker">电脑端功能提醒</span>
-    <h2 id="mobile-entry-title">知识图文魔方工作台暂未开放手机端</h2>
-    <p>手机端可以继续浏览官网介绍、查看使用场景和推广信息。生成图文、进入系统、下载桌面端等功能请使用电脑浏览器打开。</p>
-    <p>电脑端访问地址：<strong>https://www.lcxq88.com</strong></p>
+    <span class="modal-kicker">手机轻创作提醒</span>
+    <h2 id="mobile-entry-title">手机端将进入轻创作版</h2>
+    <p>手机端可体验一句话成图、电商详情图、图片风格拆解、爆款封面和图片压缩。完整工作台、批量处理和更多工具建议使用电脑端或桌面端。</p>
+    <p>通过推广链接进入时，推广码会同步带入手机端，登录后自动绑定。</p>
     <div class="modal-actions">
       <button type="button" class="btn primary" id="mobile-entry-close">知道了，继续浏览</button>
     </div>
@@ -772,6 +772,17 @@ function buildZsEntryUrl(extra){
   return url.toString();
 }
 
+function buildZsMobileEntryUrl(extra){
+  const url=new URL(ZS_ENTRY_ORIGIN+'/mobile/');
+  const invite=getInviteParams();
+  invite.forEach((value,key)=>url.searchParams.set(key,value));
+  Object.keys(extra||{}).forEach(key=>{
+    const value=extra[key];
+    if(value!==undefined&&value!==null&&String(value).trim()) url.searchParams.set(key,String(value).trim());
+  });
+  return url.toString();
+}
+
 function hasInviteParam(){
   const invite=getInviteParams();
   return Array.from(invite.keys()).length>0;
@@ -789,7 +800,7 @@ function syncZsEntryLinks(){
     const extra={};
     const tool=link.getAttribute('data-zs-tool');
     if(tool) extra.tool=tool;
-    link.href=buildZsEntryUrl(extra);
+    link.href=isMobileVisitor()?buildZsMobileEntryUrl(extra):buildZsEntryUrl(extra);
   });
   document.querySelectorAll('[data-desktop-download]').forEach(link=>{
     if(hasInviteParam()){
@@ -902,11 +913,6 @@ function loadPartnerQr(){
 
 document.addEventListener('click',event=>{
   const zsLink=event.target&&event.target.closest?event.target.closest('a[href^="https://zs.lcxq88.com"]'):null;
-  if(zsLink&&isMobileVisitor()){
-    event.preventDefault();
-    showMobileEntryModal();
-    return;
-  }
   if(zsLink&&!hasAcceptedLegalNotice()){
     event.preventDefault();
     showLegalNotice(zsLink.href,zsLink.hasAttribute('download'));
