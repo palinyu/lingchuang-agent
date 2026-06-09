@@ -470,6 +470,8 @@ body.legal-modal-open,body.partner-modal-open,body.mobile-modal-open{overflow:hi
 .modal.is-visible{display:flex}
 .modal-box{
   width:min(640px,100%);
+  max-height:calc(100vh - 44px);
+  overflow:auto;
   border:1px solid rgba(255,255,255,.42);
   border-radius:12px;
   background:#fff;
@@ -543,6 +545,16 @@ body.legal-modal-open,body.partner-modal-open,body.mobile-modal-open{overflow:hi
   .wb-body,.pipeline,.tool-matrix{grid-template-columns:1fr}
   .prompt-card{min-height:auto}
   .qr-wrap{grid-template-columns:1fr}
+  .partner-modal{align-items:flex-start;padding:12px}
+  .partner-modal .modal-box{max-height:calc(100dvh - 24px);padding:18px;border-radius:10px}
+  .partner-modal .modal-kicker{margin-bottom:10px}
+  .partner-modal .modal-box h2{font-size:22px;margin-bottom:8px}
+  .partner-modal .modal-box p{font-size:13px;line-height:1.55}
+  .partner-modal .qr-wrap{gap:10px;margin-top:12px}
+  .partner-modal .qr-placeholder,.partner-modal .qr-image{width:min(100%,260px);height:auto;max-height:34vh;aspect-ratio:1;margin:0 auto;object-fit:contain}
+  .partner-modal .qr-notes{gap:7px}
+  .partner-modal .qr-notes span{padding:9px 10px;font-size:12px;line-height:1.4}
+  .partner-modal .modal-actions{margin-top:14px}
   .qr-placeholder,.qr-image{width:100%}
   .modal-box{padding:20px}
   .modal-actions{display:grid;grid-template-columns:1fr}
