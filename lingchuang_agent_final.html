@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <script>
 // =========================================================================================
-// 🔑 灵创星球 · 本地兜底配置（云端加载失败时自动启用）
+// 🔑 慧播电商 · 本地兜底配置（云端加载失败时自动启用）
 // 日常运营只需修改腾讯云 status.txt，不用动这里
 // =========================================================================================
 const LOCAL_FALLBACK = {
   locked:      false,          // true = 强制锁死所有人
   max_clicks:  1,              // 未激活用户可免费试用次数
-  password:    "灵创星球888",  // 激活卡密
+  password:    "慧播电商888",  // 激活卡密
   version:     "unlocked_v9", // 改掉此值 = 让所有旧激活用户重新锁死
   notice:      "",             // 非空时页面顶部显示公告横幅
   video_url:   "https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E8%90%8C%E5%AE%A0/0a8645aa3d371e7adbbc2c2961d17ea6_raw.mp4"
@@ -24,7 +24,7 @@ const REMOTE_CONFIG_URL = "https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/
 let CFG = { ...LOCAL_FALLBACK };
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI萌宠播客智能体 · 灵创星球</title>
+<title>AI萌宠播客智能体 · 慧播电商</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -130,13 +130,13 @@ textarea{resize:vertical;min-height:130px;}
 <!-- 主体内容 -->
 <div id="main-panel" class="shell" style="display:none;">
   <div class="header">
-    <div class="logo">🎙️ 灵创星球 · AI萌宠播客智能体</div>
+    <div class="logo">🎙️ 慧播电商 · AI萌宠播客智能体</div>
     <h1>一键生成爆款萌宠播客素材</h1>
     <p>云端远程管控版 · 自备大模型通道 · 丝滑搞定全套矩阵视频素材</p>
   </div>
 
   <div class="card" style="border:1px solid rgba(245,196,74,0.25);background:rgba(15,15,15,0.6);">
-    <div class="card-title"><span></span>🎬 灵创星球 · 官方爆款成品案例视频</div>
+    <div class="card-title"><span></span>🎬 慧播电商 · 官方爆款成品案例视频</div>
     <div class="video-wrapper">
       <video id="cloud-player-node" crossorigin="anonymous" preload="auto" controls autoplay muted loop
         style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;background:#000;"></video>
@@ -770,7 +770,7 @@ boot();
     >
       <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#f5c44a,#d4af37);display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 0 18px rgba(245,196,74,0.45);">🌐</div>
       <div style="text-align:center;">
-        <div style="font-size:15px;font-weight:900;color:#f5c44a;letter-spacing:.05em;">灵创星球</div>
+        <div style="font-size:15px;font-weight:900;color:#f5c44a;letter-spacing:.05em;">慧播电商</div>
         <div style="font-size:12px;color:#999;margin-top:4px;">AI聚合平台</div>
       </div>
       <div style="width:80%;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);"></div>
@@ -792,7 +792,7 @@ boot();
   <div style="display:flex;align-items:center;gap:10px;">
     <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f5c44a,#d4af37);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 10px rgba(245,196,74,0.4);">🌐</div>
     <div>
-      <div style="font-size:13px;font-weight:900;color:#f5c44a;">灵创星球</div>
+      <div style="font-size:13px;font-weight:900;color:#f5c44a;">慧播电商</div>
       <div style="font-size:11px;color:#888;">AI生产力全能聚合平台</div>
     </div>
   </div>
