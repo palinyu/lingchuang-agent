@@ -47,7 +47,6 @@
   "applicationCategory": "DesignApplication",
   "operatingSystem": "Web",
   "url": "https://zs.lcxq88.com/",
-  "downloadUrl": "https://zs.lcxq88.com/desktop/lingchuang-prompt-master-setup.exe",
   "publisher": {
     "@type": "Organization",
     "name": "零创AI",
@@ -543,7 +542,6 @@ body.legal-modal-open,body.partner-modal-open,body.mobile-modal-open{overflow:hi
     </a>
     <div class="nav-actions">
       <a class="btn primary" href="https://zs.lcxq88.com" data-zs-entry>进入系统</a>
-      <a class="btn ghost" href="https://zs.lcxq88.com/desktop/lingchuang-prompt-master-setup.exe" download data-desktop-download title="下载零创AI图文矩阵工作站最新版安装包">下载桌面端</a>
     </div>
   </nav>
 
@@ -604,7 +602,6 @@ body.legal-modal-open,body.partner-modal-open,body.mobile-modal-open{overflow:hi
         </div>
         <div class="entry-actions">
           <a class="btn light" href="https://zs.lcxq88.com" data-zs-entry>进入知识图文魔方</a>
-          <a class="btn ghost" href="https://zs.lcxq88.com/desktop/lingchuang-prompt-master-setup.exe" download data-desktop-download title="下载零创AI图文矩阵工作站最新版安装包">下载桌面端</a>
         </div>
       </aside>
     </div>
@@ -705,7 +702,6 @@ const LEGAL_NOTICE_KEY='lc_legal_notice_v20260608b';
 let pendingLegalHref='';
 let pendingLegalDownload=false;
 const ZS_ENTRY_ORIGIN='https://zs.lcxq88.com';
-const DESKTOP_INSTALLER_URL=ZS_ENTRY_ORIGIN+'/desktop/lingchuang-prompt-master-setup.exe';
 const DEFAULT_PARTNER_QR_URL='https://vip-1426371499.cos.ap-guangzhou.myqcloud.com/%E5%BE%AE%E4%BF%A1%E4%BA%8C%E7%BB%B4%E7%A0%81.jpg';
 const INVITE_PARAM_KEYS=['invite','inviter','ref_invite','ref'];
 
@@ -759,15 +755,6 @@ function syncZsEntryLinks(){
     const tool=link.getAttribute('data-zs-tool');
     if(tool) extra.tool=tool;
     link.href=isMobileVisitor()?buildZsMobileEntryUrl(extra):buildZsEntryUrl(extra);
-  });
-  document.querySelectorAll('[data-desktop-download]').forEach(link=>{
-    if(hasInviteParam()){
-      link.href=buildZsEntryUrl({download:'desktop'});
-      link.removeAttribute('download');
-    }else{
-      link.href=DESKTOP_INSTALLER_URL;
-      link.setAttribute('download','');
-    }
   });
 }
 
