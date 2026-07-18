@@ -150,6 +150,7 @@ button{font:inherit}
 .btn.dark{background:var(--ink);border-color:var(--ink);color:#fff}
 .btn.light{background:#fff;color:var(--ink);border-color:rgba(255,255,255,.3)}
 .hero{
+  position:relative;
   width:min(var(--content-max),calc(100% - var(--page-pad) * 2));
   margin:0 auto;
   padding:48px 0 24px;
@@ -158,6 +159,37 @@ button{font:inherit}
   gap:34px;
   justify-content:space-between;
   align-items:center;
+  overflow:hidden;
+  border-radius:16px;
+}
+.hero-bends{
+  position:absolute;
+  inset:-24% -12% -18%;
+  z-index:0;
+  opacity:.62;
+  pointer-events:none;
+  filter:saturate(1.05) contrast(1.02);
+}
+.hero-bends::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background:
+    linear-gradient(90deg,rgba(245,247,251,.88),rgba(245,247,251,.52) 46%,rgba(245,247,251,.68)),
+    radial-gradient(circle at 62% 48%,rgba(255,255,255,.72),transparent 38%);
+  pointer-events:none;
+}
+.hero-bends canvas{width:100%;height:100%;display:block}
+.hero>div:not(.hero-bends),.hero>.workbench{position:relative;z-index:1}
+.hero::before{
+  content:"";
+  position:absolute;
+  inset:8px 0 auto 0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(24,104,219,.22),transparent);
+  z-index:2;
+  pointer-events:none;
 }
 .eyebrow{
   display:inline-flex;
@@ -546,6 +578,7 @@ body.legal-modal-open,body.partner-modal-open,body.mobile-modal-open{overflow:hi
   </nav>
 
   <section class="hero">
+    <div class="hero-bends" id="hero-bends" aria-hidden="true"></div>
     <div>
       <span class="eyebrow">无需复杂提示词</span>
       <h1>一句话/一张图，大白话生成想要的内容</h1>
@@ -896,6 +929,113 @@ document.addEventListener('DOMContentLoaded',()=>{
   loadPartnerQr();
   if(!hasAcceptedLegalNotice()) showLegalNotice('',false);
 });
+</script>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+const heroBends=document.getElementById('hero-bends');
+if(heroBends&&window.WebGLRenderingContext){
+  const frag=[
+    'uniform vec2 uCanvas;',
+    'uniform float uTime;',
+    'uniform vec2 uRot;',
+    'uniform vec3 uColors[5];',
+    'uniform vec2 uPointer;',
+    'varying vec2 vUv;',
+    'void main(){',
+    '  float t=uTime*.16;',
+    '  vec2 p=vUv*2.0-1.0;',
+    '  p+=uPointer*.03;',
+    '  vec2 rp=vec2(p.x*uRot.x-p.y*uRot.y,p.x*uRot.y+p.y*uRot.x);',
+    '  vec2 q=vec2(rp.x*(uCanvas.x/uCanvas.y),rp.y);',
+    '  q/=1.0;',
+    '  q/=.55+.18*dot(q,q);',
+    '  q+=.2*cos(t)-7.56;',
+    '  q+=(uPointer-rp)*.12;',
+    '  vec3 col=vec3(0.0);',
+    '  float cover=0.0;',
+    '  vec2 s=q;',
+    '  for(int i=0;i<5;i++){',
+    '    s-=.01;',
+    '    vec2 r=sin(1.26*s.yx+2.0*cos(s));',
+    '    vec2 warped=s+(r-s)*.82;',
+    '    float m=length(warped+sin(5.0*warped.y-3.0*t+float(i))*.25);',
+    '    float w=1.0-exp(-5.6/exp(5.6*m));',
+    '    col+=uColors[i]*w*.48;',
+    '    cover=max(cover,w);',
+    '  }',
+    '  float n=fract(sin(dot(gl_FragCoord.xy+vec2(uTime),vec2(12.9898,78.233)))*43758.5453);',
+    '  col=clamp(col*1.02+(n-.5)*.035,0.0,1.0);',
+    '  gl_FragColor=vec4(col*max(.66,cover),cover*.82);',
+    '}'
+  ].join('\\n');
+  const vert='varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position,1.0);}';
+  let renderer,material,clock,raf;
+  function cleanup(){
+    if(raf) cancelAnimationFrame(raf);
+    window.removeEventListener('resize',resizeHeroBends);
+    window.removeEventListener('pointermove',moveHeroBendsPointer);
+    try{if(renderer){renderer.dispose();renderer.forceContextLoss();}}catch(e){}
+  }
+  function resizeHeroBends(){
+    if(!renderer||!material) return;
+    const w=heroBends.clientWidth||1;
+    const h=heroBends.clientHeight||1;
+    renderer.setSize(w,h,false);
+    material.uniforms.uCanvas.value.set(w,h);
+  }
+  function moveHeroBendsPointer(event){
+    if(!material) return;
+    const rect=heroBends.getBoundingClientRect();
+    const x=((event.clientX-rect.left)/(rect.width||1))*2-1;
+    const y=-(((event.clientY-rect.top)/(rect.height||1))*2-1);
+    material.uniforms.uPointer.value.set(x,y);
+  }
+  function frameHeroBends(){
+    if(!renderer||!material||!clock) return;
+    const elapsed=clock.getElapsedTime();
+    material.uniforms.uTime.value=elapsed;
+    const rad=(88+elapsed*1.1)*Math.PI/180;
+    material.uniforms.uRot.value.set(Math.cos(rad),Math.sin(rad));
+    renderer.render(renderer._scene,renderer._camera);
+    raf=requestAnimationFrame(frameHeroBends);
+  }
+  try{
+    const scene=new THREE.Scene();
+    const camera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+    material=new THREE.ShaderMaterial({
+      vertexShader:vert,
+      fragmentShader:frag,
+      transparent:true,
+      premultipliedAlpha:true,
+      uniforms:{
+        uCanvas:{value:new THREE.Vector2(1,1)},
+        uTime:{value:0},
+        uRot:{value:new THREE.Vector2(0,1)},
+        uPointer:{value:new THREE.Vector2(0,0)},
+        uColors:{value:['#1868db','#7c3aed','#06b6d4','#f3af42','#ec4899'].map(color=>new THREE.Color(color))}
+      }
+    });
+    scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),material));
+    renderer=new THREE.WebGLRenderer({antialias:false,alpha:true,powerPreference:'high-performance'});
+    renderer._scene=scene;
+    renderer._camera=camera;
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    renderer.setClearColor(0x000000,0);
+    renderer.domElement.style.width='100%';
+    renderer.domElement.style.height='100%';
+    renderer.domElement.style.display='block';
+    heroBends.appendChild(renderer.domElement);
+    clock=new THREE.Clock();
+    resizeHeroBends();
+    window.addEventListener('resize',resizeHeroBends);
+    window.addEventListener('pointermove',moveHeroBendsPointer);
+    frameHeroBends();
+  }catch(e){
+    cleanup();
+  }
+}
 </script>
 </body>
 </html>
